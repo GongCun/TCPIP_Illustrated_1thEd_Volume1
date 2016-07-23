@@ -1,0 +1,34 @@
+% arp -a
+? (192.168.0.1) at e8:94:f6:be:62:f0 on en0 ifscope [ethernet]
+? (192.168.0.107) at ac:3c:b:9c:30:0 on en0 ifscope [ethernet]
+
+% sudo arp -d 192.168.0.107 ifscope en0
+
+#--------------------------------------------
+#-*- start echo service on centos 6.7 -*-
+#--------------------------------------------
+% sudo service xinetd status
+% sudo vi /etc/xinet.d/echo-stream
+...
+  disable = no
+...
+% sudo service xinetd restart
+% chkconfig --list
+% telnet 127.0.0.1 7
+# _DONT_ use 'echo' in MacOS, because it's 4/ddp of AppleTalk Echo Protocol
+
+#-*- Insert the iptables policy -*-
+% sudo iptables -I INPUT -s 192.168.0.0/24 -i wlan0 -j ACCEPT
+# (delete: sudo iptables -D INPUT -s 192.168.0.0/24 -i wlan0 -j ACCEPT)
+
+% sudo /etc/init.d/iptables save
+
+# list rules
+% sudo iptables -S | grep -F 192.168.0.0
+
+# list chain
+% sudo iptables -L INPUT -n
+
+#
+#-*- On MacOS
+sudo tcpdump -l -ttttt -n -e -i en0 'host 192.168.0.113' | tee ./arp.tcpdump

@@ -1,0 +1,18 @@
+# Telnet IP which not exist
+% date; telnet 192.168.0.253 7; date                                                                           
+Sat Jul 23 10:58:29 CST 2016
+Trying 192.168.0.253...
+telnet: connect to address 192.168.0.253: Operation timed out
+telnet: Unable to connect to remote host
+Sat Jul 23 10:59:44 CST 2016
+# (75 ses)
+
+# Tcpdump output
+% sudo tcpdump -l -ttttt -n -e -i en0 'host 192.168.0.253' | tee ./arp.NotExist.tcpdump
+00:00:00.000000 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.253 tell 192.168.0.104, length 28
+00:00:01.008972 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.253 tell 192.168.0.104, length 28
+00:00:02.114393 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.253 tell 192.168.0.104, length 28
+00:00:03.120879 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.253 tell 192.168.0.104, length 28
+00:00:04.128196 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.253 tell 192.168.0.104, length 28
+00:00:36.697853 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.253 tell 192.168.0.104, length 28
+00:01:09.249437 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.253 tell 192.168.0.104, length 28

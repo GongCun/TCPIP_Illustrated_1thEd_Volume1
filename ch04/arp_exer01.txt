@@ -1,0 +1,19 @@
+# Output of MacOS (192.168.0.4)
+00:00:00.000000 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.113 tell 192.168.0.104, length 28
+00:00:00.111609 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype ARP (0x0806), length 42: Reply 192.168.0.113 is-at 5c:e0:c5:c7:e6:ab, length 28
+00:00:00.111849 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 78: 192.168.0.104.53212 > 192.168.0.113.7: Flags [S], seq 3498655970, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 763451708 ecr 0,sackOK,eol], length 0
+00:00:00.114980 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype IPv4 (0x0800), length 74: 192.168.0.113.7 > 192.168.0.104.53212: Flags [S.], seq 306634600, ack 3498655971, win 14480, options [mss 1460,sackOK,TS val 36368940 ecr 763451708,nop,wscale 7], length 0
+00:00:00.115202 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.53212 > 192.168.0.113.7: Flags [.], ack 1, win 8235, options [nop,nop,TS val 763451822 ecr 36368940], length 0
+00:00:06.055499 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.53212 > 192.168.0.113.7: Flags [F.], seq 1, ack 1, win 8235, options [nop,nop,TS val 763457733 ecr 36368940], length 0
+00:00:06.165694 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype IPv4 (0x0800), length 66: 192.168.0.113.7 > 192.168.0.104.53212: Flags [F.], seq 1, ack 2, win 114, options [nop,nop,TS val 36374979 ecr 763457733], length 0
+00:00:06.165996 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.53212 > 192.168.0.113.7: Flags [.], ack 2, win 8235, options [nop,nop,TS val 763457843 ecr 36374979], length 0
+
+# Output of CentOS (192.168.0.113)
+00:00:00.000000 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.113 tell 192.168.0.104, length 28
+00:00:00.000043 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype ARP (0x0806), length 42: Reply 192.168.0.113 is-at 5c:e0:c5:c7:e6:ab, length 28
+00:00:00.003722 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 78: 192.168.0.104.53212 > 192.168.0.113.7: Flags [S], seq 3498655970, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 763451708 ecr 0,sackOK,eol], length 0
+00:00:00.003831 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype IPv4 (0x0800), length 74: 192.168.0.113.7 > 192.168.0.104.53212: Flags [S.], seq 306634600, ack 3498655971, win 14480, options [mss 1460,sackOK,TS val 36368940 ecr 763451708,nop,wscale 7], length 0
+00:00:00.007068 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.53212 > 192.168.0.113.7: Flags [.], ack 1, win 8235, options [nop,nop,TS val 763451822 ecr 36368940], length 0
+00:00:06.042405 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.53212 > 192.168.0.113.7: Flags [F.], seq 1, ack 1, win 8235, options [nop,nop,TS val 763457733 ecr 36368940], length 0
+00:00:06.042845 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype IPv4 (0x0800), length 66: 192.168.0.113.7 > 192.168.0.104.53212: Flags [F.], seq 1, ack 2, win 114, options [nop,nop,TS val 36374979 ecr 763457733], length 0
+00:00:06.058333 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.53212 > 192.168.0.113.7: Flags [.], ack 2, win 8235, options [nop,nop,TS val 763457843 ecr 36374979], length 0

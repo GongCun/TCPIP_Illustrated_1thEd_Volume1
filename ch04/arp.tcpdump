@@ -1,0 +1,12 @@
+00:00:00.000000 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.113 tell 192.168.0.104, length 28
+00:00:01.008275 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.113 tell 192.168.0.104, length 28
+00:00:02.015984 10:40:f3:86:19:82 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.0.113 tell 192.168.0.104, length 28
+00:00:02.052068 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype ARP (0x0806), length 42: Reply 192.168.0.113 is-at 5c:e0:c5:c7:e6:ab, length 28
+00:00:02.052317 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 78: 192.168.0.104.52148 > 192.168.0.113.7: Flags [S], seq 3049730782, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 757307091 ecr 0,sackOK,eol], length 0
+00:00:02.055094 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype IPv4 (0x0800), length 74: 192.168.0.113.7 > 192.168.0.104.52148: Flags [S.], seq 4260836459, ack 3049730783, win 14480, options [mss 1460,sackOK,TS val 35116856 ecr 757307091,nop,wscale 7], length 0
+00:00:02.055332 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.52148 > 192.168.0.113.7: Flags [.], ack 1, win 8235, options [nop,nop,TS val 757307130 ecr 35116856], length 0
+00:00:07.432936 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.52148 > 192.168.0.113.7: Flags [F.], seq 1, ack 1, win 8235, options [nop,nop,TS val 757312308 ecr 35116856], length 0
+00:00:07.581071 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype IPv4 (0x0800), length 66: 192.168.0.113.7 > 192.168.0.104.52148: Flags [.], ack 2, win 114, options [nop,nop,TS val 35122281 ecr 757312308], length 0
+00:00:07.581302 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.52148 > 192.168.0.113.7: Flags [.], ack 1, win 8235, options [nop,nop,TS val 757312456 ecr 35122281], length 0
+00:00:07.581581 5c:e0:c5:c7:e6:ab > 10:40:f3:86:19:82, ethertype IPv4 (0x0800), length 66: 192.168.0.113.7 > 192.168.0.104.52148: Flags [F.], seq 1, ack 2, win 114, options [nop,nop,TS val 35122281 ecr 757312308], length 0
+00:00:07.581810 10:40:f3:86:19:82 > 5c:e0:c5:c7:e6:ab, ethertype IPv4 (0x0800), length 66: 192.168.0.104.52148 > 192.168.0.113.7: Flags [.], ack 2, win 8235, options [nop,nop,TS val 757312456 ecr 35122281], length 0
