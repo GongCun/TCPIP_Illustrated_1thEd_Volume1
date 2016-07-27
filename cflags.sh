@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: platform.sh,v 1.4 2016/07/24 08:29:37 gongcunjust Exp $
+# $Id: cflags.sh,v 1.2 2016/07/27 23:27:17 gongcunjust Exp $
 
 PID=$$
 OS=`uname -s | tr '[:lower:]' '[:upper:]'`
@@ -31,21 +31,29 @@ if test "X$OS" = "XAIX"; then
 fi
 
 #-+- Find the pcap library -+-
-typeset type
+cat >./${PID}.c <<\EOF
+#include <pcap.h>
+#include <stdlib.h>
+
+int main(void) {
+  printf("%s\n", pcap_lib_version());
+  return 0;
+}
+EOF
+
+typeset -i found=0
 for folder in /usr/lib /usr/lib64 /usr/local/lib; do
     if test -d $folder; then
-        find $folder -name "libpcap*" -print | while read f; do
-            type=`nm $f | grep pcap_open_live | awk '{print $2}'`
-            if test "X$type" != "XU"; then
-                break
-            fi # defined symbols or stripped
-        done
-        if test "X$type" != "XU"; then
-            LIBS="-L$folder -lpcap"
-            break;
-        fi
+        LIBS="-L$folder -lpcap"
+        cc -o ${PID}.exe ${PID}.c $LIBS >/dev/null 2>&1 && {
+          found=1; break
+        }
     fi
 done
+
+test $found -eq 0 && unset LIBS
+
+rm -rf ${PID}.* 2>/dev/null
 
 echo "$CFLAGS%$LIBS"
 
