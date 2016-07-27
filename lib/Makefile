@@ -1,0 +1,12 @@
+include ../Make.defines
+
+LIB_OBJS = error.o wrapunix.o get_ifi_info.o
+LIBTCPI_NAME = ../libtcpi.a
+RANLIB = ranlib
+
+all:	${LIB_OBJS}
+		ar rv ${LIBTCPI_NAME} $?
+		${RANLIB} ${LIBTCPI_NAME}
+
+clean:
+		rm -f ${CLEANFILES}

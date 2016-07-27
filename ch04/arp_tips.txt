@@ -30,5 +30,5 @@
 % sudo iptables -L INPUT -n
 
 #
-#-*- On MacOS
+#-*- On MacOS -*-
 sudo tcpdump -l -ttttt -n -e -i en0 'host 192.168.0.113' | tee ./arp.tcpdump

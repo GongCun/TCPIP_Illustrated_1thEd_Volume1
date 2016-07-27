@@ -1,0 +1,52 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	2016.07.25.14.29.52;	author gongcunjust;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#ifndef __IFI_H
+#define __IFI_H
+
+#include "tcpi.h"
+#include <net/if.h>
+#include <net/if_arp.h> /* struct arpreq */
+#include <net/if_dl.h> /* struct sockaddr_dl */
+
+#define IFI_NAME 16 /* same as IFINAMSIZ in <net/if.h> */
+#define IFI_HADDR 8
+
+struct ifi_info {
+    char ifi_name[IFI_NAME]; /* interface name, null-terminated */
+    short ifi_index; /* interface name */
+    short ifi_mtu; /* interface MTU */
+    u_char ifi_haddr[IFI_HADDR]; /* hardware address */
+    u_short ifi_hlen; /* bytes# in hardware address: 0, 6, 8 */
+    short ifi_flags; /* IFF_xxx constants from <net/if.h> */
+    struct sockaddr *ifi_addr; /* primary address */
+    struct sockaddr *ifi_brdaddr; /* broadcast address */
+    struct sockaddr *ifi_dstaddr; /* P2P destination address */
+    struct ifi_info *ifi_next; /* next of these structures */
+};
+
+struct ifi_info *get_ifi_info(void); /* only for inet4 */
+void free_ifi_info(struct ifi_info *);
+
+
+#endif
+@

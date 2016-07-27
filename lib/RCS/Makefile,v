@@ -1,0 +1,36 @@
+head	1.1;
+access;
+symbols;
+locks
+	gongcunjust:1.1; strict;
+comment	@# @;
+
+
+1.1
+date	2016.07.25.14.50.10;	author gongcunjust;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@include ../Make.defines
+
+LIB_OBJS = error.o wrapunix.o get_ifi_info.o
+LIBTCPI_NAME = ../libtcpi.a
+RANLIB = ranlib
+
+all:	${LIB_OBJS}
+		ar rv ${LIBTCPI_NAME} $?
+		${RANLIB} ${LIBTCPI_NAME}
+
+clean:
+		rm -f ${CLEANFILES}
+@
