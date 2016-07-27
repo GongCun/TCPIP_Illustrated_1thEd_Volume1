@@ -5,7 +5,6 @@ struct ifi_info *get_ifi_info(void)
     struct ifi_info *pifi, *pifihead, **ppifinext;
     struct ifconf ifc;
     struct ifreq *ifr, ifrcopy;
-    struct arpreq arpreq;
     int sockfd, len, lastlen;
     char *buf, *cptr;
 
@@ -118,6 +117,8 @@ struct ifi_info *get_ifi_info(void)
         memcpy(pifi->ifi_addr, sinptr, sizeof(struct sockaddr_in));
 
         /* Get mac address */
+#ifdef SIOCGARP
+        struct arpreq arpreq;
         if (sdlname == NULL || strcmp(sdlname, ifr->ifr_name) != 0)
         {
             idx = 0;
@@ -131,6 +132,7 @@ struct ifi_info *get_ifi_info(void)
                 hlen = 0;
             }
         }
+#endif
         pifi->ifi_index = idx;
         pifi->ifi_hlen = hlen;
         if (pifi->ifi_hlen > IFI_HADDR)
