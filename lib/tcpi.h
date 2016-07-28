@@ -23,9 +23,11 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/if_ether.h>
 #include <net/if.h>
 #include <net/if_arp.h> /* struct arpreq */
 #include <net/if_dl.h> /* struct sockaddr_dl */
+#include <net/route.h> /* struct rt_msghdr ... */
 #include <arpa/inet.h>
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
@@ -65,6 +67,7 @@ struct ifi_info {
 };
 struct ifi_info *get_ifi_info(void); /* only for inet4 */
 void free_ifi_info(struct ifi_info *);
+void prmac(void);
 
 
 #endif /* __TCPI_H */

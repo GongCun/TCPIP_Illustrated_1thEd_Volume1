@@ -29,6 +29,9 @@
 /* Define to 1 if <net/if_dl.h> defines struct sockaddr_dl */
 #define HAVE_SOCKADDR_DL_STRUCT 1
 
+/* Define to 1 if <netinet/if_ether.h> defines struct sockaddr_inarp */
+#define HAVE_SOCKADDR_INARP_STRUCT 1
+
 /* Define to 1 if socket address structures have length fields */
 #define HAVE_SOCKADDR_SA_LEN 1
 
@@ -59,17 +62,26 @@
 /* Define to 1 if `sa_len' is a member of `struct sockaddr'. */
 #define HAVE_STRUCT_SOCKADDR_SA_LEN 1
 
+/* Define to 1 if you have the `sysctl' function. */
+#define HAVE_SYSCTL 1
+
 /* Define to 1 if you have the <syslog.h> header file. */
 #define HAVE_SYSLOG_H 1
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #define HAVE_SYS_IOCTL_H 1
 
+/* Define to 1 if you have the <sys/param.h> header file. */
+#define HAVE_SYS_PARAM_H 1
+
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #define HAVE_SYS_SOCKET_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
+
+/* Define to 1 if you have the <sys/sysctl.h> header file. */
+#define HAVE_SYS_SYSCTL_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
