@@ -43,5 +43,6 @@ int main(void)
         if ((sa = ifi->ifi_dstaddr) != NULL)
             printf("  Destination addr: %s\n", inet_ntoa(((struct sockaddr_in *)sa)->sin_addr)); 
     }
+    free(ifihead);
     exit(0);
 }
