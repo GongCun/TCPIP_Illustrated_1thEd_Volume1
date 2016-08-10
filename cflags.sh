@@ -42,10 +42,10 @@ int main(void) {
 EOF
 
 typeset -i found=0
-for folder in /usr/lib /usr/lib64 /usr/local/lib; do
-    if test -d $folder; then
+for folder in /usr/local/lib /usr/lib64 /usr/lib; do
+    if test -d $folder && ls -1 $folder | grep -w libpcap >/dev/null 2>&1; then
         LIBS="-L$folder -lpcap"
-        cc -o ${PID}.exe ${PID}.c $LIBS >/dev/null 2>&1 && {
+        cc -o ${PID}.x ${PID}.c $LIBS >/dev/null 2>&1 && {
           found=1; break
         }
     fi
