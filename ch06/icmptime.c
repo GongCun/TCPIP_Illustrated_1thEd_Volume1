@@ -73,8 +73,8 @@ main(int argc, char *argv[])
                                                 (long)tsorig, (long)ntohl(icmp->icmp_otime));
                         tsrecv = ntohl(icmp->icmp_rtime);
                         tsxmit = ntohl(icmp->icmp_ttime);
-                        printf("orig = %ld, recv = %ld, xmit = %ld, rtt = %.2f\n",
-                                        (long)tsorig, (long)tsrecv, (long)tsxmit, rtt);
+                        printf("orig = %ld, recv = %ld, xmit = %ld, rtt = %.2f ms\ndifference = %ld ms\n",
+                                        (long)tsorig, (long)tsrecv, (long)tsxmit, rtt, (long)(tsrecv-tsorig));
 			break;
 		}
 	}

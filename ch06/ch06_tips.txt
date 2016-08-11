@@ -28,4 +28,14 @@ orignate timestamp not echoed: sent 50720249, received 4193060099
 orig = 50720249, recv = 50720249, xmit = 50720249, rtt = 0.16
 
 
+#-+- The timestamp is large difference between Unix and Windows
+% sudo ./icmptime 22.236.119.97
+orignate timestamp not echoed: sent 81768397, received 3450855172
+orig = 81768397, recv = 2929057540, xmit = 2929057540, rtt = 13.78 ms
+difference = 2847289143 ms
+
+% sudo ./icmptime 202.175.56.115
+orignate timestamp not echoed: sent 81782238, received 3739606788
+orig = 81782238, recv = 145876740, xmit = 145876740, rtt = 13.02 ms
+difference = 64094502 ms
 
