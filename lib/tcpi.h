@@ -11,24 +11,40 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h> /* uint8_t, uint16_t, ... */
 #include <errno.h>
 #include <string.h>
 #include <strings.h>
 #include <libgen.h>
 #include <sys/types.h>
-
+#include <unistd.h>
+#include <sys/time.h>
+#include <time.h>
+#include <setjmp.h>
+#include <signal.h>
 #ifdef HAVE_SYS_IOCTL_H
-# include <sys/ioctl.h>
+#include <sys/ioctl.h>
 #endif
-
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
 #include <netinet/if_ether.h>
+#include <netinet/tcp.h>
 #include <net/if.h>
 #include <net/if_arp.h> /* struct arpreq */
 #include <net/if_dl.h> /* struct sockaddr_dl */
 #include <net/route.h> /* struct rt_msghdr ... */
 #include <arpa/inet.h>
+#include <pcap.h>
+#if defined(_AIX) || defined(_AIX64)
+#include <net/bpf.h>
+#include <netinet/if_ether.h>
+#else
+#include <net/ethernet.h>
+#endif
+
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))
@@ -68,6 +84,15 @@ struct ifi_info {
 struct ifi_info *get_ifi_info(void); /* only for inet4 */
 void free_ifi_info(struct ifi_info *);
 void prmac(void);
+
+/* Check sum */
+uint16_t checksum(uint16_t *, int);
+
+/*
+ * ICMPv4 packet assemblers
+ */
+void icmp_build_mask(u_char *, int, uint8_t, uint8_t, uint16_t, uint16_t, uint32_t);
+ssize_t icmp_recv(int, u_char *, size_t, struct sockaddr *, socklen_t *, u_char **);
 
 
 #endif /* __TCPI_H */

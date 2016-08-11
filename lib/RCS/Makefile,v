@@ -1,10 +1,15 @@
-head	1.1;
+head	1.2;
 access;
 symbols;
 locks
-	gongcunjust:1.1; strict;
+	gongcunjust:1.2; strict;
 comment	@# @;
 
+
+1.2
+date	2016.08.11.00.24.23;	author gongcunjust;	state Exp;
+branches;
+next	1.1;
 
 1.1
 date	2016.07.25.14.50.10;	author gongcunjust;	state Exp;
@@ -16,14 +21,15 @@ desc
 @@
 
 
-1.1
+1.2
 log
-@Initial revision
+@*** empty log message ***
 @
 text
 @include ../Make.defines
 
-LIB_OBJS = error.o wrapunix.o get_ifi_info.o
+LIB_OBJS = error.o wrapunix.o get_ifi_info.o free_ifi_info.o prmac.o icmp_build.o \
+	   checksum.o icmp_recv.o
 LIBTCPI_NAME = ../libtcpi.a
 RANLIB = ranlib
 
@@ -33,4 +39,15 @@ all:	${LIB_OBJS}
 
 clean:
 		rm -f ${CLEANFILES}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 2
+a4 1
+LIB_OBJS = error.o wrapunix.o get_ifi_info.o
 @

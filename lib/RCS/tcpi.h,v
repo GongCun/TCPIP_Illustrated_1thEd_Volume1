@@ -1,10 +1,15 @@
-head	1.1;
+head	1.2;
 access;
 symbols;
 locks
-	gongcunjust:1.1; strict;
+	gongcunjust:1.2; strict;
 comment	@ * @;
 
+
+1.2
+date	2016.08.11.00.13.54;	author gongcunjust;	state Exp;
+branches;
+next	1.1;
 
 1.1
 date	2016.07.25.14.33.12;	author gongcunjust;	state Exp;
@@ -16,9 +21,9 @@ desc
 @@
 
 
-1.1
+1.2
 log
-@Initial revision
+@*** empty log message ***
 @
 text
 @/*
@@ -26,6 +31,8 @@ text
  */
 #ifndef __TCPI_H
 #define __TCPI_H
+
+#include "../config.h"
 
 #define MAXLINE 4096 /* max text line length */
 #define BUFFSIZE 8192 /* buffer size for reads and writes */
@@ -36,16 +43,20 @@ text
 #include <string.h>
 #include <strings.h>
 #include <libgen.h>
+#include <sys/types.h>
 
-#ifdef _DARWIN
+#ifdef HAVE_SYS_IOCTL_H
 # include <sys/ioctl.h>
 #endif
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/if_ether.h>
 #include <net/if.h>
 #include <net/if_arp.h> /* struct arpreq */
 #include <net/if_dl.h> /* struct sockaddr_dl */
+#include <net/route.h> /* struct rt_msghdr ... */
+#include <arpa/inet.h>
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))
@@ -84,9 +95,26 @@ struct ifi_info {
 };
 struct ifi_info *get_ifi_info(void); /* only for inet4 */
 void free_ifi_info(struct ifi_info *);
+void prmac(void);
 
 
 #endif /* __TCPI_H */
 
 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 2
+d18 1
+d20 1
+a20 1
+#ifdef _DARWIN
+d26 1
+d30 2
+d70 1
 @
