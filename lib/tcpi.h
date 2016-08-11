@@ -94,6 +94,8 @@ uint16_t checksum(uint16_t *, int);
 void icmp_build_mask(u_char *, int, uint8_t, uint8_t, uint16_t, uint16_t, uint32_t);
 ssize_t icmp_recv(int, u_char *, size_t, struct sockaddr *, socklen_t *, u_char **);
 
+void
+icmp_build_time(u_char * buf, int len, uint8_t type, uint8_t code, uint16_t id, uint16_t seq, uint32_t origtime, uint32_t recvtime, uint32_t xmittime);
 
 #endif /* __TCPI_H */
 

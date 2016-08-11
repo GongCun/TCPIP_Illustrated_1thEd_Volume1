@@ -1,0 +1,2 @@
+# Display the defined symbols
+nm -U /usr/lib/libpcap.dylib | grep {FunctionName}

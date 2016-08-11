@@ -1,1 +1,31 @@
-sudo sysctl -w net.inet.icmp.maskrepl=1
+% sudo sysctl -w net.inet.icmp.maskrepl=1
+
+% sudo ./icmpaddrmask 192.168.0.101
+received mask = 255.0.0.0, from 192.168.0.101
+
+% sudo ./icmpaddrmask 127.0.0.1
+received mask = 255.0.0.0, from 127.0.0.1
+
+% sudo ./icmpaddrmask 192.168.0.113
+timeout
+
+% sudo ./icmpaddrmask 192.168.0.255
+received mask = 255.255.255.0, from 192.168.0.101
+
+# MacOS
+% sudo sysctl -w net.inet.icmp.timestamp=1
+
+
+% sudo ./icmptime 192.168.0.113
+orignate timestamp not echoed: sent 50713106, received 315753731
+orig = 50713106, recv = 50713627, xmit = 50713627, rtt = 103.02
+
+% echo "50713627-50713106-103.02/2" | bc
+470
+
+% sudo ./icmptime 127.0.0.1
+orignate timestamp not echoed: sent 50720249, received 4193060099
+orig = 50720249, recv = 50720249, xmit = 50720249, rtt = 0.16
+
+
+
