@@ -9,29 +9,44 @@ sig_alrm(int signo)
         exit(1);
 }
 
-static pid_t make_icmp_recv(int, int);
+static void make_icmp_recv(int, int);
 
 int 
 main(int argc, char *argv[])
 {
-	if (argc != 3)
-		err_quit("Usage: %s <IPaddr> <Port>", basename(argv[0]));
+	if (argc != 2)
+		err_quit("Usage: %s <IPaddr>", basename(argv[0]));
 
 	int udpfd, sport, dport;
 	struct sockaddr_in to, from;
+	pid_t pid;
 
         if ((udpfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
                 err_sys("socket UDP error");
 
 
         sport = (getpid() & 0xffff) | 0x8000;
-        dport = atoi(argv[2]);
+        dport = (time(0) & 0xffff) | 0x8000;
 
-        make_icmp_recv(sport, dport);
+	if ((pid = fork()) < 0) {
+	    err_sys("fork error");
+	} else if (pid == 0) { /* child process */
+	    if (signal(SIGALRM, sig_alrm) == SIG_ERR)
+		err_sys("signal error");
+	    alarm(WAITTIME);
+	    make_icmp_recv(sport, dport);
+	    alarm(0);
+	    exit(0);
+	}
+
+	/*
+ 	 * parent continue...
+	 */
 
         /* Bind source UDP port */
         bzero(&from, sizeof(struct sockaddr_in));
         from.sin_family = AF_INET;
+	from.sin_addr.s_addr = htonl(0);
         from.sin_port = htons(sport);
         if (bind(udpfd, (struct sockaddr *)&from, sizeof(from)) < 0)
                 err_sys("bind source UDP port error");
@@ -50,11 +65,11 @@ main(int argc, char *argv[])
 
         return 0;
 }
+	/* Child process continue, never returns */
 
-static pid_t make_icmp_recv(int sport, int dport)
+static void make_icmp_recv(int sport, int dport)
 {
         char buf[MAXLINE];
-        pid_t pid;
         int sockfd, n, len, iplen, size;
 	u_char *ptr;
         struct sockaddr_in sockaddr;
@@ -62,8 +77,6 @@ static pid_t make_icmp_recv(int sport, int dport)
         struct ip *ip;
         struct udphdr *udp;
 
-        if ((pid = fork()) > 0)
-                return pid;
 
 	if ((sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
 		err_sys("socket RAW error");
@@ -72,19 +85,12 @@ static pid_t make_icmp_recv(int sport, int dport)
 	size = 60 * 1024;	/* OK if setsockopt fails */
 	setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size));
 
-        if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-                err_sys("signal error");
-	alarm(WAITTIME);
-
-        printf("sport = %d, dport = %d\n", sport, dport);
 	for (;;) {
 		len = sizeof(sockaddr);
 		n = icmp_recv(sockfd, (u_char *) buf, sizeof(buf), (struct sockaddr *)&sockaddr, (socklen_t *) & len, &ptr);
-                printf("n = %d\n", n);
                 if (n < 8)	/* not enough ICMP data */
 			continue;
 		icmp = (struct icmp *)ptr;
-                printf("%d %d\n", icmp->icmp_type, icmp->icmp_code);
 		if (icmp->icmp_type == 3 && icmp->icmp_code == 3) { /* ICMP port unreachableness */
                         ip = (struct ip *)(ptr + 8);
 
@@ -97,13 +103,13 @@ static pid_t make_icmp_recv(int sport, int dport)
                         if (udp->uh_sport == htons(sport) &&
                                         udp->uh_dport == htons(dport))
                         {
-                                printf("Caught ICMP Port Unreachableness error: from %d to %d\n",
-                                                sport, dport);
+                                printf("Caught ICMP Port Unreachableness error\nFrom %s:%d to %s:%d\n",
+						inet_ntoa(ip->ip_src), sport,
+						inet_ntoa(ip->ip_dst), dport);
+
                                 break;
                         }
 		}
 	}
-	alarm(0);
-
-	return 0;
+	return;
 }

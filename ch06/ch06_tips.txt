@@ -39,3 +39,5 @@ orignate timestamp not echoed: sent 81782238, received 3739606788
 orig = 81782238, recv = 145876740, xmit = 145876740, rtt = 13.02 ms
 difference = 64094502 ms
 
+#-+- AIX, but seems no use -+-
+no -p -o icmpaddressmask=1
