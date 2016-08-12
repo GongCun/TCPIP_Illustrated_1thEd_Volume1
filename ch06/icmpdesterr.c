@@ -93,7 +93,7 @@ make_icmp_recv(int sport, int dport)
 			continue;
 		icmp = (struct icmp *)ptr;
 		if (icmp->icmp_type == 3 && icmp->icmp_code == 3) {	/* ICMP port
-									 * unreachableness */
+									 * unreachable */
 			ip = (struct ip *)(ptr + 8);
 
 			/* Check if not enough IP or UDP data */
@@ -105,7 +105,7 @@ make_icmp_recv(int sport, int dport)
 			if (udp->uh_sport == htons(sport) &&
 			    udp->uh_dport == htons(dport)) {
                                 /* Never use inet_ntoa() */
-				printf("Caught ICMP Port Unreachableness error\nFrom %s:%d to %s:%d\n",
+				printf("Caught ICMP Port Unreachable error\nFrom %s:%d to %s:%d\n",
 				       inet_ntop(AF_INET, &ip->ip_src, Src, sizeof(Src)), sport,
 				       inet_ntop(AF_INET, &ip->ip_dst, Dst, sizeof(Dst)), dport);
 
