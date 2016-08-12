@@ -32,6 +32,7 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/if_ether.h>
 #include <netinet/tcp.h>
+#include <netinet/udp.h> /* struct udphdr */
 #include <net/if.h>
 #include <net/if_arp.h> /* struct arpreq */
 #include <net/if_dl.h> /* struct sockaddr_dl */
