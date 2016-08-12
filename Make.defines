@@ -1,4 +1,4 @@
-CFLAGS = -I../lib -g $(shell ../cflags.sh | cut -d'%' -f1)
+override CFLAGS += -I../lib -g $(shell ../cflags.sh | cut -d'%' -f1)
 LIBS = ../libtcpi.a $(shell ../cflags.sh | cut -d'%' -f2)
 ifeq ($(LIBS), )
 $(error Can't find the libpcap)

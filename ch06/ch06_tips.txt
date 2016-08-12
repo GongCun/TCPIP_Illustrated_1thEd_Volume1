@@ -41,3 +41,12 @@ difference = 64094502 ms
 
 #-+- AIX, but seems no use -+-
 no -p -o icmpaddressmask=1
+
+#-*- Make option -*-
+make CFLAGS=-D_DEBUG
+
+#-*- Can't see ICMP reply -*-
+% sudo ./icmpdesterr_bcast 192.168.0.255
+sport = 56599, dport = 57810
+timeout
+

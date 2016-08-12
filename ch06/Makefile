@@ -1,6 +1,6 @@
 include ../Make.defines
 
-PROGS = icmpaddrmask icmptime icmpdesterr
+PROGS = icmpaddrmask icmptime icmpdesterr icmpdesterr_bcast
 
 all: ${PROGS}
 
@@ -11,6 +11,9 @@ icmptime: icmptime.o
 	${CC} ${CFLAGS} -o $@ $< ${LIBS}
 
 icmpdesterr: icmpdesterr.o
+	${CC} ${CFLAGS} -o $@ $< ${LIBS}
+
+icmpdesterr_bcast: icmpdesterr_bcast.o
 	${CC} ${CFLAGS} -o $@ $< ${LIBS}
 
 clean:
