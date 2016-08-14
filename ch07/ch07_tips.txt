@@ -1,1 +1,6 @@
+# Make add the debug flags
 make -B CFLAGS=-D_DEBUG
+
+# bit oper in shell
+pid=$$
+echo $((($pid & 0xffff) | 0x8000))
