@@ -50,3 +50,14 @@ make CFLAGS=-D_DEBUG
 sport = 56599, dport = 57810
 timeout
 
+#-*- But UDP broadcast can send to unicast IP -*-
+% sudo ./icmpdesterr_bcast  192.168.0.113
+sport = 56633, dport = 57974
+Caught ICMP Port Unreachable error
+From 192.168.0.101:56633 to 192.168.0.113:57974
+timeout
+
+#-*- Check the ICMP packet type -*-
+netstat -s -p icmp
+# Protocols can see in /etc/protocols
+

@@ -1,0 +1,1 @@
+make -B CFLAGS=-D_DEBUG
