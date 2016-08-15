@@ -4,7 +4,7 @@
 
 static uint16_t id, seq;
 static int buflen = 56;
-int fd, rroute = 0;
+int fd, optlen = 0, srroute = 0;
 struct sockaddr *sockaddr;
 
 static void usage(const char *str)
@@ -44,12 +44,15 @@ static void sig_alrm(int signo)
 
 static void proc_icmp(int fd, uint16_t id);
 
-static void ipopt_init(u_char *buf)
+static void ipopt_init(u_char *buf, u_char type)
 {
         u_char *optr = buf;
         *optr++ = 1; /* no operation */
-        *optr++ = 7; /* record packet route */
-        *optr++ = 3 + 4*NROUTES; /* max to 9 addresses */
+        *optr++ = type; /* record packet route */
+        if (type == 7) {
+                *optr++ = 3 + 4*NROUTES; /* max to 9 addresses */
+        } else
+                *optr++ = 3;
         *optr++ = 4; /* offset to first address */
 
         return;
@@ -87,29 +90,68 @@ static void ipopt_print(u_char *buf)
 
 }
 
+static int ipopt_srr_add(u_char *buf, char *addr)
+{
+        u_char *optr = buf;
+        int len;
+        optr += 2;
+        len = *optr + 1;
+        if (inet_aton(addr, (struct in_addr *)(buf + len)) != 1)
+                err_sys("inet_aton (%s) error", addr);
+        *optr += sizeof(struct in_addr);
+
+        return(*optr + 1); /* size for setsockopt() */
+}
+
+
 int main(int argc, char *argv[])
 {
         int sockfd, recvfd, size, ch;
         struct hostent *hptr;
         struct sockaddr_in to;
         char **pptr;
+        u_char *optspace = NULL;
 
 #ifdef _DEBUG
         printf("pid = %ld\n", (long)getpid());
 #endif
 
         opterr = 0; /* don't want getopt() writing to stderr */
-        while ((ch = getopt(argc, argv, "s:R")) != -1)
+        while ((ch = getopt(argc, argv, "s:RgG")) != -1)
                 switch(ch) {
                         case 's':
                                 buflen = atoi(optarg);
                                 break;
                         case 'R':
-                                rroute = 1;
+                                if (optspace)
+                                        err_quit("Can't use both -R, -g or -G");
+                                optlen = 40;
+                                optspace = xcalloc(optlen, 1);
+                                ipopt_init(optspace, 7); /* IPOPT_RR */
+                                break;
+                        case 'g':
+                                srroute = 1;
+                                if (optspace)
+                                        err_quit("Can't use both -R, -g or -G");
+                                optlen = 44;
+                                optspace = xcalloc(optlen, 1);
+                                ipopt_init(optspace, 131); /* loose source route */
+                                break;
+                        case 'G':
+                                srroute = 1;
+                                if (optspace)
+                                        err_quit("Can't use both -R, -g or -G");
+                                optlen = 44;
+                                optspace = xcalloc(optlen, 1);
+                                ipopt_init(optspace, 137); /* strict source route */
                                 break;
                         default:
                                 usage(basename(argv[0]));
                 }
+
+        if (optspace && srroute == 1)
+                while (optind < argc - 1)
+                        optlen = ipopt_srr_add(optspace, argv[optind++]);
 
         if (optind != argc-1)
                 usage(basename(argv[0]));
@@ -131,6 +173,9 @@ int main(int argc, char *argv[])
 #endif
                 memmove(&to.sin_addr, (struct in_addr *)(*pptr), sizeof(struct in_addr));
         }
+
+        if (optspace && srroute == 1)
+                optlen = ipopt_srr_add(optspace, inet_ntoa(to.sin_addr));
         
         to.sin_family = AF_INET;
 
@@ -143,12 +188,10 @@ int main(int argc, char *argv[])
         size = 60 * 1024;       /* OK if setsockopt fails */
         setsockopt(recvfd, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size));
 
-        if (rroute == 1) {
-                char optspace[40];
-                bzero(optspace, sizeof(optspace));
-                ipopt_init((u_char *)optspace);
-                if (setsockopt(sockfd, IPPROTO_IP, IP_OPTIONS, optspace, sizeof(optspace)) < 0)
+        if (optspace) {
+                if (setsockopt(sockfd, IPPROTO_IP, IP_OPTIONS, optspace, optlen) < 0)
                         err_sys("setsockopt IP_OPTIONS error");
+                free(optspace);
         }
 
         id = getpid() & 0xffff;

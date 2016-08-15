@@ -4,3 +4,10 @@ make -B CFLAGS=-D_DEBUG
 # bit oper in shell
 pid=$$
 echo $((($pid & 0xffff) | 0x8000))
+
+#
+% sudo sysctl -w net.inet.ip.sourceroute=1
+net.inet.ip.sourceroute: 0 -> 1
+% sudo sysctl -w net.inet.ip.accept_sourceroute=1
+net.inet.ip.accept_sourceroute: 0 -> 1
+
