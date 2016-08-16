@@ -1,0 +1,7 @@
+include ./Make.defines
+
+all:
+	@echo "Nothing to make in this directory"
+
+clean:
+	rm -r -f $(CLEANFILES)

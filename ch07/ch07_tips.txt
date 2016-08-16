@@ -5,9 +5,17 @@ make -B CFLAGS=-D_DEBUG
 pid=$$
 echo $((($pid & 0xffff) | 0x8000))
 
-#
+# In MacOS
 % sudo sysctl -w net.inet.ip.sourceroute=1
-net.inet.ip.sourceroute: 0 -> 1
 % sudo sysctl -w net.inet.ip.accept_sourceroute=1
-net.inet.ip.accept_sourceroute: 0 -> 1
+% sudo sysctl -w net.inet.ip.forwarding=1
+
+# In CentOS & Ubuntu
+% sudo sysctl -w net.ipv4.conf.all.accept_source_route=1
+% sudo sysctl -w net.ipv4.conf.all.forwarding=1
+
+# In AIX
+% no -o ipsrcrouteforward=1
+% no -o ipforwarding=1
+
 

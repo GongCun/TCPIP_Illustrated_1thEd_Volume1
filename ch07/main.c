@@ -39,6 +39,11 @@ static void send_icmp(int fd, uint16_t id, uint16_t seq, struct sockaddr *dest_a
 static void sig_alrm(int signo)
 {
         send_icmp(fd, id, seq++, sockaddr, sizeof(*sockaddr));
+#if defined(_AIX) || defined(_AIX64)
+	if (signal(SIGALRM, sig_alrm) == SIG_ERR)
+		err_sys("signal SIGALRM error");
+#endif
+
         return;
 }
 
@@ -69,24 +74,43 @@ static void ipopt_print(u_char *buf)
 
         while ((ch = *ptr++) == 1)
                 ; /* skip any leading NOPs */
-        if (ch != 7)
-               return; 
-        len = *ptr++ - 3;
-        ptr++; /* skip over pointer */
+	switch (ch) {
+	case 0x07:
+		len = *ptr++ - 3;
+		ptr++;		/* skip over pointer */
 
-        if (len == old_rrlen && memcmp((char *)ptr, old_rr, len) == 0) {
-                printf("(same route) ");
-                return;
-        }
-        old_rrlen = len;
-        memmove(old_rr, (char *)ptr, len);
-        printf("(RR:");
-        while (len > 0 && *ptr != 0) {
-                printf(" %s", inet_ntop(AF_INET, ptr, str, sizeof(str)));
-                ptr += sizeof(struct in_addr);
-                len -= sizeof(struct in_addr);
-        }
-        printf(") ");
+		if (len == old_rrlen && memcmp((char *) ptr, old_rr, len) == 0) {
+			printf("(same route) ");
+			return;
+		}
+		old_rrlen = len;
+		memmove(old_rr, (char *) ptr, len);
+		printf("(RR:");
+		while (len > 0 && *ptr != 0) {
+			printf(" %s", inet_ntop(AF_INET, ptr, str, sizeof(str)));
+			ptr += sizeof(struct in_addr);
+			len -= sizeof(struct in_addr);
+		}
+		printf(") ");
+		break;
+	case 0x83:
+	case 0x89:
+		len = *ptr++ - 3;
+		ptr++;
+		if (ch == 0x83)
+			printf("(LSRR:");
+		else if (ch == 0x89)
+			printf("(SSRR:");
+		while (len > 0 && *ptr != 0) {
+			printf(" %s", inet_ntop(AF_INET, ptr, str, sizeof(str)));
+			ptr += sizeof(struct in_addr);
+			len -= sizeof(struct in_addr);
+		}
+		printf(") ");
+		break;
+	default:
+		return;
+	}
 
 }
 
@@ -131,7 +155,8 @@ int main(int argc, char *argv[])
                                 if (optspace)
                                         err_quit("Can't use both -R, -g or -G");
                                 optlen = 40;
-                                optspace = xcalloc(optlen, 1);
+                                if ((optspace = calloc(optlen, 1)) == NULL)
+					err_sys("calloc error");
                                 ipopt_init(optspace, 7); /* IPOPT_RR */
                                 break;
                         case 'g':
@@ -139,7 +164,8 @@ int main(int argc, char *argv[])
                                 if (optspace)
                                         err_quit("Can't use both -R, -g or -G");
                                 optlen = 44;
-                                optspace = xcalloc(optlen, 1);
+				if ((optspace = calloc(optlen, 1)) == NULL)
+					err_sys("calloc error");
                                 ipopt_init(optspace, 131); /* loose source route */
                                 break;
                         case 'G':
@@ -147,7 +173,8 @@ int main(int argc, char *argv[])
                                 if (optspace)
                                         err_quit("Can't use both -R, -g or -G");
                                 optlen = 44;
-                                optspace = xcalloc(optlen, 1);
+                                if ((optspace = calloc(optlen, 1)) == NULL)
+					err_sys("calloc error");
                                 ipopt_init(optspace, 137); /* strict source route */
                                 break;
                         case 'b':
@@ -221,6 +248,9 @@ int main(int argc, char *argv[])
         }
 
         if (boundif != NULL) {
+#if defined(_AIX) || defined(_AIX64)
+                printf("Don't support bind interface on this platform\n");
+#elif defined(_DARWIN)
                 unsigned int ifscope;
                 if ((ifscope = if_nametoindex(boundif)) == 0)
                         err_sys("bad interface name (%s)", boundif);
@@ -229,6 +259,10 @@ int main(int argc, char *argv[])
 #endif
                 if (setsockopt(sockfd, IPPROTO_IP, IP_BOUND_IF, (char *)&ifscope, sizeof(ifscope)) < 0)
                         err_sys("setsockopt IP_BOUND_IF error");
+#elif defined(_LINUX)
+                if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, boundif, strlen(boundif)) < 0)
+                        err_sys("setsockopt SO_BINDTODEVICE error");
+#endif
         }
 
         id = getpid() & 0xffff;
@@ -277,5 +311,6 @@ static void proc_icmp(int recvfd, uint16_t id)
                         n, inet_ntoa(from.sin_addr), ntohs(icmp->icmp_seq), ip->ip_ttl, delta);
         return;
 }
+
 
 
