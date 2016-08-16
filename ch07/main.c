@@ -9,7 +9,7 @@ struct sockaddr *sockaddr;
 
 static void usage(const char *str)
 {
-        err_quit("%s [-s packetsize] [-R] Host", str);
+        err_quit("%s [-s packetsize] [-R] [-g|-G <host>] host", str);
 }
 
 static void send_icmp(int fd, uint16_t id, uint16_t seq, struct sockaddr *dest_addr, socklen_t dest_len)
@@ -91,11 +91,14 @@ static void ipopt_print(u_char *buf)
 }
 
 static int ipopt_srr_add(u_char *buf, char *addr)
+        /* source and record routes */
 {
         u_char *optr = buf;
         int len;
         optr += 2;
         len = *optr + 1;
+        if (len >= 44)
+                err_quit("too many source routes with %s", addr);
         if (inet_aton(addr, (struct in_addr *)(buf + len)) != 1)
                 err_sys("inet_aton (%s) error", addr);
         *optr += sizeof(struct in_addr);
@@ -110,6 +113,7 @@ int main(int argc, char *argv[])
         struct hostent *hptr;
         struct sockaddr_in to;
         char **pptr;
+        char *boundif = NULL;
         u_char *optspace = NULL;
 
 #ifdef _DEBUG
@@ -117,7 +121,8 @@ int main(int argc, char *argv[])
 #endif
 
         opterr = 0; /* don't want getopt() writing to stderr */
-        while ((ch = getopt(argc, argv, "s:RgG")) != -1)
+        optind = 1;
+        while ((ch = getopt(argc, argv, "s:RgGb:")) != -1)
                 switch(ch) {
                         case 's':
                                 buflen = atoi(optarg);
@@ -145,16 +150,25 @@ int main(int argc, char *argv[])
                                 optspace = xcalloc(optlen, 1);
                                 ipopt_init(optspace, 137); /* strict source route */
                                 break;
+                        case 'b':
+                                boundif = optarg;
+                                break;
                         default:
                                 usage(basename(argv[0]));
                 }
 
-        if (optspace && srroute == 1)
+        if (optspace && srroute == 1) {
+                if (optind == argc - 1)
+                        usage(basename(argv[0]));
                 while (optind < argc - 1)
                         optlen = ipopt_srr_add(optspace, argv[optind++]);
+        }
 
         if (optind != argc-1)
                 usage(basename(argv[0]));
+#ifdef _DEBUG
+        printf("final dest = %s\n", argv[optind]);
+#endif
 
         bzero(&to, sizeof(struct sockaddr_in));
         if ((hptr = gethostbyname(argv[optind])) == NULL) {
@@ -176,6 +190,18 @@ int main(int argc, char *argv[])
 
         if (optspace && srroute == 1)
                 optlen = ipopt_srr_add(optspace, inet_ntoa(to.sin_addr));
+
+#ifdef _DEBUG
+        u_char *p;
+        printf("optlen = %d\n", optlen);
+        if (optspace) {
+                p = optspace + 2;
+                printf("len = %d\n", (int)*p);
+                for (p = optspace + 4; p < optspace + optlen; p += 4)
+                        printf("%s ", inet_ntoa(*(struct in_addr *)p));
+                printf("\n");
+        }
+#endif
         
         to.sin_family = AF_INET;
 
@@ -192,6 +218,17 @@ int main(int argc, char *argv[])
                 if (setsockopt(sockfd, IPPROTO_IP, IP_OPTIONS, optspace, optlen) < 0)
                         err_sys("setsockopt IP_OPTIONS error");
                 free(optspace);
+        }
+
+        if (boundif != NULL) {
+                unsigned int ifscope;
+                if ((ifscope = if_nametoindex(boundif)) == 0)
+                        err_sys("bad interface name (%s)", boundif);
+#ifdef _DEBUG
+                printf("index = %d\n", ifscope);
+#endif
+                if (setsockopt(sockfd, IPPROTO_IP, IP_BOUND_IF, (char *)&ifscope, sizeof(ifscope)) < 0)
+                        err_sys("setsockopt IP_BOUND_IF error");
         }
 
         id = getpid() & 0xffff;
