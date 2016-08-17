@@ -4,7 +4,7 @@
 
 static uint16_t id, seq;
 static int buflen = 56;
-int fd, optlen = 0, srroute = 0;
+int fd, optlen = 0, srroute = 0, timestamps = 0;
 struct sockaddr *sockaddr;
 
 static void usage(const char *str)
@@ -139,6 +139,7 @@ int main(int argc, char *argv[])
         char **pptr;
         char *boundif = NULL;
         u_char *optspace = NULL;
+        u_char timeflags = 0; /* OF+FL */
 
 #ifdef _DEBUG
         printf("pid = %ld\n", (long)getpid());
@@ -146,7 +147,8 @@ int main(int argc, char *argv[])
 
         opterr = 0; /* don't want getopt() writing to stderr */
         optind = 1;
-        while ((ch = getopt(argc, argv, "s:RgGb:")) != -1)
+        while ((ch = getopt(argc, argv, "s:RgGb:TUt")) != -1)
+                /* INTERNET TIMESTAMP flags: T = 0; U = 1; t = 3 */
                 switch(ch) {
                         case 's':
                                 buflen = atoi(optarg);
@@ -179,6 +181,17 @@ int main(int argc, char *argv[])
                                 break;
                         case 'b':
                                 boundif = optarg;
+                                break;
+                        case 'T':
+                        case 'U':
+                        case 't':
+                                timestamps = 1;
+                                if (ch == 'T')
+                                        timeflags = 0;
+                                else if (ch == 'U')
+                                        timeflags = 1;
+                                else
+                                        timeflags = 3;
                                 break;
                         default:
                                 usage(basename(argv[0]));

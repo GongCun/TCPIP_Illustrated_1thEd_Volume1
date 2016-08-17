@@ -18,4 +18,10 @@ echo $((($pid & 0xffff) | 0x8000))
 % no -o ipsrcrouteforward=1
 % no -o ipforwarding=1
 
+# Nmap test ip options
+% sudo nping --icmp-type time --ip-options "T" 202.175.1.142
+% sudo nmap -n --traceroute -sP -PP 202.175.56.115
+% sudo nmap -n -sP -PP --packet-trace  --ip-options "U" 202.175.1.141
+% sudo nmap -n -sP -PP --packet-trace  --ip-options "\68\36\5\3\202\175\54\113\0*32" 202.175.1.141
+
 
