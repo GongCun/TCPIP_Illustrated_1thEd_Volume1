@@ -4,12 +4,13 @@
 
 static uint16_t id, seq;
 static int buflen = 56;
-int fd, optlen = 0, srroute = 0, timestamps = 0;
+int fd, optlen = 0, srroute = 0, timestamps = 0, verbose = 0;;
 struct sockaddr *sockaddr;
+u_char timeflags = 0; /* OF+FL */
 
 static void usage(const char *str)
 {
-        err_quit("%s [-s packetsize] [-R] [-g|-G <host>] host", str);
+        err_quit("%s [-s packetsize] [-RTUv] [-g|-G|-t <host>] host", str);
 }
 
 static void send_icmp(int fd, uint16_t id, uint16_t seq, struct sockaddr *dest_addr, socklen_t dest_len)
@@ -52,13 +53,28 @@ static void proc_icmp(int fd, uint16_t id);
 static void ipopt_init(u_char *buf, u_char type)
 {
         u_char *optr = buf;
-        *optr++ = 1; /* no operation */
-        *optr++ = type; /* record packet route */
-        if (type == 7) {
-                *optr++ = 3 + 4*NROUTES; /* max to 9 addresses */
-        } else
-                *optr++ = 3;
-        *optr++ = 4; /* offset to first address */
+
+	switch(type) {
+		case 0x07:
+		case 0x83:
+		case 0x89:
+			*optr++ = 1; /* no operation */
+			*optr++ = type;
+			if (type == 0x07) {
+				*optr++ = 3 + 4*NROUTES; /* max to 9 addresses */
+			} else
+				*optr++ = 3;
+			*optr++ = 4; /* offset to first address */
+			break;
+		case 0x44:
+			*optr++ = type;
+			*optr++ = optlen;
+			*optr++ = 5;
+			*optr++ = timeflags;
+			break;
+		default:
+			err_quit("Not support ip options code: 0x%x", type);
+	}
 
         return;
 }
@@ -71,6 +87,7 @@ static void ipopt_print(u_char *buf)
         char str[32];
         static char old_rr[MAXLINE];
         static int old_rrlen = 0;
+        u_char of, fl;
 
         while ((ch = *ptr++) == 1)
                 ; /* skip any leading NOPs */
@@ -108,6 +125,36 @@ static void ipopt_print(u_char *buf)
 		}
 		printf(") ");
 		break;
+	case 0x44:
+                len = *ptr - 4;
+		ptr += 2; /* OF+FL */
+		of = (*ptr >> 4);
+		fl = (*ptr & 0x0f);
+                ptr++; /* point to timestamp */
+                printf("(");
+                switch(fl) {
+                        case 0:
+                                printf("TSONLY:");
+                                while (len > 0) {
+                                        printf(" %u", ntohl(*(uint32_t *)ptr));
+                                        ptr += 4;
+                                        len -= 4;
+                                }
+                                break;
+                        case 1:
+                        case 3:
+                                printf("%s:", (fl == 1) ? "TS+ADDR" : "TS+PRESPEC");
+                                while (len > 0) {
+                                        printf(" %u@%s", ntohl(*(uint32_t *)(ptr+4)), inet_ntoa(*(struct in_addr *)ptr));
+                                        ptr += 8;
+                                        len -= 8;
+                                }
+                                break;
+                        default:
+                                err_quit("unknown flag: %d", fl);
+                }
+                printf(" [%d hops not recorded]) ", (of <= 1) ? 0 : of-1);
+		break;
 	default:
 		return;
 	}
@@ -130,6 +177,23 @@ static int ipopt_srr_add(u_char *buf, char *addr)
         return(*optr + 1); /* size for setsockopt() */
 }
 
+static void ipopt_time_add(u_char *buf, char *addr)
+	/* routes that require timestamp */
+{
+	static int cnt = 0;
+	u_char *optr;
+
+	if (++cnt > 9)
+		err_quit("too many routes require timestamp with %s", addr);
+
+	optr = buf + 4 * cnt;
+	if (inet_aton(addr, (struct in_addr *)optr) != 1)
+		err_sys("inet_aton (%s) error", addr);
+
+	return;
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -138,16 +202,12 @@ int main(int argc, char *argv[])
         struct sockaddr_in to;
         char **pptr;
         char *boundif = NULL;
-        u_char *optspace = NULL;
-        u_char timeflags = 0; /* OF+FL */
+        u_char *optspace = NULL, type = 0;
 
-#ifdef _DEBUG
-        printf("pid = %ld\n", (long)getpid());
-#endif
 
         opterr = 0; /* don't want getopt() writing to stderr */
         optind = 1;
-        while ((ch = getopt(argc, argv, "s:RgGb:TUt")) != -1)
+        while ((ch = getopt(argc, argv, "s:RgGb:TUtv")) != -1)
                 /* INTERNET TIMESTAMP flags: T = 0; U = 1; t = 3 */
                 switch(ch) {
                         case 's':
@@ -159,25 +219,18 @@ int main(int argc, char *argv[])
                                 optlen = 40;
                                 if ((optspace = calloc(optlen, 1)) == NULL)
 					err_sys("calloc error");
-                                ipopt_init(optspace, 7); /* IPOPT_RR */
+                                ipopt_init(optspace, 0x07); /* IPOPT_RR */
                                 break;
                         case 'g':
-                                srroute = 1;
-                                if (optspace)
-                                        err_quit("Can't use both -R, -g or -G");
-                                optlen = 44;
-				if ((optspace = calloc(optlen, 1)) == NULL)
-					err_sys("calloc error");
-                                ipopt_init(optspace, 131); /* loose source route */
-                                break;
                         case 'G':
                                 srroute = 1;
                                 if (optspace)
-                                        err_quit("Can't use both -R, -g or -G");
+                                        err_quit("Can't use both -R, -g, -G, -T, -U or -t");
                                 optlen = 44;
-                                if ((optspace = calloc(optlen, 1)) == NULL)
+				if ((optspace = calloc(optlen, 1)) == NULL)
 					err_sys("calloc error");
-                                ipopt_init(optspace, 137); /* strict source route */
+				type = (ch == 'g') ? 0x83 : 0x89;
+                                ipopt_init(optspace, type); /* loose source route */
                                 break;
                         case 'b':
                                 boundif = optarg;
@@ -186,22 +239,38 @@ int main(int argc, char *argv[])
                         case 'U':
                         case 't':
                                 timestamps = 1;
+				if (optspace)
+					err_quit("Can't use both -R, -g, -G, -T, -U or -t");
+				optlen = 36;
+				type = 0x44;
                                 if (ch == 'T')
                                         timeflags = 0;
                                 else if (ch == 'U')
                                         timeflags = 1;
                                 else
                                         timeflags = 3;
+				if ((optspace = calloc(optlen, 1)) == NULL)
+					err_sys("calloc error");
+				ipopt_init(optspace, type);
+                                break;
+                        case 'v':
+                                verbose = 1;
                                 break;
                         default:
                                 usage(basename(argv[0]));
                 }
 
-        if (optspace && srroute == 1) {
+
+        if (optspace && (srroute == 1 || timeflags == 3)) {
                 if (optind == argc - 1)
                         usage(basename(argv[0]));
-                while (optind < argc - 1)
-                        optlen = ipopt_srr_add(optspace, argv[optind++]);
+		if (srroute == 1) {
+			while (optind < argc - 1)
+				optlen = ipopt_srr_add(optspace, argv[optind++]);
+		} else if (timestamps == 1) {
+			while (optind < argc - 1)
+				ipopt_time_add(optspace, argv[optind++]);
+		}
         }
 
         if (optind != argc-1)
@@ -231,17 +300,18 @@ int main(int argc, char *argv[])
         if (optspace && srroute == 1)
                 optlen = ipopt_srr_add(optspace, inet_ntoa(to.sin_addr));
 
-#ifdef _DEBUG
-        u_char *p;
-        printf("optlen = %d\n", optlen);
-        if (optspace) {
-                p = optspace + 2;
-                printf("len = %d\n", (int)*p);
-                for (p = optspace + 4; p < optspace + optlen; p += 4)
-                        printf("%s ", inet_ntoa(*(struct in_addr *)p));
-                printf("\n");
-        }
-#endif
+	if (verbose) {
+		printf("pid = %ld; ", (long)getpid());
+		u_char *p;
+		printf("optlen = %d; ", optlen);
+		if (optspace && (srroute == 1 || timeflags == 3)) {
+			p = optspace + (srroute == 1 ? 2 : 1);
+			printf("len pointer value = %d\n{ ", (int)*p);
+			for (p = optspace + 4; p < optspace + optlen; p += 4)
+				printf("%s ", inet_ntoa(*(struct in_addr *)p));
+			printf("}\n");
+		}
+	}
         
         to.sin_family = AF_INET;
 
@@ -267,9 +337,10 @@ int main(int argc, char *argv[])
                 unsigned int ifscope;
                 if ((ifscope = if_nametoindex(boundif)) == 0)
                         err_sys("bad interface name (%s)", boundif);
-#ifdef _DEBUG
-                printf("index = %d\n", ifscope);
-#endif
+
+                if (verbose)
+                        printf("bind index = %d\n", ifscope);
+
                 if (setsockopt(sockfd, IPPROTO_IP, IP_BOUND_IF, (char *)&ifscope, sizeof(ifscope)) < 0)
                         err_sys("setsockopt IP_BOUND_IF error");
 #elif defined(_LINUX)
@@ -289,6 +360,7 @@ int main(int argc, char *argv[])
         if (kill(getpid(), SIGALRM) < 0)
                 err_sys("kill error");
 
+        printf("PING %s (%s): %d data bytes\n", argv[argc-1], inet_ntoa(to.sin_addr), buflen);
         for (;;) {
                 proc_icmp(recvfd, id);
         }
@@ -324,6 +396,7 @@ static void proc_icmp(int recvfd, uint16_t id)
                         n, inet_ntoa(from.sin_addr), ntohs(icmp->icmp_seq), ip->ip_ttl, delta);
         return;
 }
+
 
 
 
