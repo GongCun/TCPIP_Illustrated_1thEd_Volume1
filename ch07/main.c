@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 	if (verbose) {
 		printf("pid = %ld; ", (long)getpid());
 		u_char *p;
-		printf("optlen = %d; ", optlen);
+		printf("optlen = %d\n", optlen);
 		if (optspace && (srroute == 1 || timeflags == 3)) {
 			p = optspace + (srroute == 1 ? 2 : 1);
 			printf("len pointer value = %d\n{ ", (int)*p);
