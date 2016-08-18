@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdint.h> /* uint8_t, uint16_t, ... */
 #include <errno.h>
+#include <ctype.h>
 #include <string.h>
 #include <strings.h>
 #include <libgen.h>

@@ -4,13 +4,13 @@
 
 static uint16_t id, seq;
 static int buflen = 56;
-int fd, optlen = 0, srroute = 0, timestamps = 0, verbose = 0;;
+int fd, optlen = 0, srroute = 0, timestamps = 0, verbose = 0, pat = 0x80;
 struct sockaddr *sockaddr;
 u_char timeflags = 0; /* OF+FL */
 
 static void usage(const char *str)
 {
-        err_quit("%s [-s packetsize] [-RTUv] [-g|-G|-t <host>] host", str);
+        err_quit("%s [-s packetsize] [-p pattern] [-RTUv] [-g|-G|-t <host>] host", str);
 }
 
 static void send_icmp(int fd, uint16_t id, uint16_t seq, struct sockaddr *dest_addr, socklen_t dest_len)
@@ -21,7 +21,7 @@ static void send_icmp(int fd, uint16_t id, uint16_t seq, struct sockaddr *dest_a
         if (buflen < sizeof(struct timeval))
                 buflen = sizeof(struct timeval);
 
-        memset(data, 0x80, buflen);
+        memset(data, pat, buflen);
 
         tv = (struct timeval *)data;
 
@@ -200,14 +200,14 @@ int main(int argc, char *argv[])
         int sockfd, recvfd, size, ch;
         struct hostent *hptr;
         struct sockaddr_in to;
-        char **pptr;
+        char **pptr, *cp;
         char *boundif = NULL;
         u_char *optspace = NULL, type = 0;
 
 
         opterr = 0; /* don't want getopt() writing to stderr */
         optind = 1;
-        while ((ch = getopt(argc, argv, "s:RgGb:TUtv")) != -1)
+        while ((ch = getopt(argc, argv, "s:RgGb:TUtvp:")) != -1)
                 /* INTERNET TIMESTAMP flags: T = 0; U = 1; t = 3 */
                 switch(ch) {
                         case 's':
@@ -256,6 +256,12 @@ int main(int argc, char *argv[])
                         case 'v':
                                 verbose = 1;
                                 break;
+                        case 'p':
+                                for (cp = optarg; *cp; cp++)
+                                        if (!isxdigit(*cp))
+                                                err_quit("patterns must be specified as hex digits");
+                                sscanf(optarg, "%2x", &pat);
+                                break;
                         default:
                                 usage(basename(argv[0]));
                 }
@@ -301,9 +307,12 @@ int main(int argc, char *argv[])
                 optlen = ipopt_srr_add(optspace, inet_ntoa(to.sin_addr));
 
 	if (verbose) {
-		printf("pid = %ld; ", (long)getpid());
 		u_char *p;
+
+		printf("pid = %ld; ", (long)getpid());
+                printf("PATTERN: 0x%02x\n", pat);
 		printf("optlen = %d\n", optlen);
+
 		if (optspace && (srroute == 1 || timeflags == 3)) {
 			p = optspace + (srroute == 1 ? 2 : 1);
 			printf("len pointer value = %d\n{ ", (int)*p);
