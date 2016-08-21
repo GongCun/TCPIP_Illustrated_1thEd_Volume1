@@ -22,9 +22,14 @@
 
 /* Define to 1 if you have the <net/if_dl.h> header file. */
 /* #undef HAVE_NET_IF_DL_H */
+#define HAVE_NET_IF_DL_H 1
 
 /* Define to 1 if you have the <net/if.h> header file. */
 /* #undef HAVE_NET_IF_H */
+#define HAVE_NET_IF_H 1
+
+/* Define to 1 if you have the <pcap.h> header file. */
+#define HAVE_PCAP_H 1
 
 /* Define to 1 if <net/if_dl.h> defines struct sockaddr_dl */
 #define HAVE_SOCKADDR_DL_STRUCT 1

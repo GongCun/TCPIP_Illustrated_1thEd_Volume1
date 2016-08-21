@@ -25,6 +25,9 @@
 /* Define to 1 if you have the <net/if.h> header file. */
 #undef HAVE_NET_IF_H
 
+/* Define to 1 if you have the <pcap.h> header file. */
+#undef HAVE_PCAP_H
+
 /* Define to 1 if <net/if_dl.h> defines struct sockaddr_dl */
 #undef HAVE_SOCKADDR_DL_STRUCT
 

@@ -21,3 +21,94 @@ uint16_t checksum(uint16_t * addr, int len)
 	answer = ~sum;		/* truncate to 16 bit */
 	return answer;
 }
+
+/*
+ *  The following code comes from:
+ *
+ *  libnet
+ *  libnet_checksum.c - checksum routines
+ *
+ *  Copyright (c) 1998 - 2004 Mike D. Schiffman <mike@infonexus.com>
+ *  All rights reserved.
+ *
+ */
+
+static uint32_t in_checksum(uint16_t * addr, int len)
+{
+        uint32_t sum = 0;
+
+        while (len > 1) {
+                sum += *addr++;
+                len -= 2;
+        }
+
+        if (len == 1)
+                sum += *(uint16_t *)addr;
+
+        return sum;
+}
+
+int do_checksum(u_char *buf, int protocol, int len)
+        /* len = protocol header length + payload length */
+{
+        struct ip *ip;
+        int ip_hl, sum = 0;
+
+        if (len == 0) {
+                err_msg("header length can't be zero");
+                return -1;
+        }
+
+        ip = (struct ip *)buf;
+        if (ip->ip_v != 4) {
+                err_msg("Unsupported IP protocol: %d", ip->ip_v);
+                return -1;
+        }
+        ip_hl = ip->ip_hl << 2;
+
+        switch (protocol) {
+                case IPPROTO_TCP:
+                {
+                        struct tcphdr *tcp = (struct tcphdr *)(buf + ip_hl);
+                        tcp->th_sum = 0;
+                        sum = in_checksum((uint16_t *)&ip->ip_src, 8);
+                        sum += ntohs(IPPROTO_TCP+len);
+                        sum += in_checksum((uint16_t *)tcp, len);
+                        tcp->th_sum = CKSUM_CARRY(sum);
+                        break;
+                }
+                case IPPROTO_UDP:
+                {
+                        struct udphdr *udp = (struct udphdr *)(buf + ip_hl);
+                        udp->uh_sum = 0;
+                        sum = in_checksum((uint16_t *)&ip->ip_src, 8);
+                        sum += ntohs(IPPROTO_UDP+len);
+                        sum += in_checksum((uint16_t *)udp, len);
+                        udp->uh_sum = CKSUM_CARRY(sum);
+                        break;
+                }
+                case IPPROTO_ICMP:
+                {
+                        struct icmp *icmp = (struct icmp *)(buf + ip_hl);
+                        icmp->icmp_cksum = 0;
+                        sum = in_checksum((uint16_t *)icmp, len);
+                        icmp->icmp_cksum = CKSUM_CARRY(sum);
+                        break;
+                }
+                case IPPROTO_IP:
+                {
+                        ip->ip_sum = 0;
+                        sum = in_checksum((uint16_t *)ip, ip->ip_hl);
+                        ip->ip_sum = CKSUM_CARRY(sum);
+                        break;
+                }
+                default:
+                {
+                        err_msg("Unsupported protocol: %d", protocol);
+                        return -1;
+                }
+        }
+        return 0;
+}
+
+

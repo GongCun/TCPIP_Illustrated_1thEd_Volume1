@@ -15,6 +15,7 @@ AC_PROG_RANLIB
 
 # Checks for header files.
 AC_CHECK_HEADERS(sys/sysctl.h sys/param.h)
+AC_CHECK_HEADERS(pcap.h)
 AC_CHECK_HEADERS(net/if.h netinet/in.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h syslog.h net/if_arp.h net/if_dl.h, [], [], [
 #ifdef HAVE_NET_IF_H
 #include <net/if.h>

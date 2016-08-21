@@ -33,14 +33,23 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/if_ether.h>
+#ifdef _LINUX
+#define __FAVOR_BSD 1
+#endif
 #include <netinet/tcp.h>
 #include <netinet/udp.h> /* struct udphdr */
 #include <net/if.h>
+#ifdef HAVE_NET_ARP_H
 #include <net/if_arp.h> /* struct arpreq */
+#endif
+#ifdef HAVE_NET_IF_DL_H
 #include <net/if_dl.h> /* struct sockaddr_dl */
+#endif
 #include <net/route.h> /* struct rt_msghdr ... */
 #include <arpa/inet.h>
+#ifdef HAVE_PCAP_H
 #include <pcap.h>
+#endif
 #if defined(_AIX) || defined(_AIX64)
 #include <net/bpf.h>
 #include <netinet/if_ether.h>
@@ -48,6 +57,8 @@
 #include <net/ethernet.h>
 #endif
 
+#define CKSUM_CARRY(x) \
+        (x = (x >> 16) + (x & 0xffff), (~(x + (x >> 16)) & 0xffff))
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))
@@ -90,6 +101,7 @@ void prmac(void);
 
 /* Check sum */
 uint16_t checksum(uint16_t *, int);
+int do_checksum(u_char *buf, int protocol, int len);
 
 /*
  * ICMPv4 packet assemblers
@@ -102,6 +114,9 @@ void
 icmp_build_time(u_char * buf, int len, uint8_t type, uint8_t code, uint16_t id, uint16_t seq, uint32_t origtime, uint32_t recvtime, uint32_t xmittime);
 
 void icmp_build_echo(u_char * buf, int len, uint8_t type, uint8_t code, uint16_t id, uint16_t seq, u_char *data);
+
+/* Name and address conversions */
+void xgethostbyname(const char *host, struct in_addr *addr);
 
 #endif /* __TCPI_H */
 

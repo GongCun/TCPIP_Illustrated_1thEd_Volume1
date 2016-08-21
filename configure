@@ -3540,6 +3540,18 @@ fi
 
 done
 
+for ac_header in pcap.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "pcap.h" "ac_cv_header_pcap_h" "$ac_includes_default"
+if test "x$ac_cv_header_pcap_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PCAP_H 1
+_ACEOF
+
+fi
+
+done
+
 for ac_header in net/if.h netinet/in.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h syslog.h net/if_arp.h net/if_dl.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
