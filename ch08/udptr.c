@@ -95,7 +95,7 @@ static int icmp_udp_check(u_char *buf, int len)
 int 
 main(int argc, char *argv[])
 {
-	char buf[512], recvbuf[MAXLINE];
+	char buf[24], recvbuf[MAXLINE];
 	struct in_addr lastrecv;
         struct sockaddr_in recv;
 	int i, sendfd, rawfd, ttl, n, ret;
@@ -135,7 +135,7 @@ main(int argc, char *argv[])
 
 	bzero(&lastrecv, sizeof(struct in_addr));
 
-        printf("traceroute to %s (%s), 30 hops max, 512 bytes packets\n",
+        printf("traceroute to %s (%s), 30 hops max, 52 bytes packets\n",
                         argv[1], inet_ntoa(to.sin_addr));
 
 	for (ttl = 1; ttl <= 30; ttl++) {
