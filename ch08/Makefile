@@ -1,13 +1,13 @@
 include ../Make.defines
 
-PROGS = udptr 
+PROGS = udptr icmptr 
 
 all: ${PROGS}
 
 udptr: udptr.o
 	${CC} ${CFLAGS} -o $@ $< ${LIBS}
 
-icmptr: icmptr.c
+icmptr: icmptr.o
 	${CC} ${CFLAGS} -o $@ $< ${LIBS}
 
 clean:
