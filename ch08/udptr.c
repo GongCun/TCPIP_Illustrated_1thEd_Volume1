@@ -1,5 +1,10 @@
 #include "traceroute.h"
 
+#define OPTLEN 44
+#define MAXSRR 9
+#define LSRR 0x83
+#define SSRR 0x89
+
 char *device;
 int Sport;
 int Dport = 32768 + 666;
@@ -7,6 +12,19 @@ int probe = 3;
 sigjmp_buf jumpbuf;
 struct sockaddr_in from;
 struct sockaddr_in to;
+u_char *optr = NULL;
+
+static void srr_init(u_char *buf, u_char type)
+{
+        optr = buf;
+
+        *optr++ = 1;
+        *optr++ = type;
+        *optr++ = 3;
+        *optr++ = 4;
+
+        return;
+}
 
 static void tvsub(struct timeval *out, struct timeval *in)
 {
@@ -73,10 +91,13 @@ static int icmp_udp_check(u_char *buf, int len)
                 return 0;
         udp = (struct udphdr *)(buf + ip_hl + 8 + originip_hl);
         if (originip->ip_p == IPPROTO_UDP &&
-                        !memcmp(&originip->ip_dst, &to.sin_addr, sizeof(struct in_addr)) &&
+                        /*
+                         * - Don't check the destination IP address, because it maybe the gateway address
+                         * if set the source and record routes option
+                         * - Don't check the source IP address, because it doesn't bind an address
+                         */
                         udp->uh_sport == htons(Sport) &&
                         udp->uh_dport == htons(Dport))
-                /* Don't check the source IP address, because it doesn't bind an address */
         {
                 if (icmp->icmp_type == 11 &&
                                 icmp->icmp_code == 0) {
@@ -101,10 +122,42 @@ main(int argc, char *argv[])
 	int i, sendfd, rawfd, ttl, n, ret;
         socklen_t len;
         struct timeval sendtime;
+        int ch;
+        int srr = 0;
+        int optlen = 0;
+        u_char optspace[OPTLEN], *ptr;
 
-	if (argc != 2) {
-		err_quit("Usage: %s <IPaddr>", basename(argv[0]));
-	}
+        bzero(optspace, sizeof(optspace));
+
+        opterr = 0;
+        optind = 1;
+
+        while ((ch = getopt(argc, argv, "g:G:")) != -1)
+                switch(ch) {
+                        case 'G':
+                        case 'g':
+                        {
+                                if (optr == NULL) {
+                                        if (ch == 'g')
+                                                srr_init(optspace, LSRR);
+                                        else
+                                                srr_init(optspace, SSRR);
+                                }
+                                if (++srr > MAXSRR) {
+                                        err_quit("too many source routes");
+                                }
+                                xgethostbyname(optarg, (struct in_addr *)optr);
+                                optr += sizeof(struct in_addr);
+                                break;
+                        }
+                        default:
+                        {
+                                err_quit("Usage: %s [-g|-G] gateway host", basename(argv[0]));
+                        }
+                }
+
+        if (optind != argc-1)
+                err_quit("Usage: %s [-g|-G] gateway host", basename(argv[0]));
 
 	if ((rawfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0)
 		err_sys("socket error");
@@ -126,7 +179,23 @@ main(int argc, char *argv[])
         /* Prepare destination sockaddr */
         bzero(&to, sizeof(struct sockaddr_in));
         to.sin_family = AF_INET;
-        xgethostbyname(argv[1], &to.sin_addr);
+        xgethostbyname(argv[argc-1], &to.sin_addr);
+
+        if (srr > 0) {
+                if (++srr > MAXSRR+1)
+                        err_quit("too many source routes");
+                memmove((struct in_addr *)optr, &to.sin_addr, sizeof(struct in_addr));
+                optspace[2] = 3 + srr*4;
+                optlen = optspace[2] + 1;
+                if (setsockopt(sendfd, IPPROTO_IP, IP_OPTIONS, optspace, optlen) < 0)
+                        err_sys("setsockopt error");
+                printf("code = 0x%02x, len = %d, ptr = %d\n",
+                                optspace[1], optspace[2], optspace[3]);
+                for (ptr=optspace+4; ptr<=optr; ptr+=4) {
+                        printf("%s ", inet_ntoa(*(struct in_addr *)ptr));
+                }
+                printf("\n");
+        }
 
 	if (signal(SIGALRM, sig_alrm) == SIG_ERR)
 		err_sys("signal error");
@@ -136,7 +205,7 @@ main(int argc, char *argv[])
 	bzero(&lastrecv, sizeof(struct in_addr));
 
         printf("traceroute to %s (%s), 30 hops max, 52 bytes packets\n",
-                        argv[1], inet_ntoa(to.sin_addr));
+                        argv[argc-1], inet_ntoa(to.sin_addr));
 
 	for (ttl = 1; ttl <= 30; ttl++) {
 		printf("%2d", ttl);
