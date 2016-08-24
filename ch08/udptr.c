@@ -14,6 +14,33 @@ struct sockaddr_in from;
 struct sockaddr_in to;
 u_char *optr = NULL;
 
+static void icmp_srr_print(u_char *buf)
+{
+	struct ip *ip;
+	struct ip *originip;
+	int ip_hl;
+	int len;
+	u_char *ptr;
+
+	ip = (struct ip *)buf;
+	ip_hl = ip->ip_hl * 4;
+
+	originip = (struct ip *)(buf + ip_hl + 8);
+	if (originip->ip_hl * 4 <= 20)
+		return;
+
+	ptr = buf + ip_hl + 8 + 20;
+	while (*ptr == 1) {
+		ptr++;
+	}
+        if (*ptr != 0x83 || *ptr == 0x89)
+                return;
+	printf("0x%02x ", *ptr++);
+	len = *ptr - 3;
+	for (ptr+=2 ; len>0; ptr+=4, len-=4)
+		printf("%s ", inet_ntoa(*(struct in_addr *)ptr));
+}
+
 static void srr_init(u_char *buf, u_char type)
 {
         optr = buf;
@@ -62,6 +89,7 @@ static int icmp_udp_check(u_char *buf, int len)
          *   0) Not expect ICMP packet or error;
          *   1) ICMP Time Exceeded
          *   2) ICMP Port Unreachable
+         *   3) ICMP Source Route failed
          */
         const struct ip *ip;
         const struct ip *originip;
@@ -105,7 +133,10 @@ static int icmp_udp_check(u_char *buf, int len)
                 } else if (icmp->icmp_type == 3 &&
                                 icmp->icmp_code == 3) {
                         return 2;
-                } else {
+                } else if (icmp->icmp_type == 3 &&
+				icmp->icmp_code == 5) {
+			return 3;
+		} else {
                         return 0;
                 }
         }
@@ -202,12 +233,11 @@ main(int argc, char *argv[])
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 
-	bzero(&lastrecv, sizeof(struct in_addr));
-
         printf("traceroute to %s (%s), 30 hops max, 52 bytes packets\n",
                         argv[argc-1], inet_ntoa(to.sin_addr));
 
 	for (ttl = 1; ttl <= 30; ttl++) {
+		bzero(&lastrecv, sizeof(struct in_addr));
 		printf("%2d", ttl);
                 if (setsockopt(sendfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(int)) < 0)
                         err_sys("setsockopt IP_TTL error");
@@ -243,6 +273,11 @@ main(int argc, char *argv[])
                                 } else if (ret == 2) {
                                         printf(" %s (%.3f ms)\n", inet_ntoa(recv.sin_addr), deltaT(&sendtime));
                                         goto end;
+                                } else if (ret == 3) {
+                                        printf(" %s (%.3f ms) !S ", inet_ntoa(recv.sin_addr), deltaT(&sendtime));
+                                        icmp_srr_print((u_char *)recvbuf);
+                                        printf("\n");
+                                        goto end;
                                 }
 			}
 	endloop:
@@ -254,3 +289,4 @@ main(int argc, char *argv[])
 end:
 	return 0;
 }
+
