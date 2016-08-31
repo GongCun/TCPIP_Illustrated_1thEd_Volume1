@@ -52,7 +52,7 @@ int do_checksum(u_char *buf, int protocol, int len)
         /* len = protocol header length + payload length */
 {
         struct ip *ip;
-        int ip_hl, sum = 0;
+        int iplen, sum = 0;
 
         if (len == 0) {
                 err_msg("header length can't be zero");
@@ -64,12 +64,12 @@ int do_checksum(u_char *buf, int protocol, int len)
                 err_msg("Unsupported IP protocol: %d", ip->ip_v);
                 return -1;
         }
-        ip_hl = ip->ip_hl << 2;
+        iplen = ip->ip_hl << 2;
 
         switch (protocol) {
                 case IPPROTO_TCP:
                 {
-                        struct tcphdr *tcp = (struct tcphdr *)(buf + ip_hl);
+                        struct tcphdr *tcp = (struct tcphdr *)(buf + iplen);
                         tcp->th_sum = 0;
                         sum = in_checksum((uint16_t *)&ip->ip_src, 8);
                         sum += ntohs(IPPROTO_TCP+len);
@@ -79,7 +79,7 @@ int do_checksum(u_char *buf, int protocol, int len)
                 }
                 case IPPROTO_UDP:
                 {
-                        struct udphdr *udp = (struct udphdr *)(buf + ip_hl);
+                        struct udphdr *udp = (struct udphdr *)(buf + iplen);
                         udp->uh_sum = 0;
                         sum = in_checksum((uint16_t *)&ip->ip_src, 8);
                         sum += ntohs(IPPROTO_UDP+len);
@@ -89,7 +89,7 @@ int do_checksum(u_char *buf, int protocol, int len)
                 }
                 case IPPROTO_ICMP:
                 {
-                        struct icmp *icmp = (struct icmp *)(buf + ip_hl);
+                        struct icmp *icmp = (struct icmp *)(buf + iplen);
                         icmp->icmp_cksum = 0;
                         sum = in_checksum((uint16_t *)icmp, len);
                         icmp->icmp_cksum = CKSUM_CARRY(sum);
