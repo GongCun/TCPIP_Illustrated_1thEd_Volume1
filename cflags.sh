@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: cflags.sh,v 1.2 2016/07/27 23:27:17 gongcunjust Exp $
+# $Id: cflags.sh,v 1.3 2016/09/01 07:02:27 gongcunjust Exp gongcunjust $
 
 PID=$$
 OS=`uname -s | tr '[:lower:]' '[:upper:]'`
@@ -42,16 +42,32 @@ int main(void) {
 EOF
 
 typeset -i found=0
-for folder in /usr/lib /usr/lib64 /usr/local/lib; do
-    if test -d $folder; then
+for folder in /usr/local/lib /usr/lib64 /usr/lib; do
+    if test -d $folder && ls -1 $folder | grep -w libpcap >/dev/null 2>&1; then
         LIBS="-L$folder -lpcap"
-        cc -o ${PID}.exe ${PID}.c $LIBS >/dev/null 2>&1 && {
+        cc -o ${PID}.x ${PID}.c $LIBS >/dev/null 2>&1 && {
           found=1; break
         }
     fi
 done
 
-test $found -eq 0 && unset LIBS
+test $found -eq 0 && unset LIBS || {
+cat >./${PID}.c <<\EOF  
+#include <stdlib.h>
+#include <pcap.h>
+#if defined(_AIX) || defined(_AIX64)
+#include <net/bpf.h>
+#endif
+
+int main(void) {
+  struct bpf_program bp;
+  pcap_freecode(&bp);
+  return 0;
+}
+EOF
+cc -o ${PID}.x ${PID}.c $LIBS >/dev/null 2>&1 && \
+CFLAGS="-DHAVE_PCAP_FREECODE $CFLAGS"
+}
 
 rm -rf ${PID}.* 2>/dev/null
 

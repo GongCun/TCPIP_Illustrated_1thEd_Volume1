@@ -7,6 +7,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
+/* Define to 1 if you have the `pcap' library (-lpcap). */
+#define HAVE_LIBPCAP 1
+
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
 #define HAVE_MALLOC 1
@@ -22,11 +25,12 @@
 
 /* Define to 1 if you have the <net/if_dl.h> header file. */
 /* #undef HAVE_NET_IF_DL_H */
-#define HAVE_NET_IF_DL_H 1
 
 /* Define to 1 if you have the <net/if.h> header file. */
 /* #undef HAVE_NET_IF_H */
-#define HAVE_NET_IF_H 1
+
+/* Define to 1 if you have the `pcap_freecode' function. */
+#define HAVE_PCAP_FREECODE 1
 
 /* Define to 1 if you have the <pcap.h> header file. */
 #define HAVE_PCAP_H 1

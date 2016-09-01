@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+AC_INIT([FULL-PACKAGE-NAME],[VERSION],[BUG-REPORT-ADDRESS])
 AC_CONFIG_SRCDIR([lib/tcpi.h])
 AC_CONFIG_HEADERS([config.h])
 
@@ -12,6 +12,7 @@ AC_PROG_CC
 AC_PROG_RANLIB
 
 # Checks for libraries.
+AC_CHECK_LIB(pcap, pcap_open_live, [], [AC_MSG_ERROR([cannot find libpcap])])
 
 # Checks for header files.
 AC_CHECK_HEADERS(sys/sysctl.h sys/param.h)
@@ -48,14 +49,14 @@ AC_CHECK_TYPE([struct sockaddr_inarp], [AC_DEFINE(HAVE_SOCKADDR_INARP_STRUCT, 1,
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([bzero socket strchr strerror vsnprintf sysctl])
+AC_CHECK_FUNCS([pcap_freecode bzero socket strchr strerror vsnprintf sysctl])
 
 # Check for system services.
 
 # Let's see if the system really supports IPv6
 AC_MSG_CHECKING(for IPv6 support)
 AC_CACHE_VAL(ac_cv_ipv6,
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -65,10 +66,7 @@ int main(void)
 	struct sockaddr_in6 foo;
 	fd = socket(AF_INET6, SOCK_STREAM, 0);
 	exit((fd >= 0) ? 0 : 1);
-}],
-[ac_cv_ipv6=yes],
-[ac_cv_ipv6=no],
-[ac_cv_ipv6=no]))
+}]])],[ac_cv_ipv6=yes],[ac_cv_ipv6=no],[ac_cv_ipv6=no]))
 AC_MSG_RESULT($ac_cv_ipv6)
 if test $ac_cv_ipv6 = yes; then
 	AC_DEFINE([IPV6], 1, [Define to 1 if the system supports IPv6])
