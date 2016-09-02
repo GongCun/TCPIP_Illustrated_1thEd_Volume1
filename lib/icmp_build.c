@@ -58,3 +58,21 @@ void icmp_build_echo(u_char * buf, int len, uint8_t type, uint8_t code, uint16_t
 
         return;
 }
+
+void icmp_build_redirect(u_char *buf, int len, uint8_t type, uint8_t code, struct in_addr gateway, u_char *data)
+{
+        struct icmp *icmp;
+
+        icmp = (struct icmp *)buf;
+        memset(icmp, 0, sizeof(struct icmp));
+
+        icmp->icmp_type = type;
+        icmp->icmp_code = code;
+        icmp->icmp_cksum = 0;
+        memmove(&icmp->icmp_gwaddr, &gateway, sizeof(struct in_addr));
+        memmove(icmp->icmp_data, data, len);
+        icmp->icmp_cksum = checksum((u_short *)icmp, 8+len);
+
+        return;
+}
+

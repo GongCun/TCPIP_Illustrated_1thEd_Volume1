@@ -115,6 +115,8 @@ icmp_build_time(u_char * buf, int len, uint8_t type, uint8_t code, uint16_t id, 
 
 void icmp_build_echo(u_char * buf, int len, uint8_t type, uint8_t code, uint16_t id, uint16_t seq, u_char *data);
 
+void icmp_build_redirect(u_char *buf, int len, uint8_t type, uint8_t code, struct in_addr gateway, u_char *data);
+
 /* Name and address conversions */
 void xgethostbyname(const char *host, struct in_addr *addr);
 
