@@ -1,0 +1,5 @@
+# ICMP Router Discovery Message
+sudo ./icmpselection 192.168.0.255
+
+# ICMP Router Advertisement Message
+sudo ./icmpadver 192.168.0.255 192.168.0.104

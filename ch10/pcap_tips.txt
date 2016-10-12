@@ -1,0 +1,40 @@
+The callback for pcap_dispatch() and pcap_loop() is supplied a pointer to a
+struct pcap_pkthdr, which includes the following members:
+
+ts
+        a struct timeval containing the time when the packet was captured
+caplen
+        a bpf_u_int32 giving the number of bytes of the packet that are available from
+        the capture
+len
+        a bpf_u_int32 giving the length of the packet, in bytes (which might be more
+        than the number of bytes available from the capture, if the length of the
+        packet is larger than the maximum number of bytes to capture).
+
+
+---
+#include <pcap/pcap.h>
+
+char errbuf[PCAP_ERRBUF_SIZE];
+
+pcap_t *pcap_open_live(const char *device, int snaplen,
+
+
+        int promisc, int to_ms, char *errbuf);
+--- 
+
+Regarding the to_ms argument to pcap_open_live, the pcap manpage says:
+
+--
+
+to_ms specifies the read timeout in milliseconds. The read timeout is
+used to arrange that the read not necessarily return immediately when
+a packet is seen, but that it wait for some amount of time to allow
+more packets to arrive and to read multiple packets from the OS kernel
+in one operation. Not all platforms support a read timeout; on
+platforms that don't, the read timeout is ignored. A zero value for
+to_ms, on platforms that support a read timeout, will cause a read to
+wait forever to allow enough packets to arrive, with no timeout.
+
+--
+

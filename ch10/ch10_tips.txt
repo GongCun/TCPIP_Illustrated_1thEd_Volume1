@@ -1,0 +1,8 @@
+gongcunjust@macosx[ch10]# sudo route -n delete -net 0.0.0.0 192.168.0.1
+Password:
+delete net 0.0.0.0: gateway 192.168.0.1
+
+% sudo tcpdump -n -i en0 'udp and port 520'
+
+% sudo -s
+% sysctl -w net.inet.ip.forwarding=1

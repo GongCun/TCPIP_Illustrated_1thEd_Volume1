@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include <stdint.h> /* uint8_t, uint16_t, ... */
 #include <errno.h>
 #include <ctype.h>
@@ -117,8 +118,19 @@ void icmp_build_echo(u_char * buf, int len, uint8_t type, uint8_t code, uint16_t
 
 void icmp_build_redirect(u_char *buf, int len, uint8_t type, uint8_t code, struct in_addr gateway, u_char *data);
 
+void icmp_build_selection(u_char *buf, uint8_t type, uint8_t code);
+void icmp_build_advertisment(u_char *buf, uint8_t type, uint8_t code, u_char naddr, struct in_addr *addrlist);
+
 /* Name and address conversions */
 void xgethostbyname(const char *host, struct in_addr *addr);
+
+
+/* pcap functions */
+typedef void (*handler)(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes);
+pcap_t *open_pcap(const char *device, int to_ms, const char *cmd, int *linktype, struct bpf_program *bp);
+void dispatch_pcap(pcap_t *pt, struct bpf_program *, handler callback);
+
+void udp_write(int fd, char *buf, int userlen, struct in_addr src, struct in_addr dst, u_short sport, u_short dport, struct sockaddr *to, socklen_t tolen);
 
 #endif /* __TCPI_H */
 
