@@ -5,7 +5,11 @@ dispatch_pcap(pcap_t *pt, struct bpf_program *bp, handler callback)
 {
         int rt;
 
-        if ((rt = pcap_dispatch(pt, 0, callback, NULL)) == -1)
+        /*
+         * In older versions of libpcap,
+         * the behavior when cnt was 0 was undefined
+         */
+        if ((rt = pcap_dispatch(pt, -1, callback, NULL)) == -1)
                 err_quit("pcap_dispatch: %s", pcap_dispatch);
         else if (rt == 0)
                 fprintf(stderr, "pcap_dispatch captured no packets\n");

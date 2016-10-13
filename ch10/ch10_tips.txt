@@ -1,4 +1,4 @@
-gongcunjust@macosx[ch10]# sudo route -n delete -net 0.0.0.0 192.168.0.1
+% sudo route -n delete -net 0.0.0.0 192.168.0.1
 Password:
 delete net 0.0.0.0: gateway 192.168.0.1
 
@@ -6,3 +6,25 @@ delete net 0.0.0.0: gateway 192.168.0.1
 
 % sudo -s
 % sysctl -w net.inet.ip.forwarding=1
+
+#-*- In Client (MacOS) -*-
+% sudo ripreply 192.168.0.101 192.168.0.113 0.0.0.0 1
+% sudo ./ripdump en0 10
+RIP cmd = 2, version = 1, domain = 0
+0: IP address: 0.0.0.0, mask: 0.0.0.0, next: 0.0.0.0, metric: 1
+
+#-*- In Server (CentOS) -*-
+% route -n
+(no default router)
+
+# Start the RIP daemon
+% sudo /usr/local/sbin/bird -c ./rip.conf -d -f
+
+# Check status
+% sudo /usr/local/sbin/birdc
+bird> show route
+
+% route -n
+(have default router, but metric is 0)
+0.0.0.0 192.168.0.101
+
