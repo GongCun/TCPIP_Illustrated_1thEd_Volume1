@@ -1,7 +1,7 @@
 include ../Make.defines
 
 LIB_OBJS = error.o wrapunix.o get_ifi_info.o free_ifi_info.o prmac.o icmp_build.o \
-	   checksum.o icmp_recv.o open_pcap.o dispatch_pcap.o udp_write.o
+	   checksum.o icmp_recv.o
 LIBTCPI_NAME = ../libtcpi.a
 RANLIB = ranlib
 

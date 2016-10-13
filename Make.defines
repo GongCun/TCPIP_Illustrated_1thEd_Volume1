@@ -3,5 +3,13 @@ LIBS = ../libtcpi.a $(shell ../cflags.sh | cut -d'%' -f2)
 ifeq ($(LIBS), )
 $(error Can't find the libpcap)
 endif
+
+PLATFORM = $(shell uname -s | tr 'a-z' 'A-Z')
+ifeq ($(PLATFORM),AIX)
+ARFLAGS = -rv -Xany
+else
+ARFLAGS = rv
+endif
+
 CLEANFILES = core core.* *.core *.o temp.* *.a *.so configure config.log config.status auto* config.h.in* *.BAK *~ *.dSYM
 

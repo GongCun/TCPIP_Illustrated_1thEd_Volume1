@@ -11,7 +11,7 @@ void prmac(void)
 #ifndef HAVE_SYSCTL
     err_msg("Sorry, this system not support sysctl()");
     return;
-#endif
+#else
     int i, mib[6];
     size_t needed;
     char *buf, *next, *lim;
@@ -64,4 +64,5 @@ void prmac(void)
         return;
 #endif
     }
+#endif
 }

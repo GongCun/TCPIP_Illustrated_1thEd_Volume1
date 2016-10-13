@@ -102,14 +102,29 @@ void icmp_build_advertisment(u_char *buf, uint8_t type, uint8_t code,
         ssize_t len = sizeof(struct in_addr);
 
         icmp = (struct icmp *)buf;
+	ptr = (u_char *)icmp;
         memset(icmp, 0, sizeof(struct icmp));
 
         icmp->icmp_type = 9;
         icmp->icmp_code = 0;
         icmp->icmp_cksum = 0;
+#if defined(HAVE_ICMP_NUM_ADDRS) || defined(icmp_num_addrs)
         icmp->icmp_num_addrs = naddr;
+#else
+	*(ptr + 4) = naddr;
+#endif
+
+#if defined(HAVE_ICMP_WPA) || defined(icmp_wpa)
         icmp->icmp_wpa = 2;                     /* Address Entry Size: fixed at 2 */
+#else
+        *(ptr + 5) = 2;                     	/* Address Entry Size: fixed at 2 */
+#endif
+
+#if defined(HAVE_ICMP_LIFETIME) || defined(icmp_lifetime)
         icmp->icmp_lifetime = htons(30*60);     /* Number of Seconds */
+#else
+        *((uint16_t *)(ptr + 6)) = htons(30*60);
+#endif
 
         ptr = (u_char *)icmp->icmp_data;
         for (i = 0; i < naddr; i++) {

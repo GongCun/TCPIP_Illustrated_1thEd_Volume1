@@ -2,7 +2,7 @@
 
 #define CAPLEN 1514
 
-pcap_t *open_pcap(const char *device, int to_ms, const char *cmd, int *linktype, struct bpf_program *bp)
+pcap_t *open_pcap(const char *device, int to_ms, char *cmd, int *linktype, struct bpf_program *bp)
 {
         char errbuf[PCAP_ERRBUF_SIZE];
         pcap_t *pt;

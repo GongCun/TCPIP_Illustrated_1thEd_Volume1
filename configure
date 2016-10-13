@@ -3128,9 +3128,9 @@ fi
 
 # Checks for libraries.
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcap_freecode in -lpcap" >&5
-$as_echo_n "checking for pcap_freecode in -lpcap... " >&6; }
-if ${ac_cv_lib_pcap_pcap_freecode+:} false; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcap_open_live in -lpcap" >&5
+$as_echo_n "checking for pcap_open_live in -lpcap... " >&6; }
+if ${ac_cv_lib_pcap_pcap_open_live+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
@@ -3144,33 +3144,35 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 #ifdef __cplusplus
 extern "C"
 #endif
-char pcap_freecode ();
+char pcap_open_live ();
 int
 main ()
 {
-return pcap_freecode ();
+return pcap_open_live ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_pcap_pcap_freecode=yes
+  ac_cv_lib_pcap_pcap_open_live=yes
 else
-  ac_cv_lib_pcap_pcap_freecode=no
+  ac_cv_lib_pcap_pcap_open_live=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 LIBS=$ac_check_lib_save_LIBS
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pcap_pcap_freecode" >&5
-$as_echo "$ac_cv_lib_pcap_pcap_freecode" >&6; }
-if test "x$ac_cv_lib_pcap_pcap_freecode" = xyes; then :
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pcap_pcap_open_live" >&5
+$as_echo "$ac_cv_lib_pcap_pcap_open_live" >&6; }
+if test "x$ac_cv_lib_pcap_pcap_open_live" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBPCAP 1
 _ACEOF
 
   LIBS="-lpcap $LIBS"
 
+else
+  as_fn_error $? "cannot find libpcap" "$LINENO" 5
 fi
 
 
@@ -3597,6 +3599,18 @@ fi
 
 done
 
+for ac_header in net/if_dl.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "net/if_dl.h" "ac_cv_header_net_if_dl_h" "$ac_includes_default"
+if test "x$ac_cv_header_net_if_dl_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_NET_IF_DL_H 1
+_ACEOF
+
+fi
+
+done
+
 for ac_header in net/if.h netinet/in.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h syslog.h net/if_arp.h net/if_dl.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
@@ -3658,6 +3672,34 @@ $as_echo "#define HAVE_SOCKADDR_SA_LEN 1" >>confdefs.h
 fi
 
 
+ac_fn_c_check_member "$LINENO" "struct icmp" "icmp_num_addrs" "ac_cv_member_struct_icmp_icmp_num_addrs" "#include <netinet/ip_icmp.h>
+
+"
+if test "x$ac_cv_member_struct_icmp_icmp_num_addrs" = xyes; then :
+
+$as_echo "#define HAVE_ICMP_NUM_ADDRS 1" >>confdefs.h
+
+fi
+
+ac_fn_c_check_member "$LINENO" "struct icmp" "icmp_wpa" "ac_cv_member_struct_icmp_icmp_wpa" "#include <netinet/ip_icmp.h>
+
+"
+if test "x$ac_cv_member_struct_icmp_icmp_wpa" = xyes; then :
+
+$as_echo "#define HAVE_ICMP_WPA 1" >>confdefs.h
+
+fi
+
+ac_fn_c_check_member "$LINENO" "struct icmp" "icmp_lifetime" "ac_cv_member_struct_icmp_icmp_lifetime" "#include <netinet/ip_icmp.h>
+
+"
+if test "x$ac_cv_member_struct_icmp_icmp_lifetime" = xyes; then :
+
+$as_echo "#define HAVE_ICMP_LIFETIME 1" >>confdefs.h
+
+fi
+
+
 ac_fn_c_check_type "$LINENO" "struct sockaddr_dl" "ac_cv_type_struct_sockaddr_dl" "#include <sys/types.h>
 #include <sys/socket.h>
 #include <net/if_dl.h>
@@ -3680,6 +3722,7 @@ if test "x$ac_cv_type_struct_sockaddr_inarp" = xyes; then :
 $as_echo "#define HAVE_SOCKADDR_INARP_STRUCT 1" >>confdefs.h
 
 fi
+
 
 
 # Checks for library functions.
@@ -3750,7 +3793,7 @@ $as_echo "#define malloc rpl_malloc" >>confdefs.h
 fi
 
 
-for ac_func in bzero socket strchr strerror vsnprintf sysctl
+for ac_func in pcap_freecode bzero socket strchr strerror vsnprintf sysctl
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"

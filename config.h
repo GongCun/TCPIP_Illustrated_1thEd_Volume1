@@ -4,6 +4,15 @@
 /* Define to 1 if you have the `bzero' function. */
 #define HAVE_BZERO 1
 
+/* Define to 1 if <netinet/icmp.h> have icmp_lifetime */
+/* #undef HAVE_ICMP_LIFETIME */
+
+/* Define to 1 if <netinet/icmp.h> have icmp_num_addrs */
+/* #undef HAVE_ICMP_NUM_ADDRS */
+
+/* Define to 1 if <netinet/icmp.h> have icmp_wpa */
+/* #undef HAVE_ICMP_WPA */
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
@@ -24,7 +33,7 @@
 #define HAVE_NET_IF_ARP_H 1
 
 /* Define to 1 if you have the <net/if_dl.h> header file. */
-/* #undef HAVE_NET_IF_DL_H */
+#define HAVE_NET_IF_DL_H 1
 
 /* Define to 1 if you have the <net/if.h> header file. */
 /* #undef HAVE_NET_IF_H */

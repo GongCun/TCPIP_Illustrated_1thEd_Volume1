@@ -17,6 +17,7 @@ AC_CHECK_LIB(pcap, pcap_open_live, [], [AC_MSG_ERROR([cannot find libpcap])])
 # Checks for header files.
 AC_CHECK_HEADERS(sys/sysctl.h sys/param.h)
 AC_CHECK_HEADERS(pcap.h)
+AC_CHECK_HEADERS(net/if_dl.h)
 AC_CHECK_HEADERS(net/if.h netinet/in.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h syslog.h net/if_arp.h net/if_dl.h, [], [], [
 #ifdef HAVE_NET_IF_H
 #include <net/if.h>
@@ -35,6 +36,17 @@ AC_CHECK_MEMBERS([struct sockaddr.sa_len], [AC_DEFINE(HAVE_SOCKADDR_SA_LEN, 1, [
 #include <sys/socket.h>
 ])
 
+AC_CHECK_MEMBER([struct icmp.icmp_num_addrs], [AC_DEFINE(HAVE_ICMP_NUM_ADDRS, 1, [Define to 1 if <netinet/icmp.h> have icmp_num_addrs])], [],
+[#include <netinet/ip_icmp.h>
+])
+AC_CHECK_MEMBER([struct icmp.icmp_wpa], [AC_DEFINE(HAVE_ICMP_WPA, 1, [Define to 1 if <netinet/icmp.h> have icmp_wpa])], [],
+[#include <netinet/ip_icmp.h>
+])
+AC_CHECK_MEMBER([struct icmp.icmp_lifetime], [AC_DEFINE(HAVE_ICMP_LIFETIME, 1, [Define to 1 if <netinet/icmp.h> have icmp_lifetime])],
+[],
+[#include <netinet/ip_icmp.h>
+])
+
 AC_CHECK_TYPE([struct sockaddr_dl], [AC_DEFINE(HAVE_SOCKADDR_DL_STRUCT, 1, [Define to 1 if <net/if_dl.h> defines struct sockaddr_dl])], [],
 [#include <sys/types.h>
 #include <sys/socket.h>
@@ -46,6 +58,7 @@ AC_CHECK_TYPE([struct sockaddr_inarp], [AC_DEFINE(HAVE_SOCKADDR_INARP_STRUCT, 1,
 #include <sys/socket.h>
 #include <netinet/if_ether.h>
 ])
+
 
 # Checks for library functions.
 AC_FUNC_MALLOC
