@@ -36,10 +36,7 @@
 #define HAVE_NET_IF_DL_H 1
 
 /* Define to 1 if you have the <net/if.h> header file. */
-/* #undef HAVE_NET_IF_H */
-
-/* Define to 1 if you have the `pcap_freecode' function. */
-#define HAVE_PCAP_FREECODE 1
+#define HAVE_NET_IF_H 1
 
 /* Define to 1 if you have the <pcap.h> header file. */
 #define HAVE_PCAP_H 1

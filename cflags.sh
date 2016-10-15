@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: cflags.sh,v 1.3 2016/09/01 07:02:27 gongcunjust Exp gongcunjust $
+# $Id: cflags.sh,v 1.5 2016/10/15 05:18:44 gongcunjust Exp gongcunjust $
 
 PID=$$
 OS=`uname -s | tr '[:lower:]' '[:upper:]'`
@@ -30,44 +30,53 @@ if test "X$OS" = "XAIX"; then
     rm -f ${PID}.* >/dev/null 2>&1
 fi
 
-#-+- Find the pcap library -+-
+#-+- Test in linker to find the pcap library -+-
 cat >./${PID}.c <<\EOF
 #include <pcap.h>
-#include <stdlib.h>
-
-int main(void) {
-  printf("%s\n", pcap_lib_version());
-  return 0;
-}
+main() { pcap_lib_version(); }
 EOF
 
-typeset -i found=0
-for folder in /usr/local/lib /usr/lib64 /usr/lib; do
+typeset LIBS=
+LIBDIR="$LIBDIR /usr/local/lib /usr/lib64 /usr/lib"
+for folder in $LIBDIR; do
     if test -d $folder && ls -1 $folder | grep -w libpcap >/dev/null 2>&1; then
         LIBS="-L$folder -lpcap"
-        cc -o ${PID}.x ${PID}.c $LIBS >/dev/null 2>&1 && {
-          found=1; break
-        }
+        cc -o ${PID}.x ${PID}.c $LIBS >/dev/null 2>&1 && break
     fi
+    unset LIBS
 done
 
-test $found -eq 0 && unset LIBS || {
+if test "$LIBS"; then
+
 cat >./${PID}.c <<\EOF  
-#include <stdlib.h>
 #include <pcap.h>
 #if defined(_AIX) || defined(_AIX64)
 #include <net/bpf.h>
 #endif
 
-int main(void) {
+main() {
   struct bpf_program bp;
   pcap_freecode(&bp);
-  return 0;
 }
 EOF
-cc -o ${PID}.x ${PID}.c $LIBS >/dev/null 2>&1 && \
+cc -o ${PID}.x -D_$OS ${PID}.c $LIBS >/dev/null 2>&1 && \
 CFLAGS="-DHAVE_PCAP_FREECODE $CFLAGS"
+
+cat >./${PID}.c <<\EOF  
+#include <pcap.h>
+#if defined(_AIX) || defined(_AIX64)
+#include <net/bpf.h>
+#endif
+
+main() {
+  pcap_t *p;
+  pcap_breakloop(p);
 }
+EOF
+cc -o ${PID}.x -D_$OS ${PID}.c $LIBS >/dev/null 2>&1 && \
+CFLAGS="-DHAVE_PCAP_BREAKLOOP $CFLAGS"
+
+fi
 
 rm -rf ${PID}.* 2>/dev/null
 

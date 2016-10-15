@@ -37,9 +37,6 @@
 /* Define to 1 if you have the <net/if.h> header file. */
 #undef HAVE_NET_IF_H
 
-/* Define to 1 if you have the `pcap_freecode' function. */
-#undef HAVE_PCAP_FREECODE
-
 /* Define to 1 if you have the <pcap.h> header file. */
 #undef HAVE_PCAP_H
 

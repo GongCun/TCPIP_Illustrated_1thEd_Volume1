@@ -1,14 +1,15 @@
 override CFLAGS += -I../lib -g $(shell ../cflags.sh | cut -d'%' -f1)
-LIBS = ../libtcpi.a $(shell ../cflags.sh | cut -d'%' -f2)
+LIBS = $(shell ../cflags.sh | cut -d'%' -f2)
 ifeq ($(LIBS), )
-$(error Can't find the libpcap)
+$(error Can't find the libpcap, you can use env 'LIBDIR' to search library)
 endif
+LIBS := ../libtcpi.a $(LIBS)
 
 PLATFORM = $(shell uname -s | tr 'a-z' 'A-Z')
 ifeq ($(PLATFORM),AIX)
-ARFLAGS = -rv -Xany
+AROPT = -rv -Xany
 else
-ARFLAGS = rv
+AROPT = rv
 endif
 
 CLEANFILES = core core.* *.core *.o temp.* *.a *.so configure config.log config.status auto* config.h.in* *.BAK *~ *.dSYM

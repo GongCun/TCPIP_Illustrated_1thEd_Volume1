@@ -13,13 +13,16 @@ int main(int argc, char *argv[])
 {
         pcap_t *pt;
         struct bpf_program bp;
+        int to;
 
-        if (argc != 3)
-                err_quit("Usage: %s <interface> <seconds>", basename(argv[0]));
+        if (argc != 4)
+                err_quit("Usage: %s <interface> <seconds> <#packets>", basename(argv[0]));
 
-        pt = open_pcap(argv[1], atoi(argv[2])*1000, CMD, &linktype, &bp);
+        to = atoi(argv[2]);
+        to = (to < 0) ? -1 : to*1000;
+        pt = open_pcap(argv[1], to, CMD, &linktype, &bp);
 
-        dispatch_pcap(pt, &bp, callback);
+        loop_pcap(pt, &bp, callback, atoi(argv[3]));
 
         return 0;
 }

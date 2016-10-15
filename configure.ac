@@ -16,9 +16,18 @@ AC_CHECK_LIB(pcap, pcap_open_live, [], [AC_MSG_ERROR([cannot find libpcap])])
 
 # Checks for header files.
 AC_CHECK_HEADERS(sys/sysctl.h sys/param.h)
+AC_CHECK_HEADERS(stdlib.h string.h strings.h sys/ioctl.h syslog.h, [], [], [])
 AC_CHECK_HEADERS(pcap.h)
-AC_CHECK_HEADERS(net/if_dl.h)
-AC_CHECK_HEADERS(net/if.h netinet/in.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h syslog.h net/if_arp.h net/if_dl.h, [], [], [
+AC_CHECK_HEADERS(sys/socket.h)
+AC_CHECK_HEADERS(net/if.h, [], [],
+[#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+])
+AC_CHECK_HEADERS(netinet/in.h net/if_arp.h net/if_dl.h, [], [], [
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
 #ifdef HAVE_NET_IF_H
 #include <net/if.h>
 #endif
@@ -62,7 +71,7 @@ AC_CHECK_TYPE([struct sockaddr_inarp], [AC_DEFINE(HAVE_SOCKADDR_INARP_STRUCT, 1,
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([pcap_freecode bzero socket strchr strerror vsnprintf sysctl])
+AC_CHECK_FUNCS([bzero socket strchr strerror vsnprintf sysctl])
 
 # Check for system services.
 

@@ -1,12 +1,13 @@
 include ../Make.defines
 
 LIB_OBJS = error.o wrapunix.o get_ifi_info.o free_ifi_info.o prmac.o icmp_build.o \
-	   checksum.o icmp_recv.o
+	   checksum.o icmp_recv.o open_pcap.o dispatch_pcap.o loop_pcap.o udp_write.o \
+	   signal_func.o
 LIBTCPI_NAME = ../libtcpi.a
 RANLIB = ranlib
 
 all:	${LIB_OBJS}
-		ar rv ${LIBTCPI_NAME} $?
+		ar ${AROPT} ${LIBTCPI_NAME} $?
 		${RANLIB} ${LIBTCPI_NAME}
 
 clean:

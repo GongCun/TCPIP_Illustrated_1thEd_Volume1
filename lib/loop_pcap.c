@@ -13,7 +13,7 @@ static void sig_int(int signo)
 }
 
 void
-dispatch_pcap(pcap_t *pt, struct bpf_program *bp, handler callback, int cnt)
+loop_pcap(pcap_t *pt, struct bpf_program *bp, handler callback, int cnt)
 {
         int rt;
 	Pt = pt;
@@ -30,16 +30,16 @@ dispatch_pcap(pcap_t *pt, struct bpf_program *bp, handler callback, int cnt)
          * In older versions of libpcap,
          * the behavior when cnt was 0 was undefined
          */
-        rt = pcap_dispatch(pt, cnt, callback, NULL);
+        rt = pcap_loop(pt, cnt, callback, NULL);
 INTR:
         switch (rt) {
                 case 0:
-                        fprintf(stderr, "pcap_dispatch exited\n");
+                        fprintf(stderr, "pcap_loop exited\n");
                         break;
                 case -1:
-                        err_quit("pcap_dispatch: %s", pcap_geterr(pt));
+                        err_quit("pcap_loop: %s", pcap_geterr(pt));
                 case -2:
-                        fprintf(stderr, "pcap_dispatch was interrupted\n");
+                        fprintf(stderr, "pcap_loop was interrupted\n");
                         break;
                 default:
                         ;

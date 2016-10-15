@@ -127,10 +127,15 @@ void xgethostbyname(const char *host, struct in_addr *addr);
 
 /* pcap functions */
 typedef void (*handler)(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes);
-pcap_t *open_pcap(const char *device, int to_ms, const char *cmd, int *linktype, struct bpf_program *bp);
-void dispatch_pcap(pcap_t *pt, struct bpf_program *, handler callback);
+pcap_t *open_pcap(const char *device, int to_ms, char *cmd, int *linktype, struct bpf_program *bp);
+void dispatch_pcap(pcap_t *pt, struct bpf_program *, handler callback, int cnt);
+void loop_pcap(pcap_t *pt, struct bpf_program *bp, handler callback, int cnt);
 
 void udp_write(int fd, char *buf, int userlen, struct in_addr src, struct in_addr dst, u_short sport, u_short dport, struct sockaddr *to, socklen_t tolen);
+
+/* signal functions */
+typedef void (*signal_t)(int);
+signal_t signal_intr(int sig, signal_t func);
 
 #endif /* __TCPI_H */
 
