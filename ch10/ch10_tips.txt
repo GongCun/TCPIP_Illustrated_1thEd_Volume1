@@ -28,3 +28,9 @@ bird> show route
 (have default router, but metric is 0)
 0.0.0.0 192.168.0.101
 
+#-*- Check the Multicast Group Stat -*-
+netstat -n -g -s -i -finet
+
+#-*- Join the Class D multicast group -*-
+sudo ./test_mg en0 224.0.0.5
+netstat -n -g -s -i -finet -Ien0 | awk '/^en0:/{print; while (getline > 0) print}'
