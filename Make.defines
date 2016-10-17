@@ -1,7 +1,11 @@
 override CFLAGS += -I../lib -g $(shell ../cflags.sh | cut -d'%' -f1)
 LIBS = $(shell ../cflags.sh | cut -d'%' -f2)
+define \n
+
+
+endef
 ifeq ($(LIBS), )
-$(error Can't find the libpcap, you can use env 'LIBDIR' to search library)
+$(error Can't find the libpcap${\n}You can export LIBDIR=<lib dir> to search the library)
 endif
 LIBS := ../libtcpi.a $(LIBS)
 
