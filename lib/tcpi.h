@@ -137,6 +137,9 @@ void udp_write(int fd, char *buf, int userlen, struct in_addr src, struct in_add
 typedef void (*signal_t)(int);
 signal_t signal_intr(int sig, signal_t func);
 
+/* multicast functions */
+int mcast_join(int sockfd, const char *dev, char *maddr);
+
 #endif /* __TCPI_H */
 
 
