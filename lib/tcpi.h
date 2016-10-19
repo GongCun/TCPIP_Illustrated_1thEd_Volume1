@@ -134,8 +134,8 @@ void loop_pcap(pcap_t *pt, struct bpf_program *bp, handler callback, int cnt);
 void udp_write(int fd, char *buf, int userlen, struct in_addr src, struct in_addr dst, u_short sport, u_short dport, struct sockaddr *to, socklen_t tolen);
 
 /* signal functions */
-typedef void (*signal_t)(int);
-signal_t signal_intr(int sig, signal_t func);
+typedef void (*signal_func_t)(int);
+signal_func_t signal_intr(int sig, signal_func_t func);
 
 /* multicast functions */
 int mcast_join(int sockfd, const char *dev, char *maddr);

@@ -1,6 +1,6 @@
 #include "tcpi.h"
 
-signal_t signal_intr(int sig, signal_t func)
+signal_func_t signal_intr(int sig, signal_func_t func)
 {
         struct sigaction act, oact;
         act.sa_handler = func;

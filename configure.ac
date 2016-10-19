@@ -95,5 +95,5 @@ if test $ac_cv_ipv6 = yes; then
 	AC_DEFINE([IPv6], 1, [Define to 1 if the system supports IPv6])
 fi
 
-AC_CONFIG_FILES([lib/Makefile])
+#AC_CONFIG_FILES([lib/Makefile])
 AC_OUTPUT

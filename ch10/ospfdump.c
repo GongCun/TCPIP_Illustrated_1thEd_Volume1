@@ -1,5 +1,5 @@
 #include "tcpi.h"
-#include "rip.h"
+#include "drp.h"
 
 #define CMD "host 224.0.0.5 and ip[9:1] == 89" /* The OSPF protocol is 89,
                                                   class D addr is 224.0.0.5 */
@@ -15,9 +15,20 @@ int main(int argc, char *argv[])
         pcap_t *pt;
         struct bpf_program bp;
         int to;
+        int sockfd;
+        const int on = 1;
 
         if (argc != 4)
                 err_quit("Usage: %s <interface> <seconds> <#packets>", basename(argv[0]));
+
+        /* Join the multicast group of 224.0.0.5 */
+        if ((sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_IP)) < 0)
+                err_sys("socket error");
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+                err_sys("setsockopt SO_REUSEADDR error");
+        if (mcast_join(sockfd, argv[1], "224.0.0.5") < 0)
+                err_sys("mcast_join error");
+        /* End join mcast group */
 
         to = atoi(argv[2]);
         to = (to < 0) ? -1 : to*1000;

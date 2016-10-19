@@ -1,5 +1,5 @@
-#ifndef _RIP_H
-#define _RIP_H
+#ifndef _DRP_H
+#define _DRP_H
 
 struct rip_data {
         uint16_t rip_af;

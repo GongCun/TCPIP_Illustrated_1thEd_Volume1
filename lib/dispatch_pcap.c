@@ -39,7 +39,7 @@ INTR:
                 case -1:
                         err_quit("pcap_dispatch: %s", pcap_geterr(pt));
                 case -2:
-                        fprintf(stderr, "pcap_dispatch was interrupted\n");
+                        fprintf(stderr, "\npcap_dispatch was interrupted\n");
                         break;
                 default:
                         ;

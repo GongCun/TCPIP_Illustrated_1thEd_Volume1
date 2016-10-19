@@ -1,5 +1,5 @@
-#!/usr/bin/perl -w
-# $Id$
+#!/usr/bin/env perl -w
+# $Id: multiserv.pl,v 1.1 2016/10/19 03:56:14 root Exp $
 use strict;
 use Socket;
 use IO::Handle;
@@ -25,13 +25,20 @@ setsockopt($socket, SOL_SOCKET, SO_REUSEADDR, 1) or die "Can't reuse the socket:
 $addr = sockaddr_in($port, $local_addr);
 bind($socket, $addr);
 
-my $ip_level = getprotobyname('IP');
+my $ip_level;
+chomp(my $OS = `uname -s`);
+if ($OS ne 'AIX') {
+	$ip_level = getprotobyname('IP');
+} else {
+	$ip_level = 0;
+}
 # grep -e IP_ADD_MEMBERSHIP -e IP_MULTICAST_LOOP /usr/include/netinet/in.h | grep '^#define'
 my $IP_ADD_MEMBERSHIP = 12;
 my $IP_MULTICAST_LOOP = 11;
 
 setsockopt($socket, $ip_level, $IP_ADD_MEMBERSHIP, $ip_mreq) or die "Can't join group: $!";
-setsockopt($socket, $ip_level, $IP_MULTICAST_LOOP, 0) or die "Can't deactive the message to loop back: $!";
+setsockopt($socket, $ip_level, $IP_MULTICAST_LOOP, 0) or
+	die "Can't deactive the message to loop back: $!" if $OS ne 'AIX';
 
 
 while (1) {
