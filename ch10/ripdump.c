@@ -88,7 +88,6 @@ static char *praddr(const uint32_t *buf, char *str, int len)
         u_char *ptr;
 
         ptr = (u_char *)buf;
-        /* snprintf(str, len, "%d.%d.%d.%d", ntohs(*ptr), ntohs(*(ptr+1)), ntohs(*(ptr+2)), ntohs(*(ptr+3))); */
         snprintf(str, len, "%d.%d.%d.%d", *ptr, *(ptr+1), *(ptr+2), *(ptr+3));
 
         return str;
