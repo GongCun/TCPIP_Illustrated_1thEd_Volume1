@@ -9,6 +9,7 @@ int linktype;
 
 static void callback(u_char *user, const struct pcap_pkthdr *header, const u_char *packet);
 static char *praddr(const uint32_t *buf, char *str, int len);
+static void pkt_hello(const u_char *, int);
 
 int main(int argc, char *argv[])
 {
@@ -75,6 +76,17 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
                         praddr(&ospfhdr->ospf_rid, ridbuf, sizeof(ridbuf)),
                         praddr(&ospfhdr->ospf_aid, aidbuf, sizeof(aidbuf)));
 
+        switch (type) {
+                case 1:
+                        pkt_hello(packet + size_eth + size_ip + size_ospf,
+                                        header->caplen - size_eth - size_ip - size_ospf);
+                        break;
+                default:
+                        ;
+        }
+
+        printf("\n");
+
         return;
 }
 
@@ -86,4 +98,35 @@ static char *praddr(const uint32_t *buf, char *str, int len)
         snprintf(str, len, "%d.%d.%d.%d", *ptr, *(ptr+1), *(ptr+2), *(ptr+3));
 
         return str;
+}
+
+static void pkt_hello(const u_char *pkt, int length)
+{
+        const struct ospfhello *ospfhello;
+        char buf[INET_ADDRSTRLEN];
+
+        if (length < sizeof(struct ospfhello)) {
+                fprintf(stderr, "The HELLO packet is incomplete");
+                return;
+        }
+        ospfhello = (struct ospfhello *)pkt;
+        printf("Network Mask: %s\n"
+                        "HelloInterval: %d\n"
+                        "Options: %03o\n"
+                        "Rtr Pri: %d\n"
+                        "RouterDeadInterval: %d\n",
+                        praddr(&ospfhello->hello_mask, buf, sizeof(buf)),
+                        ntohs(ospfhello->hello_intr),
+                        ospfhello->hello_opt,
+                        ospfhello->hello_pri,
+                        ntohl(ospfhello->hello_rdi));
+        printf("Designated Router: %s\n", praddr(&ospfhello->hello_dr, buf, sizeof(buf)));
+        printf("Backup Designated Router: %s\n", praddr(&ospfhello->hello_bdr, buf, sizeof(buf)));
+
+        if (length - sizeof(struct ospfhello) >= 4)
+                printf("Neighbor: %s\n", praddr((uint32_t *)(pkt + sizeof(struct ospfhello)), buf, sizeof(buf)));
+        else
+                printf("Neighbor Seen = 0\n");
+        
+        return;
 }
