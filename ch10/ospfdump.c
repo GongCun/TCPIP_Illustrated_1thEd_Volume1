@@ -60,6 +60,8 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         ip = (struct ip *)(packet + size_eth);
         if ((size_ip = ip->ip_hl * 4) < 20)
                 err_quit("Invalid IP header length: %d bytes\n", size_ip);
+        printf("From IP: %s\n", inet_ntoa(ip->ip_src));
+        printf("To IP: %s\n", inet_ntoa(ip->ip_dst));
 
         if (header->caplen - size_eth - size_ip < size_ospf)
                 err_quit("Invalid OSPF header length: %d bytes\n", header->caplen - size_eth - size_ip);

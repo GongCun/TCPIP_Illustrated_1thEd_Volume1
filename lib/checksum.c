@@ -33,7 +33,7 @@ uint16_t checksum(uint16_t * addr, int len)
  *
  */
 
-static uint32_t in_checksum(uint16_t * addr, int len)
+uint32_t in_checksum(uint16_t * addr, int len)
 {
         uint32_t sum = 0;
 

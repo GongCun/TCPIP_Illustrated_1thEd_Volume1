@@ -1,6 +1,10 @@
 #ifndef _DRP_H
 #define _DRP_H
 
+#define OSPF_MCAST "224.0.0.5"
+#define OSPF_MCAST_RTR "224.0.0.6"
+typedef enum {DOWN, ATTEMPT, INIT, TWOWAY, EXSTART, EXCHANGE, LOADING, FULL} ospf_stat_t;
+
 struct rip_data {
         uint16_t rip_af;
         uint16_t rip_rt;

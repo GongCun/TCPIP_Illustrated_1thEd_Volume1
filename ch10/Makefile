@@ -1,7 +1,7 @@
 include ../Make.defines
 
 PROGS = ripdump ripquery ripreply test_mg multiserv \
-	ospfdump
+	ospfdump ospf_init
 
 all: ${PROGS}
 
@@ -22,6 +22,9 @@ multiserv: multiserv.o
 
 ospfdump: ospfdump.o
 	${CC} ${CFLAGS} -o $@ $< ${LIBS}
+
+ospf_init: ospf_init.o ospf_write.o
+	${CC} ${CFLAGS} -o $@ $^ ${LIBS}
 
 clean:
 	rm -rf ${PROGS} ${CLEANFILES}

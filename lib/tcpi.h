@@ -103,6 +103,7 @@ void prmac(void);
 /* Check sum */
 uint16_t checksum(uint16_t *, int);
 int do_checksum(u_char *buf, int protocol, int len);
+uint32_t in_checksum(uint16_t * addr, int len);
 
 /*
  * ICMPv4 packet assemblers
