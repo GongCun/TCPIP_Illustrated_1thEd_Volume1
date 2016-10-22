@@ -46,9 +46,11 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         const struct tcphdr *tcp;
         const struct bgphdr *bgp;
         const struct bgpopenhdr *bgpopen;
+        int i;
         int size_eth, size_ip;
         int size_tcp;
         int size_bgp = sizeof(struct bgphdr);
+        uint8_t optlen, *ptr, paratype, paralen;
 
         if (linktype != 0 && linktype != 1)
                 err_quit("Unknown link-layer header type: %d", linktype);
@@ -69,7 +71,10 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
 
         printf("Capture BGP packet from %s to ", inet_ntoa(ip->ip_src));
         printf("%s\n", inet_ntoa(ip->ip_dst));
-        printf("BGP packet length = %d, type = %d\n", ntohs(bgp->bgp_len), bgp->bgp_type);
+        printf("BGP Marker: ");
+        for (i = 0; i < sizeof(bgp->bgp_marker); i++)
+                printf("%x%s", bgp->bgp_marker[i], (i%2) == 1 ? " " : "");
+        printf("\nBGP packet length = %d, type = %d\n", ntohs(bgp->bgp_len), bgp->bgp_type);
 
         if (bgp->bgp_type != 1)
                 return;
@@ -78,7 +83,25 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         printf("Verion = %d, AS id = %d\n", bgpopen->bgp_ver, ntohs(bgpopen->bgp_asid));
         printf("Hold timer = %d sec\n", ntohs(bgpopen->bgp_holdtime));
         printf("BGP id = %s\n", inet_ntoa(*((struct in_addr *)&bgpopen->bgp_bgpid)));
-        printf("Option Paratemters length = %d\n", bgpopen->bgp_optlen);
+
+        optlen = bgpopen->bgp_optlen;
+        printf("Option Paratemters length = %d\n", optlen);
+        ptr = (uint8_t *)(packet + size_eth + size_ip + size_tcp + size_bgp + sizeof(struct bgpopenhdr));
+        while (optlen > 0) {
+                paratype = *ptr;
+                paralen = *(ptr + 1);
+                printf("Parameter Type = %zd, Length = %zd ", paratype, paralen);
+                if (paratype == 1)
+                        printf("(Authentication Optional Parameter)\n");
+                else if (paratype == 2)
+                        printf("(Capabilities Optional Parameter)\n");
+                else
+                        printf("(Unknown Optional Parameter)\n");
+                ptr += paralen + 2;
+                optlen -= paralen + 2;
+        }
+
+        printf("\n");
 
         return;
 }

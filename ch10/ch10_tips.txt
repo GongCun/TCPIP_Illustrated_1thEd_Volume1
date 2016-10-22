@@ -50,3 +50,45 @@ ospf: Neighbor 192.168.0.102 on wlan0 changed state from Down to Init
 ...
 ospf: Inactivity timer expired for nbr 192.168.0.102 on wlan0
 ospf: Neighbor 192.168.0.102 on wlan0 changed state from Init to Down 
+
+#-*- Test capture the BGP OPEN message -*-
+% sudo ./bgpdump en0 1 0
+Capture BGP packet from 192.168.0.113 to 192.168.0.102
+BGP Marker: ffff ffff ffff ffff ffff ffff ffff ffff 
+BGP packet length = 51, type = 1
+Verion = 4, AS id = 65000
+Hold timer = 240 sec
+BGP id = 192.168.0.113
+Option Paratemters length = 22
+Parameter Type = 2, Length = 20 (Capabilities Optional Parameter)
+
+
+
+#-+- From RFC 4271 -+-
+# <Optional Parameters>
+         0                   1
+         0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-...
+         |  Parm. Type   | Parm. Length  |  Parameter Value (variable)
+         +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-...
+
+#-+- From RFC 3392 -+-
+# <Capabilities Optional Parameter (Parameter Type 2)>
+
+       +------------------------------+
+       | Capability Code (1 octet)    |
+       +------------------------------+
+       | Capability Length (1 octet)  |
+       +------------------------------+
+       | Capability Value (variable)  |
+       +------------------------------+
+
+
+#-+- From RFC 4760 -+-
+# <Use of BGP Capability Advertisement>
+# <The content of Capability Value>
+
+                     0       7      15      23      31
+                     +-------+-------+-------+-------+
+                     |      AFI      | Res.  | SAFI  |
+                     +-------+-------+-------+-------+
