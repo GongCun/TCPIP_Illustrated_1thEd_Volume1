@@ -37,3 +37,16 @@ netstat -n -g -s -i -finet -Ien0 | awk '/^en0:/{print; while (getline > 0) print
 
 #-*- Check the OSPF packet -*-
 sudo tcpdump -n -i en0 'ip[9:1] == 89 and host 224.0.0.5'
+
+#-*- Change the OSPF state from Down to Init -*-
+% sudo ./ospf_init en0
+Capture packet From 192.168.0.113 to 224.0.0.5
+Packet type = 1, length = 44
+Reply Router ID is 192.168.0.102
+Reply Neighbor seen is 192.168.0.102
+
+# Display in the Router 
+ospf: Neighbor 192.168.0.102 on wlan0 changed state from Down to Init
+...
+ospf: Inactivity timer expired for nbr 192.168.0.102 on wlan0
+ospf: Neighbor 192.168.0.102 on wlan0 changed state from Init to Down 
