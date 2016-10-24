@@ -94,6 +94,43 @@ struct ospfhello {
         /* uint32_t hello_nei; */
 };
 
+struct ospfdbd {
+        uint16_t dbd_mtu;
+        uint8_t dbd_opt;
+        uint8_t dbd_flag;
+        uint16_t dbd_seq;
+};
+
+/*-+- The LSA header -+-
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |            LS age             |    Options    |    LS type    |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                        Link State ID                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                     Advertising Router                        |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                     LS sequence number                        |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |         LS checksum           |             length            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
+
+struct ospflsahdr {
+        uint16_t lsa_age;
+        uint8_t lsa_opt;
+        uint8_t lsa_type;
+        uint32_t lsa_id;
+        uint32_t lsa_adv;
+        uint32_t lsa_seq;
+        uint16_t lsa_sum;
+        uint16_t lsa_len; /* the length in bytes of the LSA,
+                             include the 20 bytes LSA header */
+};
+
+
 /*
  *-+- BGP Message Header Format -+-
 

@@ -18,8 +18,7 @@ int main(int argc, char *argv[])
         if (argc != 4)
                 err_quit("Usage: %s <interface> <seconds> <#packets>", basename(argv[0]));
 
-        to = atoi(argv[2]);
-        to = (to < 0) ? -1 : to*1000;
+        to = (argv[2] < 0) ? -1 : (int)(atof(argv[2]) * 1000);
         pt = open_pcap(argv[1], to, CMD, &linktype, &bp);
 
         loop_pcap(pt, &bp, callback, atoi(argv[3]));

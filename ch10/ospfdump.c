@@ -10,6 +10,9 @@ int linktype;
 static void callback(u_char *user, const struct pcap_pkthdr *header, const u_char *packet);
 static char *praddr(const uint32_t *buf, char *str, int len);
 static void pkt_hello(const u_char *, int);
+static void pkt_dbd(const u_char *, int);
+static void pkt_lsack(const u_char *, int);
+static void pkt_lsahdr(const struct ospflsahdr *);
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +25,11 @@ int main(int argc, char *argv[])
         if (argc != 4)
                 err_quit("Usage: %s <interface> <seconds> <#packets>", basename(argv[0]));
 
+         if (setvbuf(stdout, NULL, _IONBF, 0) < 0)
+                 err_sys("setvbuf stdout error");
+         if (setvbuf(stderr, NULL, _IONBF, 0) < 0)
+                 err_sys("setvbuf stderr error");
+
         /* Join the multicast group of 224.0.0.5 */
         if ((sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_IP)) < 0)
                 err_sys("socket error");
@@ -31,8 +39,7 @@ int main(int argc, char *argv[])
                 err_sys("mcast_join error");
         /* End join mcast group */
 
-        to = atoi(argv[2]);
-        to = (to < 0) ? -1 : to*1000;
+        to = (argv[2] < 0) ? -1 : (int)(atof(argv[2]) * 1000);
         pt = open_pcap(argv[1], to, CMD, &linktype, &bp);
 
         loop_pcap(pt, &bp, callback, atoi(argv[3]));
@@ -60,8 +67,8 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         ip = (struct ip *)(packet + size_eth);
         if ((size_ip = ip->ip_hl * 4) < 20)
                 err_quit("Invalid IP header length: %d bytes\n", size_ip);
-        printf("From IP: %s\n", inet_ntoa(ip->ip_src));
-        printf("To IP: %s\n", inet_ntoa(ip->ip_dst));
+        printf("From %s to ", inet_ntoa(ip->ip_src));
+        printf("%s\n", inet_ntoa(ip->ip_dst));
 
         if (header->caplen - size_eth - size_ip < size_ospf)
                 err_quit("Invalid OSPF header length: %d bytes\n", header->caplen - size_eth - size_ip);
@@ -80,9 +87,19 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
 
         switch (type) {
                 case 1:
+                        printf(">>> Hello Packet <<<\n");
                         pkt_hello(packet + size_eth + size_ip + size_ospf,
                                         header->caplen - size_eth - size_ip - size_ospf);
                         break;
+                case 2:
+                        printf(">>> DD Packet <<<\n");
+                        pkt_dbd(packet + size_eth + size_ip + size_ospf,
+                                        header->caplen - size_eth - size_ip - size_ospf);
+                        break;
+                case 5:
+                        printf(">>> Link State Acknowledgement <<<\n");
+                        pkt_lsack(packet + size_eth + size_ip + size_ospf,
+                                        header->caplen - size_eth - size_ip - size_ospf);
                 default:
                         ;
         }
@@ -106,9 +123,11 @@ static void pkt_hello(const u_char *pkt, int length)
 {
         const struct ospfhello *ospfhello;
         char buf[INET_ADDRSTRLEN];
+        int neighbor;
+        const struct in_addr *ptr;
 
         if (length < sizeof(struct ospfhello)) {
-                fprintf(stderr, "The HELLO packet is incomplete");
+                fprintf(stderr, "The HELLO packet is incomplete\n");
                 return;
         }
         ospfhello = (struct ospfhello *)pkt;
@@ -125,10 +144,69 @@ static void pkt_hello(const u_char *pkt, int length)
         printf("Designated Router: %s\n", praddr(&ospfhello->hello_dr, buf, sizeof(buf)));
         printf("Backup Designated Router: %s\n", praddr(&ospfhello->hello_bdr, buf, sizeof(buf)));
 
-        if (length - sizeof(struct ospfhello) >= 4)
-                printf("Neighbor: %s\n", praddr((uint32_t *)(pkt + sizeof(struct ospfhello)), buf, sizeof(buf)));
-        else
-                printf("Neighbor Seen = 0\n");
+        printf("Neighbor Seen: ");
+        neighbor = length - sizeof(struct ospfhello);
+        ptr = (struct in_addr *)(pkt + sizeof(struct ospfhello));
+        if (neighbor == 0) {
+                printf("0.0.0.0\n");
+        } else {
+                while (neighbor > 0) {
+                        printf("%s ", inet_ntoa(*ptr));
+                        neighbor -= sizeof(struct in_addr);
+                        ptr += 1;
+                }
+                printf("\n");
+        }
         
         return;
 }
+
+static void pkt_dbd(const u_char *pkt, int length)
+{
+        const struct ospfdbd *ospfdbd;
+
+        if (length < sizeof(struct ospfdbd)) {
+                fprintf(stderr, "The DB Description packet is incomplete\n");
+                return;
+        }
+        ospfdbd = (struct ospfdbd *)pkt;
+        printf("Interface MTU: %d, Options: %d\n", ntohs(ospfdbd->dbd_mtu), ospfdbd->dbd_opt);
+        if ((ospfdbd->dbd_flag & 1) != 0) printf("MS-bit ");
+        if ((ospfdbd->dbd_flag & 2) != 0) printf("M-bit ");
+        if ((ospfdbd->dbd_flag & 4) != 0) printf("I-bit ");
+        printf("\n");
+        printf("DD sequence number: %d\n", ntohl(ospfdbd->dbd_seq));
+
+        return;
+}
+
+static void pkt_lsack(const u_char *pkt, int length)
+{
+        const struct ospflsahdr *ospflsahdr;
+
+        if (length < sizeof(struct ospflsahdr)) {
+                fprintf(stderr, "The Link State Acknowledgment packet is incomplete\n");
+                return;
+        }
+
+        for (ospflsahdr = (const struct ospflsahdr *)pkt; length > 0;
+                        length -= sizeof(struct ospflsahdr), ospflsahdr += 1)
+                pkt_lsahdr(ospflsahdr);
+        printf("\n");
+
+        return;
+}
+
+static void pkt_lsahdr(const struct ospflsahdr *lsahdr)
+{
+        printf("[LSA Header]\n");
+        printf("LS Age: %d sec\n", ntohs(lsahdr->lsa_age));
+        printf("Options: %03o\n", lsahdr->lsa_opt);
+        printf("LS Type: %d\n", lsahdr->lsa_type);
+        printf("Link State ID: %s\n", inet_ntoa(*((struct in_addr *)&lsahdr->lsa_id)));
+        printf("Advertising Router: %s\n", inet_ntoa(*((struct in_addr *)&lsahdr->lsa_adv)));
+        printf("LS Sequence Number: %zd\n", ntohl(lsahdr->lsa_seq));
+        printf("LS Length: %d\n", ntohs(lsahdr->lsa_len));
+        return;
+}
+
