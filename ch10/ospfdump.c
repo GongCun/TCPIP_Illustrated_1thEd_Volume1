@@ -12,7 +12,9 @@ static char *praddr(const uint32_t *buf, char *str, int len);
 static void pkt_hello(const u_char *, int);
 static void pkt_dbd(const u_char *, int);
 static void pkt_lsack(const u_char *, int);
+static void pkt_lsupd(const u_char *, int);
 static void pkt_lsahdr(const struct ospflsahdr *);
+static void pkt_lsa_router(u_char *ptr, int length);
 
 int main(int argc, char *argv[])
 {
@@ -96,6 +98,10 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
                         pkt_dbd(packet + size_eth + size_ip + size_ospf,
                                         header->caplen - size_eth - size_ip - size_ospf);
                         break;
+                case 4:
+                        printf(">>> Link State Update <<<\n");
+                        pkt_lsupd(packet + size_eth + size_ip + size_ospf,
+                                        header->caplen - size_eth - size_ip - size_ospf);
                 case 5:
                         printf(">>> Link State Acknowledgement <<<\n");
                         pkt_lsack(packet + size_eth + size_ip + size_ospf,
@@ -164,6 +170,8 @@ static void pkt_hello(const u_char *pkt, int length)
 static void pkt_dbd(const u_char *pkt, int length)
 {
         const struct ospfdbd *ospfdbd;
+        int len;
+        const struct ospflsahdr *ospflsahdr;
 
         if (length < sizeof(struct ospfdbd)) {
                 fprintf(stderr, "The DB Description packet is incomplete\n");
@@ -175,7 +183,10 @@ static void pkt_dbd(const u_char *pkt, int length)
         if ((ospfdbd->dbd_flag & 2) != 0) printf("M-bit ");
         if ((ospfdbd->dbd_flag & 4) != 0) printf("I-bit ");
         printf("\n");
-        printf("DD sequence number: %d\n", ntohl(ospfdbd->dbd_seq));
+        printf("DD Sequence Number: %zd\n", ntohl(ospfdbd->dbd_seq));
+        for (len = length - sizeof(struct ospfdbd), ospflsahdr = (struct ospflsahdr *)(pkt + sizeof(struct ospfdbd));
+                        len > 0; len -= 4, ospflsahdr += 1)
+                pkt_lsahdr(ospflsahdr);
 
         return;
 }
@@ -209,4 +220,68 @@ static void pkt_lsahdr(const struct ospflsahdr *lsahdr)
         printf("LS Length: %d\n", ntohs(lsahdr->lsa_len));
         return;
 }
+
+static void pkt_lsupd(const u_char *pkt, int length)
+{
+        int nlsa;
+        const struct ospflsahdr *lsahdr;
+
+        if (length < 4) {
+                fprintf(stderr, "The Link State Update packet is incomplete\n");
+                return;
+        }
+
+        for (nlsa = ntohl(*((uint32_t *)pkt)), length -= 4, lsahdr = (struct ospflsahdr *)(pkt + 4);
+                        length > 0 && nlsa > 0;
+                        nlsa--, length -= lsahdr->lsa_len, lsahdr = (struct ospflsahdr *)((u_char *)lsahdr + lsahdr->lsa_len)) {
+                pkt_lsahdr(lsahdr);
+                switch (lsahdr->lsa_type) {
+                        case 1:
+                                pkt_lsa_router((u_char *)lsahdr + sizeof(struct ospflsahdr), lsahdr->lsa_len);
+                                break;
+                        default:
+                                ;
+                }
+        }
+        printf("\n");
+}
+
+
+static void pkt_lsa_router(u_char *ptr, int length)
+{
+        uint8_t flag;
+        uint16_t nlink;
+        char addrbuf[INET_ADDRSTRLEN];
+        int i = 0;
+        const struct ospf_router_lsa *rtrlsa;
+
+        printf("[Route LSA]\n");
+        if(length < 4) {
+                fprintf(stderr, "The Router LSAs packet is incomplete\n");
+                return;
+        }
+        flag = *((uint8_t *)ptr);
+        if ((flag & 1) != 0)
+                printf("bit B\n");
+        if ((flag & 2) != 0)
+                printf("bit E\n");
+        if ((flag & 4) != 0)
+                printf("bit V\n");
+
+        nlink = ntohs(*((uint16_t *)(ptr + 2)));
+        printf("#links = %d\n", nlink);
+        for (length -= 4, rtrlsa = (struct ospf_router_lsa *)(ptr + 4);
+                        length > 0 && i < nlink;
+                        length -= sizeof(struct ospf_router_lsa), i++,
+                        rtrlsa = (struct ospf_router_lsa *)((u_char *)rtrlsa + sizeof(struct ospf_router_lsa))) {
+                printf("\n");
+                printf("Link ID: %s\n", praddr(&rtrlsa->rtr_linkid, addrbuf, sizeof(addrbuf)));
+                printf("Link Data: %s\n", praddr(&rtrlsa->rtr_linkdata, addrbuf, sizeof(addrbuf)));
+                printf("Link Type: %d\n", rtrlsa->rtr_type);
+                printf("#TOS: %d\n", rtrlsa->rtr_tos);
+                printf("Metric: %d\n", ntohs(rtrlsa->rtr_metric));
+        }
+
+}
+
 

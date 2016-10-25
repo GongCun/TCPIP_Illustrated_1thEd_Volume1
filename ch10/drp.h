@@ -130,6 +130,38 @@ struct ospflsahdr {
                              include the 20 bytes LSA header */
 };
 
+/*
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |    0    |V|E|B|        0      |            # links            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                          Link ID                              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                         Link Data                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |     Type      |     # TOS     |            metric             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |                              ...                              |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |      TOS      |        0      |          TOS  metric          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
+struct ospf_router_lsa {
+        /* uint16_t rtr_flag; */
+        /* uint16_t rtr_links; */
+        uint32_t rtr_linkid;
+        uint32_t rtr_linkdata;
+        uint8_t rtr_type;
+        uint8_t rtr_tos;
+        uint16_t rtr_metric;
+        /* -+- The BIRD not use the additional TOS-specific information -+-
+         * uint16_t rtr_add;
+         * uint8_t rtr_iptos;
+         * uint8_t rtr_zero;
+         * uint16_t rtr_tosmetric;
+         * */
+};
+
+
 
 /*
  *-+- BGP Message Header Format -+-
