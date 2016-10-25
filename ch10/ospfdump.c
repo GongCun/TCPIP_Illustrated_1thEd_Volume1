@@ -15,6 +15,7 @@ static void pkt_lsack(const u_char *, int);
 static void pkt_lsupd(const u_char *, int);
 static void pkt_lsahdr(const struct ospflsahdr *);
 static void pkt_lsa_router(u_char *ptr, int length);
+static void pkt_lsa_network(u_char *ptr, int length);
 
 int main(int argc, char *argv[])
 {
@@ -102,10 +103,12 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
                         printf(">>> Link State Update <<<\n");
                         pkt_lsupd(packet + size_eth + size_ip + size_ospf,
                                         header->caplen - size_eth - size_ip - size_ospf);
+                        break;
                 case 5:
                         printf(">>> Link State Acknowledgement <<<\n");
                         pkt_lsack(packet + size_eth + size_ip + size_ospf,
                                         header->caplen - size_eth - size_ip - size_ospf);
+                        break;
                 default:
                         ;
         }
@@ -233,14 +236,20 @@ static void pkt_lsupd(const u_char *pkt, int length)
 
         for (nlsa = ntohl(*((uint32_t *)pkt)), length -= 4, lsahdr = (struct ospflsahdr *)(pkt + 4);
                         length > 0 && nlsa > 0;
-                        nlsa--, length -= lsahdr->lsa_len, lsahdr = (struct ospflsahdr *)((u_char *)lsahdr + lsahdr->lsa_len)) {
+                        nlsa--, length -= ntohs(lsahdr->lsa_len),
+                        lsahdr = (struct ospflsahdr *)((u_char *)lsahdr + ntohs(lsahdr->lsa_len))) {
                 pkt_lsahdr(lsahdr);
                 switch (lsahdr->lsa_type) {
                         case 1:
-                                pkt_lsa_router((u_char *)lsahdr + sizeof(struct ospflsahdr), lsahdr->lsa_len);
+                                pkt_lsa_router((u_char *)lsahdr + sizeof(struct ospflsahdr),
+                                                ntohs(lsahdr->lsa_len) - sizeof(struct ospflsahdr));
+                                break;
+                        case 2:
+                                pkt_lsa_network((u_char *)lsahdr + sizeof(struct ospflsahdr),
+                                                ntohs(lsahdr->lsa_len) - sizeof(struct ospflsahdr));
                                 break;
                         default:
-                                ;
+                                printf("LS Type: %d\n", lsahdr->lsa_type);
                 }
         }
         printf("\n");
@@ -284,4 +293,23 @@ static void pkt_lsa_router(u_char *ptr, int length)
 
 }
 
+static void pkt_lsa_network(u_char *ptr, int length)
+{
+        const struct in_addr *rtraddr;
+        char buf[INET_ADDRSTRLEN];
 
+        printf("[Network LSA]\n");
+        if (length < 8) {
+                fprintf(stderr, "The Network LSAs packet is incomplete\n");
+                return;
+        }
+
+        printf("Network Mask: %s\n", praddr((uint32_t *)ptr, buf, sizeof(buf)));
+        for (rtraddr = (struct in_addr *)(ptr + 4), length -= 4; length > 0;
+                        rtraddr = (struct in_addr *)((u_char *)rtraddr + sizeof(struct in_addr)),
+                        length -= sizeof(struct in_addr))
+
+        {
+                printf("Attached Router: %s\n", inet_ntoa(*rtraddr));
+        }
+}

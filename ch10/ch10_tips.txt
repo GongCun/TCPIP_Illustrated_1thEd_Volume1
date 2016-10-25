@@ -92,3 +92,8 @@ Parameter Type = 2, Length = 20 (Capabilities Optional Parameter)
                      +-------+-------+-------+-------+
                      |      AFI      | Res.  | SAFI  |
                      +-------+-------+-------+-------+
+
+
+
+#-+- Add an static route in Ubuntu -+-
+sudo route add -net 22.236.119.0 gw 192.168.0.105 netmask 255.255.255.0
