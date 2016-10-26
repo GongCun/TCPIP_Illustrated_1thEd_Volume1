@@ -1,0 +1,505 @@
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 44
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 0.0.0.0
+Backup Designated Router: 0.0.0.0
+Neighbor Seen: 0.0.0.0
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 0.0.0.0
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 4, length = 64
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Link State Update <<<
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 1
+Link State ID: 192.168.0.106
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483687
+LS Length: 36
+[Route LSA]
+bit E
+#links = 1
+
+Link ID: 192.168.0.0
+Link Data: 255.255.255.0
+Link Type: 3
+#TOS: 0
+Metric: 5
+
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 5, length = 64
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Link State Acknowledgement <<<
+[LSA Header]
+LS Age: 6 sec
+Options: 002
+LS Type: 5
+Link State ID: 0.0.0.0
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483649
+LS Length: 36
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 1
+Link State ID: 192.168.0.106
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483687
+LS Length: 36
+
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 5, length = 64
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Link State Acknowledgement <<<
+[LSA Header]
+LS Age: 215 sec
+Options: 002
+LS Type: 5
+Link State ID: 0.0.0.0
+Advertising Router: 192.168.0.113
+LS Sequence Number: 2147483727
+LS Length: 36
+[LSA Header]
+LS Age: 5 sec
+Options: 002
+LS Type: 1
+Link State ID: 192.168.0.113
+Advertising Router: 192.168.0.113
+LS Sequence Number: 2147483695
+LS Length: 48
+
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 4, length = 108
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Link State Update <<<
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 1
+Link State ID: 192.168.0.113
+Advertising Router: 192.168.0.113
+LS Sequence Number: 2147483696
+LS Length: 48
+[Route LSA]
+bit E
+#links = 2
+
+Link ID: 192.168.122.0
+Link Data: 255.255.255.0
+Link Type: 3
+#TOS: 0
+Metric: 5
+
+Link ID: 192.168.0.113
+Link Data: 192.168.0.113
+Link Type: 2
+#TOS: 0
+Metric: 5
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 2
+Link State ID: 192.168.0.113
+Advertising Router: 192.168.0.113
+LS Sequence Number: 2147483654
+LS Length: 32
+[Network LSA]
+Network Mask: 255.255.255.0
+Attached Router: 192.168.0.113
+Attached Router: 192.168.0.106
+
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 5, length = 64
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Link State Acknowledgement <<<
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 1
+Link State ID: 192.168.0.113
+Advertising Router: 192.168.0.113
+LS Sequence Number: 2147483696
+LS Length: 48
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 2
+Link State ID: 192.168.0.113
+Advertising Router: 192.168.0.113
+LS Sequence Number: 2147483654
+LS Length: 32
+
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 4, length = 100
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Link State Update <<<
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 1
+Link State ID: 192.168.0.106
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483688
+LS Length: 36
+[Route LSA]
+bit E
+#links = 1
+
+Link ID: 192.168.0.113
+Link Data: 192.168.0.110
+Link Type: 2
+#TOS: 0
+Metric: 5
+[LSA Header]
+LS Age: 3600 sec
+Options: 002
+LS Type: 5
+Link State ID: 0.0.0.0
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483649
+LS Length: 36
+[AS LSA]
+Network Mask: 0.0.0.0
+bit E, metric: 10000
+Forwarding address: 192.168.0.1
+
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 5, length = 64
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Link State Acknowledgement <<<
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 1
+Link State ID: 192.168.0.106
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483688
+LS Length: 36
+[LSA Header]
+LS Age: 3600 sec
+Options: 002
+LS Type: 5
+Link State ID: 0.0.0.0
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483649
+LS Length: 36
+
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 4, length = 64
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Link State Update <<<
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 5
+Link State ID: 22.236.119.0
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483649
+LS Length: 36
+[AS LSA]
+Network Mask: 255.255.255.0
+bit E, metric: 10000
+Forwarding address: 192.168.0.105
+
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 5, length = 44
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Link State Acknowledgement <<<
+[LSA Header]
+LS Age: 1 sec
+Options: 002
+LS Type: 5
+Link State ID: 22.236.119.0
+Advertising Router: 192.168.0.106
+LS Sequence Number: 2147483649
+LS Length: 36
+
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.113 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.113; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.106 
+
+From 192.168.0.110 to 224.0.0.5
+OSPF version = 2, type = 1, length = 48
+Router ID = 192.168.0.106; Area ID = 0.0.0.0
+>>> Hello Packet <<<
+Network Mask: 255.255.255.0
+HelloInterval: 5
+Options: 002
+Rtr Pri: 1
+RouterDeadInterval: 20
+Designated Router: 192.168.0.113
+Backup Designated Router: 192.168.0.110
+Neighbor Seen: 192.168.0.113 
+

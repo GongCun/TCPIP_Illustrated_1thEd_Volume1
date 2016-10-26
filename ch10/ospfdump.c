@@ -16,6 +16,7 @@ static void pkt_lsupd(const u_char *, int);
 static void pkt_lsahdr(const struct ospflsahdr *);
 static void pkt_lsa_router(u_char *ptr, int length);
 static void pkt_lsa_network(u_char *ptr, int length);
+static void pkt_lsa_as(u_char *ptr, int length);
 
 int main(int argc, char *argv[])
 {
@@ -248,8 +249,16 @@ static void pkt_lsupd(const u_char *pkt, int length)
                                 pkt_lsa_network((u_char *)lsahdr + sizeof(struct ospflsahdr),
                                                 ntohs(lsahdr->lsa_len) - sizeof(struct ospflsahdr));
                                 break;
+                        case 3:
+                        case 4:
+                                printf("Summary-LSA (type: %d)\n", lsahdr->lsa_type);
+                                break;
+                        case 5:
+                                pkt_lsa_as((u_char *)lsahdr + sizeof(struct ospflsahdr),
+                                                ntohs(lsahdr->lsa_len) - sizeof(struct ospflsahdr));
+                                break;
                         default:
-                                printf("LS Type: %d\n", lsahdr->lsa_type);
+                                printf("Unknown LS type: %d\n", lsahdr->lsa_type);
                 }
         }
         printf("\n");
@@ -311,5 +320,34 @@ static void pkt_lsa_network(u_char *ptr, int length)
 
         {
                 printf("Attached Router: %s\n", inet_ntoa(*rtraddr));
+        }
+}
+
+static void pkt_lsa_as(u_char *ptr, int length)
+{
+        const struct in_addr *forward;
+        char buf[INET_ADDRSTRLEN];
+        uint16_t *metric;
+
+        printf("[AS LSA]\n");
+        if (length < 16) {
+                fprintf(stderr, "The AS-external LSAs packet is incomplete\n");
+                return;
+        }
+
+        printf("Network Mask: %s\n", praddr((uint32_t *)ptr, buf, sizeof(buf)));
+        if (((*(ptr + 4)) & 0x80) != 0)
+                printf("bit E, ");
+        else
+                printf("bit zero, ");
+        metric = (uint16_t *)(ptr + 6);
+        printf("metric: %d\n", ntohs(*metric));
+
+        for (forward = (struct in_addr *)(ptr + 8), length -= 8; length > 0;
+                        forward = (struct in_addr *)((u_char *)forward + sizeof(struct ospf_as_lsa)),
+                        length -= sizeof(struct ospf_as_lsa))
+
+        {
+                printf("Forwarding address: %s\n", inet_ntoa(*forward));
         }
 }
