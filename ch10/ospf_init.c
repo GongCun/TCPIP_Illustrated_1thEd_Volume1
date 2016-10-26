@@ -11,6 +11,7 @@ ospf_stat_t ospfstat = DOWN;
 int sendfd;
 struct sockaddr_in sasend;
 struct in_addr recvaddr;
+struct in_addr RouterID;
 
 static void callback(u_char *user, const struct pcap_pkthdr *header, const u_char *packet);
 static char *praddr(const uint32_t *buf, char *str, int len);
@@ -89,12 +90,19 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         printf("Capture packet From %s to ", inet_ntoa(ip->ip_src));
         printf("%s\n", inet_ntoa(ip->ip_dst));
         printf("Packet type = %zd, length = %d\n", type, ntohs(ospfhdr->ospf_len));
+        memcpy(&RouterID, (struct in_addr *)&ospfhdr->ospf_rid, sizeof(struct in_addr));
 
         switch (ospfstat) {
                 case DOWN:
                         if (type != 1) {
                                 fprintf(stderr, "The state is DOWN now, but the packet is not HELLO packet\n");
                         } else {
+                                ospf_init(packet + size_eth + size_ip + size_ospfhdr,
+                                                header->caplen - size_eth - size_ip - size_ospfhdr);
+                        }
+                        break;
+                case INIT:
+                        if (type == 1) {
                                 ospf_init(packet + size_eth + size_ip + size_ospfhdr,
                                                 header->caplen - size_eth - size_ip - size_ospfhdr);
                         }
@@ -141,9 +149,8 @@ static void ospf_init(const u_char *pkt, int length)
         if (length - sizeof(struct ospfhello) >= 4) {
                 ptr = (uint32_t *)(pkt + sizeof(struct ospfhello));
                 if (*ptr != (uint32_t)0) {
-                        fprintf(stderr, "Neighbor seen is %s, but not 0\n",
-                                        praddr(ptr, buf, sizeof(buf)));
-                        return;
+                        fprintf(stderr, "Neighbor seen %s\n", praddr(ptr, buf, sizeof(buf)));
+                        /* return; */
                 }
         }
 
@@ -169,7 +176,8 @@ static void ospf_init(const u_char *pkt, int length)
         sendhello->hello_bdr = ospfhello->hello_bdr;
 
         neighbor = (struct in_addr *)(sendbuf + size_ip + size_ospfhdr + size_ospfhello);
-        memcpy(neighbor, &recvaddr, sizeof(struct in_addr));
+        /* memcpy(neighbor, &recvaddr, sizeof(struct in_addr)); */
+        memcpy(neighbor, &RouterID, sizeof(struct in_addr));
         printf("Reply Neighbor seen is %s\n", inet_ntoa(*neighbor));
 
         /*
@@ -183,7 +191,7 @@ static void ospf_init(const u_char *pkt, int length)
         ospf_write(sendfd, sendbuf, size_ospfhdr + size_ospfhello + sizeof(struct in_addr),
                         recvaddr, sasend.sin_addr, (struct sockaddr *)&sasend, sizeof(sasend));
 
-        /* ospfstat = INIT; */
+        ospfstat = INIT;
         
         return;
 }

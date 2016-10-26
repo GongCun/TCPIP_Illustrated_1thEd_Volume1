@@ -97,3 +97,6 @@ Parameter Type = 2, Length = 20 (Capabilities Optional Parameter)
 
 #-+- Add an static route in Ubuntu -+-
 sudo route add -net 22.236.119.0 gw 192.168.0.105 netmask 255.255.255.0
+
+#-+- Capture to the trace file -+-
+./ospfdump en0 0.5 0 2>&1 | tee ./capture.ospf.`date "+%y%m%d%H%M%S"`
