@@ -124,7 +124,8 @@ struct ospflsahdr {
         uint8_t lsa_type;
         uint32_t lsa_id;
         uint32_t lsa_adv;
-        uint32_t lsa_seq;
+        uint32_t lsa_seq; /* N < 2**31, Initial Seq = -N + 1 (0x80000001),
+                             Maximum Seq = N - 1 (0x7fffffff) */
         uint16_t lsa_sum;
         uint16_t lsa_len; /* the length in bytes of the LSA,
                              include the 20 bytes LSA header */

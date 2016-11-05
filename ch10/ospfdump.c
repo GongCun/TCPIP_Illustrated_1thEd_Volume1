@@ -187,7 +187,7 @@ static void pkt_dbd(const u_char *pkt, int length)
         if ((ospfdbd->dbd_flag & 2) != 0) printf("M-bit ");
         if ((ospfdbd->dbd_flag & 4) != 0) printf("I-bit ");
         printf("\n");
-        printf("DD Sequence Number: %zd\n", ntohl(ospfdbd->dbd_seq));
+        printf("DD Sequence Number: %d\n", ntohl(ospfdbd->dbd_seq));
         for (len = length - sizeof(struct ospfdbd), ospflsahdr = (struct ospflsahdr *)(pkt + sizeof(struct ospfdbd));
                         len > 0; len -= 4, ospflsahdr += 1)
                 pkt_lsahdr(ospflsahdr);
@@ -220,7 +220,7 @@ static void pkt_lsahdr(const struct ospflsahdr *lsahdr)
         printf("LS Type: %d\n", lsahdr->lsa_type);
         printf("Link State ID: %s\n", inet_ntoa(*((struct in_addr *)&lsahdr->lsa_id)));
         printf("Advertising Router: %s\n", inet_ntoa(*((struct in_addr *)&lsahdr->lsa_adv)));
-        printf("LS Sequence Number: %zd\n", ntohl(lsahdr->lsa_seq));
+        printf("LS Sequence Number: %d\n", ntohl(lsahdr->lsa_seq));
         printf("LS Length: %d\n", ntohs(lsahdr->lsa_len));
         return;
 }
