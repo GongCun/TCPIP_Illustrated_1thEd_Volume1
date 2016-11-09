@@ -4,6 +4,7 @@
 int linktype;
 
 static void udpfrag(u_char *user, const struct pcap_pkthdr *header, const u_char *packet);
+static void arpinfo(const u_char *packet);
 
 int main(int argc, char *argv[])
 {
@@ -33,11 +34,19 @@ static void udpfrag(u_char *user, const struct pcap_pkthdr *header, const u_char
         char tmbuf[64];
         struct tm *tm;
         int offset = 0;
+        time_t time;
+        uint16_t *frame;
 
         if (linktype != 0 && linktype != 1)
                 err_quit("Unknown link-layer header type: %d", linktype);
 
         size_eth = (linktype == 0) ? 4 : 14;
+
+        frame = (uint16_t *)(packet + 12);
+        if (htons(*frame) != 0x0800) {
+                arpinfo(packet);
+                return;
+        }
 
         ip = (struct ip *)(packet + size_eth);
         if ((size_ip = ip->ip_hl * 4) < sizeof(struct ip)) {
@@ -51,7 +60,8 @@ static void udpfrag(u_char *user, const struct pcap_pkthdr *header, const u_char
         }
 
         /* get daytime */
-        tm = localtime(&(header->ts.tv_sec));
+        time = (time_t)header->ts.tv_sec;
+        tm = localtime(&time);
         strftime(tmbuf, sizeof(tmbuf), "%Y-%m-%d %H:%M:%S", tm);
         printf("%s.%06d ", tmbuf, header->ts.tv_usec);
 
@@ -127,5 +137,32 @@ END:
         return;
 }
 
+
+static void arpinfo(const u_char *packet)
+{
+        uint16_t *frame, *op;
+        struct in_addr *addr;
+
+        frame = (uint16_t *)(packet + 12);
+        if (htons(*frame) == 0x0806)
+                printf("ARP ");
+        else if (htons(*frame) == 0x8035)
+                printf("RARP ");
+        else
+                err_quit("Unknown frame type: 0x%04x", htons(*frame));
+
+        op = (uint16_t *)(packet + 20);
+        if (*op == 1 || *op == 3)
+                printf("request ");
+        else if (*op == 2 || *op == 4)
+                printf("reply ");
+
+        addr = (struct in_addr *)(packet + 28);
+        printf("%s -> ", inet_ntoa(*addr));
+        addr = (struct in_addr *)(packet + 38);
+        printf("%s\n", inet_ntoa(*addr));
+
+        return;
+}
 
 

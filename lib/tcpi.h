@@ -64,6 +64,10 @@
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))
 
+#ifndef IP_OFFMASK
+#define IP_OFFMASK 0x1fff
+#endif
+
 
 /* Error handler functions */
 void err_dump(const char *, ...);

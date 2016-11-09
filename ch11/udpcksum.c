@@ -1,5 +1,4 @@
 #include "tcpi.h"
-#include <time.h>
 
 int linktype;
 
@@ -48,7 +47,8 @@ static void udpcksum(u_char *user, const struct pcap_pkthdr *header, const u_cha
 
         /* get daytime */
         char tmbuf[64];
-        struct tm *tm = localtime(&(header->ts.tv_sec));
+        time_t time = (time_t)header->ts.tv_sec;
+        struct tm *tm = localtime(&time);
         strftime(tmbuf, sizeof(tmbuf), "%Y-%m-%d %H:%M:%S", tm);
         printf("%s.%06d ", tmbuf, header->ts.tv_usec);
         printf("%s.%d > ", inet_ntoa(ip->ip_src), ntohs(udp->uh_sport));
