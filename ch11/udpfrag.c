@@ -142,6 +142,8 @@ static void arpinfo(const u_char *packet)
 {
         uint16_t *frame, *op;
         struct in_addr *addr;
+        const u_char *ptr;
+        int i;
 
         frame = (uint16_t *)(packet + 12);
         if (htons(*frame) == 0x0806)
@@ -152,15 +154,27 @@ static void arpinfo(const u_char *packet)
                 err_quit("Unknown frame type: 0x%04x", htons(*frame));
 
         op = (uint16_t *)(packet + 20);
-        if (*op == 1 || *op == 3)
-                printf("request ");
-        else if (*op == 2 || *op == 4)
-                printf("reply ");
+        switch ntohs(*op) {
+                case 1: case 3:
+                        printf("request ");
+                        break;
+                case 2: case 4:
+                        printf("reply ");
+                        break;
+                default:
+                        printf("unknown oper ");
+        }
+
+        for (ptr = packet + 22, i = 0; i < 6; ptr++, i++)
+                printf("%02x%s", *ptr, (i == 5) ? "" : ":");
 
         addr = (struct in_addr *)(packet + 28);
-        printf("%s -> ", inet_ntoa(*addr));
+        printf(" (%s) -> ", inet_ntoa(*addr));
+
+        for (ptr = packet + 32, i = 0; i < 6; ptr++, i++)
+                printf("%02x%s", *ptr, (i == 5) ? "" : ":");
         addr = (struct in_addr *)(packet + 38);
-        printf("%s\n", inet_ntoa(*addr));
+        printf(" (%s)\n", inet_ntoa(*addr));
 
         return;
 }
