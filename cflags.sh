@@ -36,7 +36,11 @@ cat >./${PID}.c <<\EOF
 main() { pcap_lib_version(); }
 EOF
 
-typeset LIBS=
+LIBS=
+LIBPCAP=`find /usr/lib -name "libpcap.a" -print | tail -1`
+if test ! -z "$LIBPCAP" ; then
+        LIBS="-L`dirname $LIBPCAP` -lpcap"
+else
 LIBDIR="$LIBDIR /usr/local/lib /usr/lib64 /usr/lib"
 for folder in $LIBDIR; do
     if test -d $folder && ls -1 $folder | grep -w libpcap >/dev/null 2>&1; then
@@ -45,6 +49,7 @@ for folder in $LIBDIR; do
     fi
     unset LIBS
 done
+fi
 
 if test "$LIBS"; then
 

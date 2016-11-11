@@ -8,8 +8,8 @@
 
 void prmac(void)
 {
-#ifndef HAVE_SYSCTL
-    err_msg("Sorry, this system not support sysctl()");
+#ifndef _DARWIN
+    err_msg("Sorry, this program run on DARWIN Linux only");
     return;
 #else
     int i, mib[6];
