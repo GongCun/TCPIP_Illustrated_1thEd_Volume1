@@ -7,7 +7,7 @@ main(int argc, char **argv)
 	int n = 1;
         size_t len = sizeof(n);
 	struct sockaddr_in servaddr;
-	char buf[65536];
+	char buf[MAXLEN+1];
 
 	if (argc != 3)
 		err_quit("Usage: %s <IPaddress> <Port>", basename(argv[0]));
@@ -22,7 +22,7 @@ main(int argc, char **argv)
 
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 		err_sys("socket error");
-        for (n += 128; n <= 65535; n += 128) {
+        for (n += 128; n <= MAXLEN; n += 128) {
                 if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &n, len) < 0) {
                         if (errno == ENOBUFS)
                                 break;

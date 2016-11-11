@@ -8,12 +8,14 @@
 
 #define MAXLINE 4096 /* max text line length */
 #define BUFFSIZE 8192 /* buffer size for reads and writes */
+#define MAXLEN 65535 /* max IP packet length */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h> /* uint8_t, uint16_t, ... */
 #include <errno.h>
+#include <fcntl.h>
 #include <ctype.h>
 #include <string.h>
 #include <strings.h>

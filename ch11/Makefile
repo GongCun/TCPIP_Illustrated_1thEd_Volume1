@@ -1,6 +1,6 @@
 include ../Make.defines
 
-PROGS = udpcksum udpfrag udpwrite udpsend
+PROGS = udpcksum udpfrag udpwrite udpsend udprecv
 
 all: ${PROGS}
 
@@ -16,5 +16,7 @@ udpwrite: udpwrite.o
 udpsend: udpsend.o
 	${CC} ${CFLAGS} -o $@ $< ${LIBS}
 
+udprecv: udprecv.o
+	${CC} ${CFLAGS} -o $@ $< ${LIBS}
 clean:
 	rm -rf ${PROGS} ${CLEANFILES}
