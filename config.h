@@ -5,13 +5,13 @@
 #define HAVE_BZERO 1
 
 /* Define to 1 if <netinet/icmp.h> have icmp_lifetime */
-/* #undef HAVE_ICMP_LIFETIME */
+#define HAVE_ICMP_LIFETIME 1
 
 /* Define to 1 if <netinet/icmp.h> have icmp_num_addrs */
-/* #undef HAVE_ICMP_NUM_ADDRS */
+#define HAVE_ICMP_NUM_ADDRS 1
 
 /* Define to 1 if <netinet/icmp.h> have icmp_wpa */
-/* #undef HAVE_ICMP_WPA */
+#define HAVE_ICMP_WPA 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
@@ -33,7 +33,7 @@
 #define HAVE_NET_IF_ARP_H 1
 
 /* Define to 1 if you have the <net/if_dl.h> header file. */
-#define HAVE_NET_IF_DL_H 1
+/* #undef HAVE_NET_IF_DL_H */
 
 /* Define to 1 if you have the <net/if.h> header file. */
 #define HAVE_NET_IF_H 1
@@ -42,13 +42,13 @@
 #define HAVE_PCAP_H 1
 
 /* Define to 1 if <net/if_dl.h> defines struct sockaddr_dl */
-#define HAVE_SOCKADDR_DL_STRUCT 1
+/* #undef HAVE_SOCKADDR_DL_STRUCT */
 
 /* Define to 1 if <netinet/if_ether.h> defines struct sockaddr_inarp */
-#define HAVE_SOCKADDR_INARP_STRUCT 1
+/* #undef HAVE_SOCKADDR_INARP_STRUCT */
 
 /* Define to 1 if socket address structures have length fields */
-#define HAVE_SOCKADDR_SA_LEN 1
+/* #undef HAVE_SOCKADDR_SA_LEN */
 
 /* Define to 1 if you have the `socket' function. */
 #define HAVE_SOCKET 1
@@ -75,7 +75,7 @@
 #define HAVE_STRUCT_IFREQ_IFR_MTU 1
 
 /* Define to 1 if `sa_len' is a member of `struct sockaddr'. */
-#define HAVE_STRUCT_SOCKADDR_SA_LEN 1
+/* #undef HAVE_STRUCT_SOCKADDR_SA_LEN */
 
 /* Define to 1 if you have the `sysctl' function. */
 #define HAVE_SYSCTL 1
