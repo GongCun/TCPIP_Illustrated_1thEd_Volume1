@@ -103,6 +103,13 @@ ICMP:
 
         size_icmp = header->caplen - size_eth - size_ip;
 
+        if (icmp->icmp_type == ICMP_SOURCEQUENCH) {
+                printf("%s > ", inet_ntoa(ip->ip_src));
+                printf("%s: ", inet_ntoa(ip->ip_dst));
+                printf("source quench\n");
+                return;
+        }
+
         if (!(icmp->icmp_type == ICMP_UNREACH && icmp->icmp_code == ICMP_UNREACH_NEEDFRAG)) {
                 printf("type %d code %d ", icmp->icmp_type, icmp->icmp_code);
                 goto END;

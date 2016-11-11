@@ -8,7 +8,7 @@ udp_write(int fd, char *buf, int userlen, struct in_addr src, struct in_addr dst
         int total;
 
         ip = (struct ip *)buf;
-        bzero(ip, sizeof(ip));
+        bzero(ip, sizeof(struct ip));
         ip->ip_v = 4;
         ip->ip_hl = sizeof(struct ip) >> 2;
         ip->ip_tos = 0;
