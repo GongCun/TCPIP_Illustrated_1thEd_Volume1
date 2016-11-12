@@ -55,6 +55,11 @@ AC_CHECK_MEMBER([struct icmp.icmp_lifetime], [AC_DEFINE(HAVE_ICMP_LIFETIME, 1, [
 [],
 [#include <netinet/ip_icmp.h>
 ])
+AC_CHECK_MEMBER([struct msghdr.msg_control], [AC_DEFINE(HAVE_MSGHDR_MSG_CONTROL, 1, [Define to 1 if struct msghdr contains have the msg_control member])],
+[],
+[#include <sys/types.h>
+#include <sys/socket.h>
+])
 
 AC_CHECK_TYPE([struct sockaddr_dl], [AC_DEFINE(HAVE_SOCKADDR_DL_STRUCT, 1, [Define to 1 if <net/if_dl.h> defines struct sockaddr_dl])], [],
 [#include <sys/types.h>
