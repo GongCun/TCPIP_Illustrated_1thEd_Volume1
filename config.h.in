@@ -25,6 +25,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if struct msghdr contains have the msg_control member */
+#undef HAVE_MSGHDR_MSG_CONTROL
+
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
 

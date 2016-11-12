@@ -3731,6 +3731,16 @@ $as_echo "#define HAVE_ICMP_LIFETIME 1" >>confdefs.h
 
 fi
 
+ac_fn_c_check_member "$LINENO" "struct msghdr" "msg_control" "ac_cv_member_struct_msghdr_msg_control" "#include <sys/types.h>
+#include <sys/socket.h>
+
+"
+if test "x$ac_cv_member_struct_msghdr_msg_control" = xyes; then :
+
+$as_echo "#define HAVE_MSGHDR_MSG_CONTROL 1" >>confdefs.h
+
+fi
+
 
 ac_fn_c_check_type "$LINENO" "struct sockaddr_dl" "ac_cv_type_struct_sockaddr_dl" "#include <sys/types.h>
 #include <sys/socket.h>

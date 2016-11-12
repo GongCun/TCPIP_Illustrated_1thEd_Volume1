@@ -70,6 +70,13 @@
 #define IP_OFFMASK 0x1fff
 #endif
 
+#ifndef CMSG_LEN
+#define CMSG_LEN(size) (sizeof(struct cmsghdr) + (size))
+#endif
+#ifndef CMSG_SPACE
+#define CMSG_SPACE(size) (sizeof(struct cmsghdr) + (size))
+#endif
+
 
 /* Error handler functions */
 void err_dump(const char *, ...);
