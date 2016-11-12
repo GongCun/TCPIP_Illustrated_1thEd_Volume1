@@ -161,7 +161,7 @@ static void arpinfo(const u_char *packet)
                 err_quit("Unknown frame type: 0x%04x", htons(*frame));
 
         op = (uint16_t *)(packet + 20);
-        switch ntohs(*op) {
+        switch (ntohs(*op)) {
                 case 1: case 3:
                         printf("request ");
                         break;

@@ -37,6 +37,9 @@ main(int argc, char **argv)
 #ifdef IP_RECVDSTADDR
         if (setsockopt(sockfd, IPPROTO_IP, IP_RECVDSTADDR, &on, sizeof(on)) < 0)
                 err_sys("setsockopt IP_RECVDSTADDR error");
+#elif defined IP_PKTINFO
+        if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
+                err_sys("setsockopt IP_PKTINFO error");
 #endif
 
 	bzero(&servaddr, sizeof(servaddr));
@@ -69,7 +72,12 @@ ssize_t recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct sockadd
 
 #ifdef HAVE_MSGHDR_MSG_CONTROL
         struct cmsghdr *cmptr;
+#ifdef HAVE_IN_PKTINFO_STRUCT
+        char ctrldata[CMSG_SPACE(sizeof(struct in_pktinfo))];
+        struct in_pktinfo *pkt;
+#else
         char ctrldata[CMSG_SPACE(sizeof(struct in_addr))];
+#endif
         msg.msg_control = ctrldata;
         msg.msg_controllen = sizeof(ctrldata);
         msg.msg_flags = 0;
@@ -92,14 +100,25 @@ ssize_t recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct sockadd
 #ifndef HAVE_MSGHDR_MSG_CONTROL
         return n;
 #else
+#ifdef IP_RECVDSTADDR
         if (msg.msg_controllen < CMSG_SPACE(sizeof(struct in_addr)) ||
                         (msg.msg_flags & MSG_CTRUNC) || dst == NULL)
                 return n;
-#ifdef IP_RECVDSTADDR
         for (cmptr = CMSG_FIRSTHDR(&msg); cmptr; cmptr = CMSG_NXTHDR(&msg, cmptr)) {
                 if (cmptr->cmsg_level == IPPROTO_IP &&
                                 cmptr->cmsg_type == IP_RECVDSTADDR)
                         memcpy(dst, CMSG_DATA(cmptr), sizeof(struct in_addr));
+        }
+#elif defined(IP_PKTINFO) && defined(HAVE_IN_PKTINFO_STRUCT)
+        if (msg.msg_controllen < CMSG_SPACE(sizeof(struct in_pktinfo)) ||
+                        (msg.msg_flags & MSG_CTRUNC) || dst == NULL)
+                return n;
+        for (cmptr = CMSG_FIRSTHDR(&msg); cmptr; cmptr = CMSG_NXTHDR(&msg, cmptr)) {
+                if (cmptr->cmsg_level == IPPROTO_IP &&
+                                cmptr->cmsg_type == IP_PKTINFO) {
+                        pkt = (struct in_pktinfo *)(CMSG_DATA(cmptr));
+                        memcpy(dst, &pkt->ipi_addr, sizeof(struct in_addr));
+                }
         }
 #else
         bzero(dst, sizeof(struct in_addr));

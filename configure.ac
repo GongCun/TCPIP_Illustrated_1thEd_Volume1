@@ -73,6 +73,13 @@ AC_CHECK_TYPE([struct sockaddr_inarp], [AC_DEFINE(HAVE_SOCKADDR_INARP_STRUCT, 1,
 #include <netinet/if_ether.h>
 ])
 
+AC_CHECK_TYPE([struct in_pktinfo], [AC_DEFINE(HAVE_IN_PKTINFO_STRUCT, 1, [Define to 1 if defines struct in_pktinfo])], [],
+[#include <sys/types.h>
+#include <sys/socket.h>
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+])
 
 # Checks for library functions.
 AC_FUNC_MALLOC
