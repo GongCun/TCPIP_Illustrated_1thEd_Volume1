@@ -5,6 +5,7 @@ main(int argc, char **argv)
 {
 	int sockfd;
 	int n = 1;
+        const int on = 1;
         size_t len = sizeof(n);
 	struct sockaddr_in servaddr;
 	char buf[MAXLEN+1];
@@ -30,6 +31,8 @@ main(int argc, char **argv)
                 }
         }
         printf("SNDBUF = %d\n", n - 128);
+        if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0)
+                err_sys("setsockopt SO_BROADCAST error");
 	while ((n = read(0, buf, sizeof(buf))) != 0) {
 		if (n == -1) {
 			if (errno == EINTR)

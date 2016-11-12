@@ -41,7 +41,8 @@ main(int argc, char **argv)
                 if ((n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&cliaddr, &socklen)) < 0) 
                         err_sys("recvfrom error");
                 printf("Recv from %s:%d %d byte\n", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port), n);
-                sleep(1);
+                /* sleep(1); */
+                pause();
                 if (n > 0 && write(fd, buf, n) != n)
                         err_sys("write error");
         }
