@@ -75,3 +75,9 @@ RCVBUF = 65409
 Recv from 192.168.0.110:40737 6 byte, destination: 192.168.0.101
 Recv from 192.168.0.110:52751 6 byte, destination: 192.168.0.255
 
+
+# On Macos
+./udprecv -v -f 192.168.0.110.9696 12345
+
+# On Ubuntu
+./udpsend -v -b 192.168.0.110.9696 192.168.0.101 12345
