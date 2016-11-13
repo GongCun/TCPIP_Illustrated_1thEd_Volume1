@@ -55,6 +55,9 @@ main(int argc, char **argv)
         if (optind != argc-1)
                 usage(basename(argv[0]));
 
+        argc -= optind;
+        argv += optind;
+
         if (verbose && foreignip[0] != 0)
                 printf("Foreign IP: %s, Port: %d\n", foreignip, foreignport);
 

@@ -47,6 +47,9 @@ main(int argc, char **argv)
         if (optind != argc-2)
                 usage(basename(argv[0]));
 
+        argc -= optind;
+        argv += optind;
+
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(atoi(argv[2]));
