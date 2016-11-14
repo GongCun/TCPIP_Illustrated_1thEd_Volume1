@@ -6,7 +6,7 @@ static ssize_t recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct 
 
 static void usage(const char *s)
 {
-        err_quit("Usage: %s -f ForeignIP.Port <Port>", s);
+        err_quit("Usage: %s -v -B -f ForeignIP.Port <Port>", s);
 }
 
 int
@@ -24,6 +24,7 @@ main(int argc, char **argv)
         int c;
         char *ptr;
 
+        int servport;
         int foreignport;
         char foreignip[32];
         static int verbose = 0;
@@ -49,11 +50,7 @@ main(int argc, char **argv)
                                 verbose = 1;
                                 break;
                         case 'B':
-#if !(defined(HAVE_GETIFADDRS) && defined(HAVE_IFADDRS_STRUCT))
-                                err_quit("Not support -B option on this OS");
-#else
                                 bindif = 1;
-#endif
                                 break;
                         case '?':
                                 err_quit("Unrecognized option");
@@ -65,24 +62,15 @@ main(int argc, char **argv)
         argc -= optind;
         argv += optind;
 
+	servport = atoi(argv[0]);
+
         if (verbose && foreignip[0] != 0)
                 printf("Foreign IP: %s, Port: %d\n", foreignip, foreignport);
 
-
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-                err_sys("socket error");
-
-        for (n += 128; n <= MAXLEN; n += 128) {
-                if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &n, len) < 0) {
-                        if (errno == ENOBUFS)
-                                break;
-                        err_sys("setsockopt SO_RCVBUF error");
-                }
-        }
-        if (verbose) printf("RCVBUF = %d\n", n - 128);
+        if (bindif) {
+		pid_t pid;
 
 #if defined(HAVE_GETIFADDRS) && defined(HAVE_IFADDRS_STRUCT)
-        if (bindif) {
                 struct ifaddrs *ifap, *ifa;
                 struct sockaddr_in *sa;
                 struct ifreq ifr;
@@ -90,21 +78,237 @@ main(int argc, char **argv)
                 if (getifaddrs(&ifap) < 0)
                         err_sys("getifaddrs error");
                 for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-                        if (ifa->ifa_addr->sa_family != AF_INET)
+                        if (ifa->ifa_addr->sa_family != AF_INET || (ifa->ifa_flags & IFF_UP) == 0)
                                 continue;
+			if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+				err_sys("socket error");
+                        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+                                err_sys("setsockopt SO_REUSEADDR error");
+#ifdef IP_RECVDSTADDR
+                        if (setsockopt(sockfd, IPPROTO_IP, IP_RECVDSTADDR, &on, sizeof(on)) < 0)
+                                err_sys("setsockopt IP_RECVDSTADDR error");
+#elif defined IP_PKTINFO
+                        if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
+                                err_sys("setsockopt IP_PKTINFO error");
+#endif
                         sa = (struct sockaddr_in *)(ifa->ifa_addr);
-                        printf("IP: %s\n", inet_ntoa(sa->sin_addr));
-#ifdef SIOCGIFGBRADDR
-                        if (ifa->ifa_flags & IFF_BROADCAST) {
-                                if (ioctl(sockfd, SIOCGIFGBRADDR, &ifr) < 0)
-                                        err_sys("ioctl SIOCGIFGBRADDR error");
-                                sa = (struct sockaddr_in *)&ifr.ifr_broadaddr;
-                                printf("Broadcast: %s\n", inet_ntoa(sa->sin_addr));
-                        }
+			sa->sin_family = AF_INET;
+			sa->sin_port = htons(servport);
+			if (bind(sockfd, (struct sockaddr *)sa, sizeof(*sa)) < 0)
+				err_sys("bind error");
+			if (verbose)
+				printf("Bound IP: %s\n", inet_ntoa(sa -> sin_addr));
+			if ((pid = fork()) < 0) 
+				err_sys("fork() error");
+			else if (pid == 0) {	/* child */
+				for ( ; ; ) {
+					socklen = sizeof(struct sockaddr_in);
+					if ((n = recvdst(sockfd, buf, sizeof(buf), &flags, (struct sockaddr *) & cliaddr, &socklen, &dstaddr)) < 0)
+						err_sys("recvfrom error");
+					printf("Listen on %s ", inet_ntoa(sa->sin_addr));
+					printf("Recv from %s:%d %d byte, ", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port), n);
+					printf("destination: %s\n", inet_ntoa(dstaddr));
+					if (n > 0 && write(1, buf, n) != n)
+						err_sys("write error");
+				}
+				exit(0);
+			}
+			/* parent continue */
+#ifdef SIOCGIFBRDADDR
+			if (ifa -> ifa_flags & IFF_BROADCAST) {
+				memcpy(ifr.ifr_name, ifa -> ifa_name, IFNAMSIZ);
+				if (ioctl(sockfd, SIOCGIFBRDADDR, &ifr) < 0)
+					err_sys("ioctl SIOCGIFGBRADDR error");
+				sa = (struct sockaddr_in *) & ifr.ifr_broadaddr;
+				if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+					err_sys("socket error");
+				if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+					err_sys("setsockopt error");
+#ifdef IP_RECVDSTADDR
+                                if (setsockopt(sockfd, IPPROTO_IP, IP_RECVDSTADDR, &on, sizeof(on)) < 0)
+                                        err_sys("setsockopt IP_RECVDSTADDR error");
+#elif defined IP_PKTINFO
+                                if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
+                                        err_sys("setsockopt IP_PKTINFO error");
 #endif
+				sa->sin_family = AF_INET;
+				sa->sin_port = htons(servport);
+				if (bind(sockfd, (struct sockaddr *)sa, sizeof(*sa)) < 0) {
+					if (errno == EADDRINUSE) {
+						if (close(sockfd) < 0)
+							err_sys("close() error");
+						continue;
+					} else
+						err_sys("bind error");
+				}
+				if (verbose) printf("Bound IP: %s\n", inet_ntoa(sa -> sin_addr));
+				if ((pid = fork()) < 0) 
+					err_sys("fork() error");
+				else if (pid == 0) {
+					for (;;) {
+						socklen = sizeof(struct sockaddr_in);
+						if ((n = recvdst(sockfd, buf, sizeof(buf), &flags, (struct sockaddr *) & cliaddr, &socklen, &dstaddr)) < 0)
+							err_sys("recvfrom error");
+                                                printf("Listen on %s ", inet_ntoa(sa->sin_addr));
+						printf("Recv from %s:%d %d byte, ", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port), n);
+						printf("destination: %s\n", inet_ntoa(dstaddr));
+						if (n > 0 && write(1, buf, n) != n)
+							err_sys("write error");
+					}
+					exit(0);
+				}
+			}
+#endif /* SIOCGIFBRDADDR */
                 }
-        }
+#else
+		struct ifconf ifc;
+		struct ifreq *ifr, ifrcopy;
+		struct sockaddr_in *sa;
+		int xlen, xfd, lastlen = 0;
+		char *xbuf;
+		if ((xfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+			err_sys("socket xfd error");
+		for (xlen = 100 * sizeof(struct ifreq); ;) {
+			xbuf = xmalloc(xlen);
+			ifc.ifc_len = xlen;
+			ifc.ifc_buf = xbuf;
+			if (ioctl(xfd, SIOCGIFCONF, &ifc) < 0) {
+				if (!(errno == EINVAL && lastlen == 0))
+					err_sys("ioctl error");
+			} else {
+				if (ifc.ifc_len == lastlen)
+					break;
+				else
+					lastlen = ifc.ifc_len;
+			}
+			xlen += 10 * sizeof(struct ifreq);
+			free(xbuf);
+		}
+		for (ptr = xbuf; ptr < xbuf + ifc.ifc_len; ) {
+			ifr = (struct ifreq *)ptr;
+#ifdef HAVE_SOCKADDR_SA_LEN
+			xlen = max(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);
+#else
+			switch (ifr->ifr_addr.sa_family) {
+#ifdef IPV6
+				case AF_INET6:
+					xlen = sizeof(struct sockaddr_in6);
+					break;
 #endif
+				case AF_INET: default:
+					xlen = sizeof(struct sockaddr);
+					break;
+			}
+#endif /* HAVE_SOCKADDR_SA_LEN */
+			ptr += sizeof(ifr->ifr_name) + xlen;
+			if (ifr->ifr_addr.sa_family != AF_INET)
+				continue;
+			ifrcopy = *ifr;
+			if (ioctl(xfd, SIOCGIFFLAGS, &ifrcopy) < 0)
+				err_sys("ioctl SIOCGIFFLAGS error");
+			if ((ifrcopy.ifr_flags & IFF_UP) == 0)
+				continue;
+
+			if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+				err_sys("socket() error");
+			if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+				err_sys("setsockopt SO_REUSEADDR error");
+#ifdef IP_RECVDSTADDR
+                        if (setsockopt(sockfd, IPPROTO_IP, IP_RECVDSTADDR, &on, sizeof(on)) < 0)
+                                err_sys("setsockopt IP_RECVDSTADDR error");
+#elif defined IP_PKTINFO
+                        if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
+                                err_sys("setsockopt IP_PKTINFO error");
+#endif
+				sa->sin_family = AF_INET;
+			sa = (struct sockaddr_in *)&ifr->ifr_addr;
+			sa->sin_family = AF_INET;
+			sa->sin_port = htons(servport);
+			if (bind(sockfd, (struct sockaddr *)sa, sizeof(*sa)) < 0)
+				err_sys("bind error");
+			if (verbose) printf("Bound IP: %s\n", inet_ntoa(sa -> sin_addr));
+
+			if ((pid = fork()) < 0) 
+				err_sys("fork() error");
+			else if (pid == 0) { /* child */
+				for ( ; ; ) {
+					socklen = sizeof(struct sockaddr_in);
+					if ((n = recvdst(sockfd, buf, sizeof(buf), &flags, (struct sockaddr *) & cliaddr, &socklen, &dstaddr)) < 0)
+						err_sys("recvfrom error"); 
+                                        printf("Listen on %s ", inet_ntoa(sa->sin_addr));
+					printf("Recv from %s:%d %d byte, ", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port), n);
+					printf("destination: %s\n", inet_ntoa(dstaddr));
+					if (n > 0 && write(1, buf, n) != n)
+						err_sys("write error");
+				}
+				exit(0);
+			}
+
+#ifdef SIOCGIFBRDADDR
+                        if (ifrcopy.ifr_flags & IFF_BROADCAST) {
+                                if (ioctl(xfd, SIOCGIFBRDADDR, &ifrcopy) < 0)
+                                        err_sys("ioctl SIOCGIFGBRADDR error");
+				if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+					err_sys("socket() error");
+				if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+					err_sys("setsockopt SO_REUSEADDR error");
+#ifdef IP_RECVDSTADDR
+                                if (setsockopt(sockfd, IPPROTO_IP, IP_RECVDSTADDR, &on, sizeof(on)) < 0)
+                                        err_sys("setsockopt IP_RECVDSTADDR error");
+#elif defined IP_PKTINFO
+                                if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
+                                        err_sys("setsockopt IP_PKTINFO error");
+#endif
+                                sa = (struct sockaddr_in *)&ifrcopy.ifr_broadaddr;
+				sa->sin_family = AF_INET;
+				sa->sin_port = htons(servport);
+				if (bind(sockfd, (struct sockaddr *)sa, sizeof(*sa)) < 0) {
+					if (errno == EADDRINUSE) {
+						if (close(sockfd) < 0)
+							err_sys("close() error");
+						continue;
+					} else
+						err_sys("bind() error");
+				}
+				if (verbose) printf("Bound IP: %s\n", inet_ntoa(sa -> sin_addr));
+				if ((pid = fork()) < 0)
+					err_sys("fork() error");
+				else if (pid == 0) { /* child */
+					for (;;) {
+						socklen = sizeof(struct sockaddr_in);
+						if ((n = recvdst(sockfd, buf, sizeof(buf), &flags, (struct sockaddr *) & cliaddr, &socklen, &dstaddr)) < 0)
+							err_sys("recvfrom error");
+                                                printf("Listen on %s ", inet_ntoa(sa->sin_addr));
+						printf("Recv from %s:%d %d byte, ", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port), n);
+						printf("destination: %s\n", inet_ntoa(dstaddr));
+						if (n > 0 && write(1, buf, n) != n)
+							err_sys("write error");
+					}
+					exit(0);
+				}
+			}
+#endif /* SIOCGIFBRDADDR */
+		}
+#endif /* HAVE_GETIFADDRS */
+        }
+
+        /* bind wildcard address */
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+		err_sys("socket() error");
+
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+		err_sys("setsockopt error");
+
+	for (n = 1; n <= MAXLEN; n += 128) {
+		if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &n, len) < 0) {
+			if (errno == ENOBUFS)
+				break;
+			err_sys("setsockopt SO_RCVBUF error");
+		}
+	}
+	if (verbose)
+		printf("RCVBUF = %d\n", n - 128);
+
 
 #ifdef IP_RECVDSTADDR
         if (setsockopt(sockfd, IPPROTO_IP, IP_RECVDSTADDR, &on, sizeof(on)) < 0)
@@ -113,14 +317,11 @@ main(int argc, char **argv)
         if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
                 err_sys("setsockopt IP_PKTINFO error");
 #endif
-        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
-                err_sys("setsockopt *.* SO_REUSEADDR error");
 
-        /* bind wildcard address */
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family      = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port        = htons(atoi(argv[0]));
+	servaddr.sin_port        = htons(servport);
 
 	if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
                 err_sys("bind error");
@@ -140,6 +341,7 @@ main(int argc, char **argv)
                 socklen = sizeof(struct sockaddr_in);
                 if ((n = recvdst(sockfd, buf, sizeof(buf), &flags, (struct sockaddr *)&cliaddr, &socklen, &dstaddr)) < 0) 
                         err_sys("recvfrom error");
+                printf("Listen on *.* ");
                 printf("Recv from %s:%d %d byte, ", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port), n);
                 printf("destination: %s\n", inet_ntoa(dstaddr));
                 if (n > 0 && write(1, buf, n) != n)

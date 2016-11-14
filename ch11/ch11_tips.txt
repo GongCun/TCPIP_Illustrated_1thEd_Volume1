@@ -81,3 +81,52 @@ Recv from 192.168.0.110:52751 6 byte, destination: 192.168.0.255
 
 # On Ubuntu
 ./udpsend -v -b 192.168.0.110.9696 192.168.0.101 12345
+
+#-+- On AIX -+-
+% ./udprecv -v -B 12345
+RCVBUF = 65409
+Bound IP: 192.168.9.241
+Bound IP: 192.168.15.255
+Bound IP: 22.236.180.216
+Bound IP: 22.236.180.255
+Bound IP: 22.236.180.254
+Bound IP: 127.0.0.1
+Bound IP: 127.255.255.255
+RCVBUF = 65409
+
+% netstat -an | grep -w 12345
+udp        0      0  *.12345                *.*
+udp        0      0  127.255.255.255.12345  *.*
+udp4       0      0  127.0.0.1.12345        *.*
+udp4       0      0  22.236.180.254.12345   *.*
+udp        0      0  22.236.180.255.12345   *.*
+udp4       0      0  22.236.180.216.12345   *.*
+udp        0      0  192.168.15.255.12345   *.*
+udp4       0      0  192.168.9.241.12345    *.*
+
+#-+- END On AIX -+-
+
+#-+- On MacOS -+-
+% ./udprecv -f 192.168.0.110.9886 -B -v 12345
+Foreign IP: 192.168.0.110, Port: 9886
+Bound IP: 127.0.0.1
+Bound IP: 192.168.0.101
+Bound IP: 192.168.0.255
+RCVBUF = 65409
+
+Listen on *.* Recv from 192.168.0.110:9886 6 byte, destination: 192.168.0.101
+hello
+Listen on 192.168.0.101 Recv from 192.168.0.110:35947 6 byte, destination:
+192.168.0.101
+hello
+Listen on 192.168.0.255 Recv from 192.168.0.110:51311 6 byte, destination:
+192.168.0.255
+hello
+
+% netstat -an | grep -w 12345
+udp4       0      0  192.168.0.101.12345    192.168.0.110.9886                
+udp4       0      0  192.168.0.255.12345    *.*                               
+udp4       0      0  192.168.0.101.12345    *.*                               
+udp4       0      0  127.0.0.1.12345        *.*  
+
+#-+- END On MacOS -+-
