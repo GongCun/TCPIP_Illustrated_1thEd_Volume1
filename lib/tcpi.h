@@ -59,6 +59,9 @@
 #else
 #include <net/ethernet.h>
 #endif
+#ifdef HAVE_IFADDRS_H
+#include <ifaddrs.h>
+#endif
 
 #define CKSUM_CARRY(x) \
         (x = (x >> 16) + (x & 0xffff), (~(x + (x >> 16)) & 0xffff))

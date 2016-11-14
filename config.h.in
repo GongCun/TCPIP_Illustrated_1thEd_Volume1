@@ -3,6 +3,12 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
+/* Define to 1 if you have the `freeifaddrs' function. */
+#undef HAVE_FREEIFADDRS
+
+/* Define to 1 if you have the `getifaddrs' function. */
+#undef HAVE_GETIFADDRS
+
 /* Define to 1 if <netinet/icmp.h> have icmp_lifetime */
 #undef HAVE_ICMP_LIFETIME
 
@@ -11,6 +17,12 @@
 
 /* Define to 1 if <netinet/icmp.h> have icmp_wpa */
 #undef HAVE_ICMP_WPA
+
+/* Define to 1 if you have the <ifaddrs.h> header file. */
+#undef HAVE_IFADDRS_H
+
+/* Define to 1 if defines struct ifaddrs */
+#undef HAVE_IFADDRS_STRUCT
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H

@@ -1,6 +1,6 @@
 #include "tcpi.h"
 
-#define OPTSTR "f:v"
+#define OPTSTR "f:vB"
 
 static ssize_t recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct sockaddr *sa, socklen_t *socklen, struct in_addr *dst);
 
@@ -27,7 +27,7 @@ main(int argc, char **argv)
         int foreignport;
         char foreignip[32];
         static int verbose = 0;
-
+        static int bindif = 0;
 
         if (argc < 2)
                 usage(basename(argv[0]));
@@ -47,6 +47,13 @@ main(int argc, char **argv)
                                 break;
                         case 'v':
                                 verbose = 1;
+                                break;
+                        case 'B':
+#if !(defined(HAVE_GETIFADDRS) && defined(HAVE_IFADDRS_STRUCT))
+                                err_quit("Not support -B option on this OS");
+#else
+                                bindif = 1;
+#endif
                                 break;
                         case '?':
                                 err_quit("Unrecognized option");
@@ -74,6 +81,31 @@ main(int argc, char **argv)
         }
         if (verbose) printf("RCVBUF = %d\n", n - 128);
 
+#if defined(HAVE_GETIFADDRS) && defined(HAVE_IFADDRS_STRUCT)
+        if (bindif) {
+                struct ifaddrs *ifap, *ifa;
+                struct sockaddr_in *sa;
+                struct ifreq ifr;
+
+                if (getifaddrs(&ifap) < 0)
+                        err_sys("getifaddrs error");
+                for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+                        if (ifa->ifa_addr->sa_family != AF_INET)
+                                continue;
+                        sa = (struct sockaddr_in *)(ifa->ifa_addr);
+                        printf("IP: %s\n", inet_ntoa(sa->sin_addr));
+#ifdef SIOCGIFGBRADDR
+                        if (ifa->ifa_flags & IFF_BROADCAST) {
+                                if (ioctl(sockfd, SIOCGIFGBRADDR, &ifr) < 0)
+                                        err_sys("ioctl SIOCGIFGBRADDR error");
+                                sa = (struct sockaddr_in *)&ifr.ifr_broadaddr;
+                                printf("Broadcast: %s\n", inet_ntoa(sa->sin_addr));
+                        }
+#endif
+                }
+        }
+#endif
+
 #ifdef IP_RECVDSTADDR
         if (setsockopt(sockfd, IPPROTO_IP, IP_RECVDSTADDR, &on, sizeof(on)) < 0)
                 err_sys("setsockopt IP_RECVDSTADDR error");
@@ -81,7 +113,10 @@ main(int argc, char **argv)
         if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
                 err_sys("setsockopt IP_PKTINFO error");
 #endif
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+                err_sys("setsockopt *.* SO_REUSEADDR error");
 
+        /* bind wildcard address */
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family      = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);

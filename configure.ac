@@ -32,6 +32,7 @@ AC_CHECK_HEADERS(netinet/in.h net/if_arp.h net/if_dl.h, [], [], [
 #include <net/if.h>
 #endif
 ])
+AC_CHECK_HEADERS(ifaddrs.h)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
@@ -81,9 +82,18 @@ AC_CHECK_TYPE([struct in_pktinfo], [AC_DEFINE(HAVE_IN_PKTINFO_STRUCT, 1, [Define
 #endif
 ])
 
+AC_CHECK_TYPE([struct ifaddrs], [AC_DEFINE(HAVE_IFADDRS_STRUCT, 1, [Define to 1 if defines struct ifaddrs])], [],
+[#include <sys/types.h>
+#include <sys/socket.h>
+#ifdef HAVE_IFADDRS_H
+#include <ifaddrs.h>
+#endif
+])
+
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([bzero socket strchr strerror vsnprintf sysctl])
+AC_CHECK_FUNCS([getifaddrs freeifaddrs])
 
 # Check for system services.
 
