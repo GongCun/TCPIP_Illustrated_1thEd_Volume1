@@ -1,12 +1,12 @@
 #include "tcpi.h"
 
-#define OPTSTR "f:vB"
+#define OPTSTR "f:vBb:"
 
 static ssize_t recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct sockaddr *sa, socklen_t *socklen, struct in_addr *dst);
 
 static void usage(const char *s)
 {
-        err_quit("Usage: %s -v -B -f ForeignIP.Port <Port>", s);
+        err_quit("Usage: %s -v -B -f ForeignIP.Port -b LocalIP <Port>", s);
 }
 
 int
@@ -29,11 +29,13 @@ main(int argc, char **argv)
         char foreignip[32];
         static int verbose = 0;
         static int bindif = 0;
+        char bindip[32];
 
         if (argc < 2)
                 usage(basename(argv[0]));
 
         bzero(foreignip, sizeof(foreignip));
+        bzero(bindip, sizeof(bindip));
 
         opterr = 0;
         optind = 1;
@@ -51,6 +53,9 @@ main(int argc, char **argv)
                                 break;
                         case 'B':
                                 bindif = 1;
+                                break;
+                        case 'b':
+                                strcpy(bindip, optarg);
                                 break;
                         case '?':
                                 err_quit("Unrecognized option");
@@ -135,6 +140,7 @@ main(int argc, char **argv)
 				sa->sin_port = htons(servport);
 				if (bind(sockfd, (struct sockaddr *)sa, sizeof(*sa)) < 0) {
 					if (errno == EADDRINUSE) {
+                                                err_msg("Can't bind: address %s in use", inet_ntoa(sa->sin_addr));
 						if (close(sockfd) < 0)
 							err_sys("close() error");
 						continue;
@@ -292,7 +298,7 @@ main(int argc, char **argv)
 #endif /* HAVE_GETIFADDRS */
         }
 
-        /* bind wildcard address */
+        /* bind wildcard or explicit address */
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 		err_sys("socket() error");
 
@@ -320,11 +326,22 @@ main(int argc, char **argv)
 
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family      = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	if (bindip[0] == 0)
+                servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        else {
+                if (inet_aton(bindip, &servaddr.sin_addr) == 0)
+                           err_quit("Invalid IP address: %s", bindip);
+        }
 	servaddr.sin_port        = htons(servport);
 
-	if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)
-                err_sys("bind error");
+	if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+                if (errno == EADDRINUSE && bindif) {
+                        err_msg("Can't bind: address %s in use", inet_ntoa(servaddr.sin_addr));
+                        goto END;
+                }
+                else
+                        err_sys("bind error");
+        }
 
         if (foreignip[0] != 0) {
                 bzero(&cliaddr, sizeof(cliaddr));
@@ -347,7 +364,9 @@ main(int argc, char **argv)
                 if (n > 0 && write(1, buf, n) != n)
                         err_sys("write error");
         }
-
+END:
+        while (waitpid(-1, NULL, 0) > 0)
+                ;
         exit(0);
 }
 
