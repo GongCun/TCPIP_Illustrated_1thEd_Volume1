@@ -1,12 +1,12 @@
 #include "tcpi.h"
 
-#define OPTSTR "f:vBb:"
+#define OPTSTR "f:vBb:m:"
 
 static ssize_t recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct sockaddr *sa, socklen_t *socklen, struct in_addr *dst);
 
 static void usage(const char *s)
 {
-        err_quit("Usage: %s -v -B -f ForeignIP.Port -b LocalIP <Port>", s);
+        err_quit("Usage: %s -v -B -m Interface -f ForeignIP.Port -b LocalIP <Port>", s);
 }
 
 int
@@ -31,11 +31,14 @@ main(int argc, char **argv)
         static int bindif = 0;
         char bindip[32];
 
+        char dev[32];
+
         if (argc < 2)
                 usage(basename(argv[0]));
 
         bzero(foreignip, sizeof(foreignip));
         bzero(bindip, sizeof(bindip));
+        bzero(dev, sizeof(dev));
 
         opterr = 0;
         optind = 1;
@@ -56,6 +59,9 @@ main(int argc, char **argv)
                                 break;
                         case 'b':
                                 strcpy(bindip, optarg);
+                                break;
+                        case 'm':
+                                strcpy(dev, optarg);
                                 break;
                         case '?':
                                 err_quit("Unrecognized option");
@@ -303,6 +309,10 @@ main(int argc, char **argv)
 
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
 		err_sys("setsockopt error");
+#ifdef SO_REUSEPORT
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0)
+		err_sys("setsockopt error");
+#endif
 
 	for (n = 1; n <= MAXLEN; n += 128) {
 		if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &n, len) < 0) {
@@ -341,6 +351,15 @@ main(int argc, char **argv)
                 else
                         err_sys("bind error");
         }
+        if (verbose) printf("Bound IP: %s\n", bindip[0] == 0 ? "*" : bindip);
+
+        if (dev[0] != 0) {
+                if (bindip[0] == 0) usage("udprecv");
+                if (mcast_join(sockfd, dev, bindip) < 0)
+                        err_sys("mcast_join error");
+                if (setsockopt(sockfd, IPPROTO_IP, IP_MULTICAST_LOOP, &on, sizeof(on)) < 0)
+                        err_sys("setsockopt IP_MULTICAST_LOOP error");
+        }
 
         if (foreignip[0] != 0) {
                 bzero(&cliaddr, sizeof(cliaddr));
@@ -357,7 +376,7 @@ main(int argc, char **argv)
                 socklen = sizeof(struct sockaddr_in);
                 if ((n = recvdst(sockfd, buf, sizeof(buf), &flags, (struct sockaddr *)&cliaddr, &socklen, &dstaddr)) < 0) 
                         err_sys("recvfrom error");
-                printf("Listen on *.* ");
+                printf("Listen on %s ", bindip[0] == 0 ? "*" : bindip);
                 printf("Recv from %s:%d %d byte, ", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port), n);
                 printf("destination: %s\n", inet_ntoa(dstaddr));
                 if (n > 0 && write(1, buf, n) != n)

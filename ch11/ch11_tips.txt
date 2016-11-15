@@ -130,3 +130,33 @@ udp4       0      0  192.168.0.101.12345    *.*
 udp4       0      0  127.0.0.1.12345        *.*  
 
 #-+- END On MacOS -+-
+
+#-+- Test completely duplicate bindings by multiple processes -+-
+% echo test | ./udpsend 224.0.0.6 12345
+
+% ./udprecv  -v -m en0 -b 224.0.0.6 12345
+RCVBUF = 65409
+Bound IP: 224.0.0.6
+Listen on 224.0.0.6 Recv from 192.168.0.110:58290 5 byte, destination: 224.0.0.6
+test
+
+% ./udprecv -v -m en0 -b 224.0.0.6 12345
+RCVBUF = 65409
+Bound IP: 224.0.0.6
+Listen on 224.0.0.6 Recv from 192.168.0.110:58290 5 byte, destination: 224.0.0.6
+test
+
+% ./udprecv -v -B -m en0 -b 224.0.0.6 12345
+Bound IP: 127.0.0.1
+Bound IP: 192.168.0.100
+Bound IP: 192.168.0.255
+RCVBUF = 65409
+Bound IP: 224.0.0.6
+
+% netstat -an | grep -w 12345
+udp4       0      0  224.0.0.6.12345        *.*
+udp4       0      0  192.168.0.255.12345    *.*
+udp4       0      0  192.168.0.100.12345    *.*
+udp4       0      0  127.0.0.1.12345        *.*
+
+#-+- END Test completely duplicate bindings by multiple processes -+-
