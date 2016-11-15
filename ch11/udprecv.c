@@ -226,7 +226,6 @@ main(int argc, char **argv)
                         if (setsockopt(sockfd, IPPROTO_IP, IP_PKTINFO, &on, sizeof(on)) < 0)
                                 err_sys("setsockopt IP_PKTINFO error");
 #endif
-				sa->sin_family = AF_INET;
 			sa = (struct sockaddr_in *)&ifr->ifr_addr;
 			sa->sin_family = AF_INET;
 			sa->sin_port = htons(servport);
