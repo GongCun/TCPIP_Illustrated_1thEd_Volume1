@@ -160,3 +160,17 @@ udp4       0      0  192.168.0.100.12345    *.*
 udp4       0      0  127.0.0.1.12345        *.*
 
 #-+- END Test completely duplicate bindings by multiple processes -+-
+
+% ./udprecv -B -v -f 192.168.0.110.9999 12345
+Foreign IP: 192.168.0.110, Port: 9999
+Bound IP: 127.0.0.1
+Bound IP: 192.168.0.100
+Bound IP: 192.168.0.255
+RCVBUF = 65409
+Bound IP: *
+
+% netstat -an | grep -w 12345
+udp4       0      0  192.168.0.100.12345    192.168.0.110.9999
+udp4       0      0  192.168.0.255.12345    *.*
+udp4       0      0  192.168.0.100.12345    *.*
+udp4       0      0  127.0.0.1.12345        *.*
