@@ -2,7 +2,7 @@
 
 #define DNSPORT 53
 
-static char *strname(u_char *buf);
+static char *strname(u_char *buf, int);
 int tcp = 0, udp = 0;
 
 int main(int argc, char *argv[])
@@ -107,22 +107,28 @@ int main(int argc, char *argv[])
 
         /* answer section */
         char *name;
+	int type;
         while (ancount-- > 0) {
                 if (*ptr & 0xc0) { /* DNS message compression */
-                        ptr++;
-                        name = strname((udp ? buf : buf+2) + (int)(*ptr++));
+			/* The 14 bits that follow in the pointer specify an offset in the DNS message */
+                        name = strname(udp ? buf : buf+2, ntohs(*((uint16_t *)ptr)) & 0x03ff);
+                        ptr += 2;
                 } else { /* full domain name */
-                        printf("%s\n", strname(ptr));
+                        printf("%s\n", strname(ptr, 0));
                         while (*ptr++ != '\0')
                                 ;
                 }
+		type = ntohs(*((uint16_t *)ptr));
                 ptr += 4; /* pass the type & class */
                 printf("TTL = %d sec\n", ntohl(*((uint32_t *)ptr)));
                 ptr += 4;
 
                 len = ntohs(*((uint16_t *)ptr));
                 ptr += 2;
-                printf("Name: %s\nAddress: %s\n", name, inet_ntoa(*((struct in_addr *)ptr)));
+                if (type == 1)
+			printf("Name: %s\nAddress: %s\n", name, inet_ntoa(*((struct in_addr *)ptr)));
+		else
+			printf("Name: %s\nType: %d\n", name, type);
                 ptr += len;
         }
 
@@ -130,19 +136,25 @@ int main(int argc, char *argv[])
         return 0;
 }
 
-static char *strname(u_char *buf)
+static char *strname(u_char *buf, int offset)
 {
         char i;
         static char name[64];
-        char *ptr = name;
+	static int n = 0;
+        char *ptr = name + n, *p = (char *)(buf + offset);
 
-        while ((i = *buf) != 0) {
-                memcpy(ptr, ++buf, i);
-                buf += i;
+        while ((i = *p) != 0) {
+		if (*p & 0xc0) {
+			return strname(buf, ntohs(*((uint16_t *)p)) & 0x03ff);
+		}
+                memcpy(ptr, ++p, i);
+                p += i;
                 ptr += i;
                 *ptr++ = '.';
+		n += i+1;
         }
         name[strlen(name)-1] = '\0';
+	n = 0;
         return name;
 }
 
