@@ -2,7 +2,7 @@
 
 #define DNSPORT 53
 
-static char *strname(u_char *buf, int);
+static char *strname(u_char *, u_char *);
 int tcp = 0, udp = 0;
 
 int main(int argc, char *argv[])
@@ -106,17 +106,15 @@ int main(int argc, char *argv[])
         ptr += 2;
 
         /* answer section */
-        char *name;
+        char *name, ch;
 	int type;
         while (ancount-- > 0) {
-                if (*ptr & 0xc0) { /* DNS message compression */
-			/* The 14 bits that follow in the pointer specify an offset in the DNS message */
-                        name = strname(udp ? buf : buf+2, ntohs(*((uint16_t *)ptr)) & 0x03ff);
-                        ptr += 2;
-                } else { /* full domain name */
-                        printf("%s\n", strname(ptr, 0));
-                        while (*ptr++ != '\0')
-                                ;
+                name = strname(udp ? buf : buf+2, ptr);
+                while ((ch = *ptr++) != '\0') {
+                        if (ch & 0xc0) {
+                                ptr++;
+                                break;
+                        }
                 }
 		type = ntohs(*((uint16_t *)ptr));
                 ptr += 4; /* pass the type & class */
@@ -125,36 +123,46 @@ int main(int argc, char *argv[])
 
                 len = ntohs(*((uint16_t *)ptr));
                 ptr += 2;
-                if (type == 1)
-			printf("Name: %s\nAddress: %s\n", name, inet_ntoa(*((struct in_addr *)ptr)));
-		else
-			printf("Name: %s\nType: %d\n", name, type);
+                printf("Name: %s\n", name);
+		switch (type) {
+		case 1:
+			printf("Address: %s\n", inet_ntoa(*((struct in_addr *)ptr)));
+			break;
+		case 2:
+		case 5:
+			name = strname(udp ? buf : buf + 2, ptr);
+			printf("%s: %s\n", (type == 2) ? "NSDName" : "CName", name);
+			break;
+		default:
+			printf("Type: %d\n", type);
+		}
                 ptr += len;
         }
 
-        
         return 0;
 }
 
-static char *strname(u_char *buf, int offset)
+static char *strname(u_char *buf, u_char *ptr)
 {
         char i;
         static char name[64];
-	static int n = 0;
-        char *ptr = name + n, *p = (char *)(buf + offset);
+        char *p = (char *)ptr;
+        char *s = name;
+
+        if (name[0] != 0)
+                bzero(name, sizeof(name));
 
         while ((i = *p) != 0) {
 		if (*p & 0xc0) {
-			return strname(buf, ntohs(*((uint16_t *)p)) & 0x03ff);
+                        p = (char *)buf + (ntohs(*((uint16_t *)p)) & 0x3fff);
+                        continue;
 		}
-                memcpy(ptr, ++p, i);
+                memcpy(s, ++p, i);
                 p += i;
-                ptr += i;
-                *ptr++ = '.';
-		n += i+1;
+                s += i;
+                *s++ = '.';
         }
         name[strlen(name)-1] = '\0';
-	n = 0;
         return name;
 }
 
