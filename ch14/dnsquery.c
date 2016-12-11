@@ -8,6 +8,7 @@ int tcp = 0, udp = 0;
 int main(int argc, char *argv[])
 {
         int fd;
+        char *PTR;
         struct sockaddr_in sa;
         u_char buf[MAXLINE];
         u_char *ptr;
@@ -51,25 +52,52 @@ int main(int argc, char *argv[])
         int i, len;
         char *str[20], *p;
 
-        str[0] = strtok(argv[1], ".");
-        p = (str[0] == NULL) ? argv[1] : str[0];
-        len = strlen(p);
-        snprintf((char *)ptr++, 2+len, "%c%s", (u_char)len, p); 
-        ptr += len;
-        if (str[0] == NULL) {
-                *ptr++ = '\0';
-        } else {
-                for (i = 1; i < 20; i++) {
-                        if ((str[i] = strtok(NULL, ".")) == NULL)
-                                break;
-                        len = strlen(str[i]);
-                        snprintf((char *)ptr++, 2+len, "%c%s", (u_char)len, str[i]);
-                        ptr += len;
-                }
-                *ptr++ = '\0';
-        }
+        PTR = getenv("PTR");
+	if (PTR == NULL) {
+		str[0] = strtok(argv[1], ".");
+		p = (str[0] == NULL) ? argv[1] : str[0];
+		len = strlen(p);
+		snprintf((char *)ptr++, 2 + len, "%c%s", (u_char) len, p);
+		ptr += len;
+		if (str[0] == NULL) {
+			*ptr++ = '\0';
+		} else {
+			for (i = 1; i < 20; i++) {
+				if ((str[i] = strtok(NULL, ".")) == NULL)
+					break;
+				len = strlen(str[i]);
+				snprintf((char *)ptr++, 2 + len, "%c%s", (u_char) len, str[i]);
+				ptr += len;
+			}
+			*ptr++ = '\0';
+		}
+	} else {
+		str[0] = strtok(argv[1], ".");
+		if (str[0] == NULL)
+			err_quit("IP format error");
+		for (i = 1; i <= 3; i++)
+			if ((str[i] = strtok(NULL, ".")) == NULL)
+				err_quit("IP format error");
+		str[4] = "in-addr";
+		str[5] = "arpa";
+		for (i = 3; i >= 0; i--) {
+			len = strlen(str[i]);
+			sprintf((char *)ptr, "%c%s", (u_char) len, str[i]);
+			ptr += len + 1;
+		}
+		for (i = 4; i <= 5; i++) {
+			len = strlen(str[i]);
+			sprintf((char *)ptr, "%c%s", (u_char) len, str[i]);
+			ptr += len + 1;
+		}
+		*ptr++ = '\0';
+	}
 
-        *((uint16_t *)ptr) = htons(1); /* query type = A */
+
+        if (!PTR)
+                *((uint16_t *)ptr) = htons(1); /* query type = A */
+        else
+                *((uint16_t *)ptr) = htons(12); /* query type = PTR */
         ptr += 2;
         *((uint16_t *)ptr) = htons(1); /* query class = 1 */
         ptr += 2;
@@ -129,9 +157,16 @@ int main(int argc, char *argv[])
 			printf("Address: %s\n", inet_ntoa(*((struct in_addr *)ptr)));
 			break;
 		case 2:
+			name = strname(udp ? buf : buf + 2, ptr);
+			printf("%s: %s\n", "NSDName", name);
+                        break;
 		case 5:
 			name = strname(udp ? buf : buf + 2, ptr);
-			printf("%s: %s\n", (type == 2) ? "NSDName" : "CName", name);
+			printf("%s: %s\n", "CName", name);
+                        break;
+                case 12:
+			name = strname(udp ? buf : buf + 2, ptr);
+			printf("%s: %s\n", "PTRDName", name);
 			break;
 		default:
 			printf("Type: %d\n", type);
