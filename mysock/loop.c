@@ -37,10 +37,10 @@ void loop(FILE *fp, int sockfd)
 			if ((n = read(sockfd, rbuf, readlen)) < 0) 
 				err_sys("read() sockfd error");
 			else if (n == 0) {
-			       if (stdineof == 1)
+			       if (stdineof == 1 || server)
 				       break; /* normal termination */
 			       else
-				       err_quit("connection closed by peer");
+				       err_quit("connection closed by peer abnormally");
 			}
 			if (client)
 				fd = fileno(stdout);
@@ -53,6 +53,7 @@ void loop(FILE *fp, int sockfd)
 
 	if (close(sockfd) < 0)
 		err_sys("close() error");
+        fprintf(stderr, "connection closed by peer normally");
 
 	return;
 }
