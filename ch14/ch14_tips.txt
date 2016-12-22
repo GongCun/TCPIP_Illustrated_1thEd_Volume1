@@ -1,0 +1,21 @@
+#-+- Pointer query -+-
+% PTR=1 dnsquery 202.175.56.10 8.8.8.8 tcp
+ANCOUNT = 1
+QType = 12
+QClass = 1
+TTL = 86399 sec
+Name: 10.56.175.202.in-addr.arpa
+PTRDName: z56l10.static.ctm.net
+
+#-+- Address query -+-
+% dnsquery its.bocmacau.com 8.8.8.8 udp
+ANCOUNT = 2
+QType = 1
+QClass = 1
+TTL = 7199 sec
+Name: its.bocmacau.com
+CName: tx01.bocmacau.com
+TTL = 7199 sec
+Name: tx01.bocmacau.com
+Address: 202.175.56.10
+
