@@ -53,7 +53,7 @@ void loop(FILE *fp, int sockfd)
 
 	if (close(sockfd) < 0)
 		err_sys("close() error");
-        fprintf(stderr, "connection closed by peer normally");
+        fprintf(stderr, "connection closed by peer normally\n");
 
 	return;
 }
