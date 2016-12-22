@@ -66,6 +66,10 @@ int cliopen(char *host, char *port)
         }
 
 
+	/* Need to allocate buffers before connect(), since they can affect
+ 	 * TCP options (window scale, etc.)
+	 */
+	buffers(fd);
 #if 0
         sockopts(fd, 0); /* may also want to set SO_DEBUG */
 #endif

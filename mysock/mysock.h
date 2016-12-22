@@ -11,9 +11,20 @@ extern int reuseaddr;
 extern int debug;
 extern int linger;
 extern int listenq;
+extern int readlen;
+extern int writelen;
+extern char *rbuf; /* pointer that is malloc'ed */
+extern char *wbuf; /* pointer that is malloc'ed */
+extern int rcvbuflen;
+extern int sndbuflen;
+extern int echo;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);
 void sockopts(int, int);
+void loop(FILE *, int);
+void buffers(int);
+ssize_t  writen(int fd, const void *buf, size_t len);
+
 
 #endif

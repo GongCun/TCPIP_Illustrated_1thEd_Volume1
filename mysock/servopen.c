@@ -34,6 +34,11 @@ int servopen(char *host, char *port)
         }
         if (bind(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
                 err_sys("bind() error");
+
+	/* May set receive buffer size; must do here to get
+ 	 * correct window advertised on SYN
+	 */
+	buffers(fd);
 #if 0
         sockopts(fd, 0); /* only set some socket for fd */
 #endif

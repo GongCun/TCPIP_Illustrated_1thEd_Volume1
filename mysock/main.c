@@ -11,6 +11,13 @@ int debug;
 int reuseaddr;
 int linger = -1; /* 0 or positive turns on option */
 int listenq = 5; /* listen queue for TCP server */
+int readlen = 1024; /* default read length for socket */
+int writelen = 1024; /* default write length for socket */
+char *rbuf; /* pointer that is malloc'ed */
+char *wbuf; /* pointer that is malloc'ed */
+int rcvbuflen;
+int sndbuflen;
+int echo;
 
 static void usage(const char *msg)
 {
@@ -21,7 +28,14 @@ static void usage(const char *msg)
 "         -V display version\n"
 "         -v verbose\n"
 "         -A SO_REUSEADDR option\n"
-"         -d debug"
+"         -d debug\n"
+"         -s operate as server instead of client\n"
+"         -r n #bytes per read()  (default: 1024)\n"
+"         -w n #bytes per write() (default: 1024)\n"
+"         -R n SO_RCVBUF option\n"
+"         -S n SO_SNDBUF option\n"
+"         -e operate as echo server (combined with -s)\n"
+"         -L n SO_LINGER option, n = linger time"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -36,7 +50,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "AVvb:sd:L")) != EOF)
+	while ((c = getopt(argc, argv, "AVvb:sdL:r:w:R:S:e")) != EOF)
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -60,12 +74,29 @@ int main(int argc, char *argv[])
                         case 'L':
                                 linger = atol(optarg);
                                 break;
+			case 'r':
+				readlen = atoi(optarg);
+				break;
+			case 'w':
+				writelen = atoi(optarg);
+				break;
+			case 'R':
+				rcvbuflen = atoi(optarg);
+				break;
+			case 'S':
+				sndbuflen = atoi(optarg);
+				break;
+			case 'e':
+				echo = 1;
+				break;
 			case '?':
 				usage("unrecognized option");
 		}
 	if (client) {
 		if (optind != argc - 2)
 			usage("missing <hostname> and/or <port>");
+		if (echo)
+			usage("");
 		host = argv[argc-2];
 		port = argv[argc-1];
 	} else {
@@ -85,7 +116,7 @@ int main(int argc, char *argv[])
 	else
 		fd = servopen(host, port);
 
-	/* loop(fd); */
+	loop(stdin, fd);
 
 	return 0;
 }
