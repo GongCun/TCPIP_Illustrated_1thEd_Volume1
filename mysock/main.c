@@ -18,6 +18,7 @@ char *wbuf; /* pointer that is malloc'ed */
 int rcvbuflen;
 int sndbuflen;
 int echo;
+int dofork;
 
 static void usage(const char *msg)
 {
@@ -35,7 +36,8 @@ static void usage(const char *msg)
 "         -R n SO_RCVBUF option\n"
 "         -S n SO_SNDBUF option\n"
 "         -e operate as echo server (combined with -s)\n"
-"         -L n SO_LINGER option, n = linger time"
+"         -L n SO_LINGER option, n = linger time\n"
+"         -F fork after connection accepted (TCP concurrent server)"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -50,7 +52,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "AVvb:sdL:r:w:R:S:e")) != EOF)
+	while ((c = getopt(argc, argv, "AVvb:sdL:r:w:R:S:eF")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -89,9 +91,14 @@ int main(int argc, char *argv[])
 			case 'e':
 				echo = 1;
 				break;
+			case 'F':
+				dofork = 1;
+				break;
 			case '?':
 				usage("unrecognized option");
 		}
+	}
+
 	if (client) {
 		if (optind != argc - 2)
 			usage("missing <hostname> and/or <port>");

@@ -18,6 +18,7 @@ extern char *wbuf; /* pointer that is malloc'ed */
 extern int rcvbuflen;
 extern int sndbuflen;
 extern int echo;
+extern int dofork;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);

@@ -91,7 +91,7 @@ AC_CHECK_TYPE([struct ifaddrs], [AC_DEFINE(HAVE_IFADDRS_STRUCT, 1, [Define to 1 
 ])
 
 # Checks for library functions.
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC
 AC_CHECK_FUNCS([bzero socket strchr strerror vsnprintf sysctl])
 AC_CHECK_FUNCS([getifaddrs freeifaddrs])
 

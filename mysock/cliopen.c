@@ -41,12 +41,6 @@ int cliopen(char *host, char *port)
                 memcpy(&serv_addr.sin_addr, *pptr, hp->h_length);
         }
 
-        if (debug) {
-                fprintf(stderr, "host(%s): %s, serv(%s): %d\n",
-                                host, inet_ntoa(serv_addr.sin_addr),
-                                port, ntohs(serv_addr.sin_port));
-        }
-
         if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
                 err_sys("socket() error");
         if (reuseaddr) {

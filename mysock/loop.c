@@ -40,7 +40,7 @@ void loop(FILE *fp, int sockfd)
 			       if (stdineof == 1 || server)
 				       break; /* normal termination */
 			       else
-				       err_quit("connection closed by peer abnormally");
+				       err_quit("process %d: connection closed by peer abnormally", (int)getpid());
 			}
 			if (client)
 				fd = fileno(stdout);
@@ -53,7 +53,7 @@ void loop(FILE *fp, int sockfd)
 
 	if (close(sockfd) < 0)
 		err_sys("close() error");
-        fprintf(stderr, "connection closed by peer normally\n");
+        fprintf(stderr, "process %d: connection closed normally\n", (int)getpid());
 
 	return;
 }
