@@ -1,5 +1,10 @@
 #include "mysock.h"
 
+static void sig_alrm(int signo)
+{
+        return; /* just interrupt the connect() */
+}
+
 int cliopen(char *host, char *port)
 {
         int i, fd;
@@ -68,8 +73,23 @@ int cliopen(char *host, char *port)
         sockopts(fd, 0); /* may also want to set SO_DEBUG */
 #endif
 
-        if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        signal_func_t sigfunc;
+        if (timeout) {
+                if ((sigfunc = xsignal(SIGALRM, sig_alrm)) == SIG_ERR)
+                        err_sys("xsignal() error");
+                if (alarm(timeout) != 0) /* Return 0 if no alarm is currently set */
+                        err_quit("sig_alrm(): alarm was already set");
+        }
+        if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+                if (errno == EINTR)
+                        errno = ETIMEDOUT;
                 err_sys("connect() error");
+        }
+        if (timeout) {
+                alarm(0);
+                if (xsignal(SIGALRM, sigfunc) == SIG_ERR)
+                        err_sys("xsignal() error");
+        }
 
         if (verbose) {
                 i = sizeof(cli_addr);

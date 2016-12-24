@@ -7,6 +7,7 @@ void loop(FILE *fp, int sockfd)
 	int n;
 	int maxfd;
 	int fd;
+        struct timeval tv, *ptv;
 
 	stdineof = 0;
 	FD_ZERO(&rset);
@@ -16,8 +17,17 @@ void loop(FILE *fp, int sockfd)
 			FD_SET(fileno(fp), &rset);
 		FD_SET(sockfd, &rset);
 		maxfd = max(fileno(fp), sockfd);
-		if (select(maxfd+1, &rset, NULL, NULL, NULL) < 0)
+                
+                if (timeout && server) {
+                        tv.tv_sec = timeout;
+                        tv.tv_usec = 0;
+                        ptv = &tv;
+                } else
+                        ptv = (struct timeval *)NULL;
+		if ((n = select(maxfd+1, &rset, NULL, NULL, ptv)) < 0)
 			err_sys("select() error");
+                if (n == 0) /* timed out for server */
+                        err_quit("recvmsg timed out");
 
 		if (FD_ISSET(fileno(fp), &rset)) { /* data to read on fp */
 			if ((n = read(fileno(fp), rbuf, readlen)) < 0)

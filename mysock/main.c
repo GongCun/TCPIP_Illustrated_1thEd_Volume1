@@ -19,6 +19,9 @@ int rcvbuflen;
 int sndbuflen;
 int echo;
 int dofork;
+int timeout; /* positive turns on option,
+                connection timeout for client,
+                read socket timeout for server */
 
 static void usage(const char *msg)
 {
@@ -37,7 +40,8 @@ static void usage(const char *msg)
 "         -S n SO_SNDBUF option\n"
 "         -e operate as echo server (combined with -s)\n"
 "         -L n SO_LINGER option, n = linger time\n"
-"         -F fork after connection accepted (TCP concurrent server)"
+"         -F fork after connection accepted (TCP concurrent server)\n"
+"         -T n #seconds timeout for connection or recvmsg"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -52,7 +56,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "AVvb:sdL:r:w:R:S:eF")) != EOF) {
+	while ((c = getopt(argc, argv, "AVvb:sdL:r:w:R:S:eFT:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -94,6 +98,9 @@ int main(int argc, char *argv[])
 			case 'F':
 				dofork = 1;
 				break;
+                        case 'T':
+                                timeout = atoi(optarg);
+                                break;
 			case '?':
 				usage("unrecognized option");
 		}
@@ -119,7 +126,6 @@ int main(int argc, char *argv[])
 
 	if (client)
 		fd = cliopen(host, port);
-
 	else
 		fd = servopen(host, port);
 

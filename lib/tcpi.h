@@ -154,6 +154,7 @@ void udp_write(int fd, char *buf, int userlen, struct in_addr src, struct in_add
 /* signal functions */
 typedef void (*signal_func_t)(int);
 signal_func_t signal_intr(int sig, signal_func_t func);
+signal_func_t xsignal(int sig, signal_func_t func);
 
 /* multicast functions */
 int mcast_join(int sockfd, const char *dev, char *maddr);

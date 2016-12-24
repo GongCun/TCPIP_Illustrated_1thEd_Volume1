@@ -19,6 +19,7 @@ extern int rcvbuflen;
 extern int sndbuflen;
 extern int echo;
 extern int dofork;
+extern int timeout;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);
