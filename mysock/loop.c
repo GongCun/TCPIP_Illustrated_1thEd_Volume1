@@ -27,7 +27,7 @@ void loop(FILE *fp, int sockfd)
 		if ((n = select(maxfd+1, &rset, NULL, NULL, ptv)) < 0)
 			err_sys("select() error");
                 if (n == 0) /* timed out for server */
-                        err_quit("recvmsg timed out");
+                        err_quit("process %d exited: recvmsg timed out", (int)getpid());
 
 		if (FD_ISSET(fileno(fp), &rset)) { /* data to read on fp */
 			if ((n = read(fileno(fp), rbuf, readlen)) < 0)
