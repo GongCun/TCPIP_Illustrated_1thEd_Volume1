@@ -1,5 +1,13 @@
 #include "mysock.h"
 
+static void sig_chld(int signo)
+{
+        pid_t pid;
+        while ((pid = waitpid(-1, NULL, WNOHANG)) > 0)
+                fprintf(stderr, "pid %d exited\n", (int)pid);
+        exit(0);
+}
+
 int main(int argc, char *argv[])
 {
         int sockfd;
@@ -40,6 +48,8 @@ int main(int argc, char *argv[])
                 err_sys("mcast_join error");
 
         if (signal(SIGTERM, SIG_IGN) == SIG_ERR)
+                err_sys("signal() error");
+        if (signal(SIGCHLD, sig_chld) == SIG_ERR)
                 err_sys("signal() error");
 
         for (;;) {
