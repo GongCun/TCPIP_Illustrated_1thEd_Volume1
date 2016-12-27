@@ -46,6 +46,9 @@ int servopen(char *host, char *port)
         if (listen(fd, listenq) < 0)
                 err_sys("listen() error");
 
+        if (pauselisten)
+                sleep(pauselisten);
+
 	for (;;) {
 		i = sizeof(cli_addr);
 		if ((newfd = accept(fd, (struct sockaddr *) & cli_addr, (socklen_t *) & i)) < 0)
