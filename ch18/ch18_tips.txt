@@ -1,0 +1,37 @@
+#-+- On MacOS (as client) -+-
+./sock -A -v -b 8888 192.168.0.113 12345 </etc/services >./services.copy 2>/dev/null
+diff /etc/services ./services.copy
+
+sudo tcpdump -w ./cli.pcap -i en0
+sudo tcpdump -r ./cli.pcap 'host 192.168.0.113'
+sudo tcpdump -n -S -r ./cli.pcap 'host 192.168.0.113'
+
+#-+- On CentOS (as server) -+-
+./sock -e -A -v -s 12345
+
+# Test Simultaneous Open but failed
+#** Send message On Ubuntu **
+echo start | ./udpsend 230.0.0.2 12345
+echo end | ./udpsend 230.0.0.2 12345
+
+#** On MacOS **
+% VERBOSE=1 ./simul en0 230.0.0.2 12345 ./cmd.sh
+message from 192.168.0.110: start
+>>> ./sock -v -b7777 -A 192.168.0.113 8888 <<<
+connect() error: Connection refused
+pid 29854 exited
+
+#** On CentOS **
+% VERBOSE=1 ./simul en0 230.0.0.2 12345 ./cmd.sh
+message from 192.168.0.110: start
+>>> ./sock -v -b8888 -A 192.168.0.108 7777 <<<
+connect() error: Connection refused
+pid 2389 exited
+
+####
+% sudo ifconfig lo0 alias 127.0.0.2 netmask 255.0.0.0
+% ./sock -A -F -s -v 12345
+% ./sock -A -F -s -v 127.0.0.2 12345
+% netstat -an | grep -w 12345
+tcp4       0      0  127.0.0.2.12345        *.*                    LISTEN     
+tcp4       0      0  *.12345                *.*                    LISTEN     

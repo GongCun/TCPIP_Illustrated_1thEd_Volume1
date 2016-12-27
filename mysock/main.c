@@ -22,6 +22,7 @@ int dofork;
 int timeout; /* positive turns on option,
                 connection timeout for client,
                 read socket timeout for server */
+int pauselisten; /* seconds to sleep after listen() */
 
 static void usage(const char *msg)
 {
@@ -41,7 +42,9 @@ static void usage(const char *msg)
 "         -e operate as echo server (combined with -s)\n"
 "         -L n SO_LINGER option, n = linger time\n"
 "         -F fork after connection accepted (TCP concurrent server)\n"
-"         -T n #seconds timeout for connection or recvmsg"
+"         -T n #seconds timeout for connection or recvmsg\n"
+"         -O n #seconds to pause after listen, but before first accept\n"
+"         -q n #size of listen queue for TCP server (default 5)"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -56,7 +59,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "AVvb:sdL:r:w:R:S:eFT:")) != EOF) {
+	while ((c = getopt(argc, argv, "q:O:AVvb:sdL:r:w:R:S:eFT:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -100,6 +103,12 @@ int main(int argc, char *argv[])
 				break;
                         case 'T':
                                 timeout = atoi(optarg);
+                                break;
+                        case 'O':
+                                pauselisten = atoi(optarg);
+                                break;
+                        case 'q':
+                                listenq = atoi(optarg);
                                 break;
 			case '?':
 				usage("unrecognized option");
