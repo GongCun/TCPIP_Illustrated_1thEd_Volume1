@@ -38,7 +38,11 @@ void tcpraw(unsigned char event, int id, int seq, int ack, char *addr, char *hos
         ip->ip_len = IP_TCP_LEN;
 #endif
         ip->ip_id = id ? htons(id) : htons((u_short)(time(0) & 0xffff));
+#ifdef _LINUX
+        ip->ip_off = htons(IP_DF);
+#else
         ip->ip_off = IP_DF;
+#endif
         ip->ip_ttl = 64;
         ip->ip_p = IPPROTO_TCP;
 
