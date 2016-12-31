@@ -1,5 +1,7 @@
 #include "mysock.h"
 
+#define ARGMAX 128 /* guess */
+
 static void sig_chld(int signo)
 {
         pid_t pid;
@@ -17,11 +19,11 @@ int main(int argc, char *argv[])
         struct sockaddr_in safrom;
         socklen_t salen;
         char line[MAXLINE];
-        char *file;
+        char File[ARGMAX], **Argv;
         pid_t pid = 0;
 
-        if (argc != 5)
-                err_quit("Usage: %s <interface> <multicast addr> <#port> <cmd_file>", basename(argv[0]));
+        if (argc < 5)
+                err_quit("Usage: %s <interface> <multicast addr> <#port> <argv>", basename(argv[0]));
 
         if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
                 err_sys("socket error");
@@ -32,7 +34,9 @@ int main(int argc, char *argv[])
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0)
                 err_sys("setsockopt error");
 #endif
-        file = argv[4];
+        strncpy(File, argv[4], strlen(argv[4])+1);
+	Argv = &argv[4];
+	
 
         bzero(&sarecv, sizeof(struct sockaddr_in));
         sarecv.sin_family = AF_INET;
@@ -69,8 +73,8 @@ int main(int argc, char *argv[])
                                  */
                                 if (signal(SIGTERM, SIG_DFL) == SIG_ERR)
                                         err_sys("signal() error");
-                                execlp(file, file, NULL);
-                                err_sys("execlp() error");
+                                execvp(File, Argv);
+                                err_sys("execvp() error");
                         }
                 } else if (strcmp(line, "end") == 0) {
                         if (pid && kill(pid, 0) == 0 && kill(0, 15) != 0)

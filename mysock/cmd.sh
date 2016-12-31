@@ -1,3 +1,3 @@
-CMD="./sock -v -b8888 -A 192.168.0.108 7777"
+CMD="./sock -v -b$1 -A $2 8888"
 echo ">>> $CMD <<<"
 eval $CMD

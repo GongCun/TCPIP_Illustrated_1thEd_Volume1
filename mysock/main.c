@@ -3,6 +3,7 @@
 
 char *host;
 char *port;
+char *addr;
 int bindport; /* 0 or TCP or UDP port number to bind for client */
 int client = 1;
 int server;
@@ -23,6 +24,11 @@ int timeout; /* positive turns on option,
                 connection timeout for client,
                 read socket timeout for server */
 int pauselisten; /* seconds to sleep after listen() */
+int rawopt;
+int id;
+int seq;
+int ack;
+unsigned char event;
 
 static void usage(const char *msg)
 {
@@ -44,7 +50,8 @@ static void usage(const char *msg)
 "         -F fork after connection accepted (TCP concurrent server)\n"
 "         -T n #seconds timeout for connection or recvmsg\n"
 "         -O n #seconds to pause after listen, but before first accept\n"
-"         -q n #size of listen queue for TCP server (default 5)"
+"         -q n #size of listen queue for TCP server (default 5)\n"
+"         -o \"EVENT:ADDR:SEQ:ACK:ID\" raw socket event"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -54,12 +61,13 @@ static void usage(const char *msg)
 int main(int argc, char *argv[])
 {
 	int c, fd;
+        char *ptr;
 
 	if (argc < 2)
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "q:O:AVvb:sdL:r:w:R:S:eFT:")) != EOF) {
+	while ((c = getopt(argc, argv, "q:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -110,6 +118,52 @@ int main(int argc, char *argv[])
                         case 'q':
                                 listenq = atoi(optarg);
                                 break;
+                        case 'o':
+                                rawopt = 1;
+                                if ((ptr = strrchr(optarg, ':')) == NULL)
+                                        usage("unrecognized option");
+                                *ptr++ = '\0';
+                                id = atoi(ptr);
+
+                                if ((ptr = strrchr(optarg, ':')) == NULL)
+                                        usage("unrecognized option");
+                                *ptr++ = '\0';
+                                ack = atoi(ptr);
+
+                                if ((ptr = strrchr(optarg, ':')) == NULL)
+                                        usage("unrecognized option");
+                                *ptr++ = '\0';
+                                seq = atoi(ptr);
+
+                                if ((ptr = strrchr(optarg, ':')) == NULL)
+                                        usage("unrecognized option");
+                                *ptr++ = '\0';
+                                addr = ptr;
+
+                                switch (*optarg) {
+                                        case 'a': case 'A':
+                                                event = TH_ACK;
+                                                break;
+                                        case 'p': case 'P':
+                                                event = TH_PUSH;
+                                                break;
+                                        case 'r': case 'R':
+                                                event = TH_RST;
+                                                break;
+                                        case 's': case 'S':
+                                                event = TH_SYN;
+                                                break;
+                                        case 'f': case 'F':
+                                                event = TH_FIN;
+                                                break;
+                                        case 'u': case 'U':
+                                                event = TH_URG;
+                                                break;
+                                        default:
+                                                usage("unrecognized option");
+                                }
+                                break;
+
 			case '?':
 				usage("unrecognized option");
 		}
@@ -133,9 +187,24 @@ int main(int argc, char *argv[])
 			usage("missing <hostname> or <port>");
 	}
 
-	if (client)
-		fd = cliopen(host, port);
-	else
+	if (client) {
+                if (rawopt) {
+                        if (bindport == 0)
+                                bindport = (getpid() & 0xffff) | 0x8000;
+                        int foreignport;
+                        struct servent *sp;
+                        if ((foreignport = atoi(port)) == 0) {
+                                if ((sp = getservbyname(port, "tcp")) == NULL)
+                                        err_quit("getservbyname() error for: %s", port);
+                                foreignport = ntohs(sp->s_port);
+                        }
+
+                        tcpraw(event, id, seq, ack, addr, host, bindport, foreignport);
+                        exit(0);
+                } else {
+		        fd = cliopen(host, port);
+                }
+        } else
 		fd = servopen(host, port);
 
 	loop(stdin, fd);

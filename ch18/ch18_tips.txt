@@ -35,3 +35,49 @@ pid 2389 exited
 % netstat -an | grep -w 12345
 tcp4       0      0  127.0.0.2.12345        *.*                    LISTEN     
 tcp4       0      0  *.12345                *.*                    LISTEN     
+
+###
+# MacOS for server (queue for 1)
+./sock -s -v -q1 -O30 12345
+# CentOS for client
+./sock -v 192.168.0.105 12345
+
+# Output from MacOS
+     1	21:29:41.946241 IP 192.168.0.113.50738 > 192.168.0.105.12345: Flags [S], seq 2914972412, win 11600, options [mss 1160,sackOK,TS val 842931940 ecr 0,nop,wscale 7], length 0
+     2	21:29:41.946620 IP 192.168.0.105.12345 > 192.168.0.113.50738: Flags [S.], seq 449397093, ack 2914972413, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 706268912 ecr 842931940,sackOK,eol], length 0
+     3	21:29:41.949025 IP 192.168.0.113.50738 > 192.168.0.105.12345: Flags [.], ack 1, win 91, options [nop,nop,TS val 842931965 ecr 706268912], length 0
+     4	21:29:41.949297 IP 192.168.0.105.12345 > 192.168.0.113.50738: Flags [.], ack 1, win 8251, options [nop,nop,TS val 706268914 ecr 842931965], length 0
+     5	21:29:51.679992 IP 192.168.0.113.50739 > 192.168.0.105.12345: Flags [S], seq 171183375, win 11600, options [mss 1160,sackOK,TS val 842941694 ecr 0,nop,wscale 7], length 0
+     6	21:29:52.682146 IP 192.168.0.113.50739 > 192.168.0.105.12345: Flags [S], seq 171183375, win 11600, options [mss 1160,sackOK,TS val 842942694 ecr 0,nop,wscale 7], length 0
+     7	21:29:54.681002 IP 192.168.0.113.50739 > 192.168.0.105.12345: Flags [S], seq 171183375, win 11600, options [mss 1160,sackOK,TS val 842944694 ecr 0,nop,wscale 7], length 0
+     8	21:29:58.740659 IP 192.168.0.113.50739 > 192.168.0.105.12345: Flags [S], seq 171183375, win 11600, options [mss 1160,sackOK,TS val 842948694 ecr 0,nop,wscale 7], length 0
+     9	21:30:01.261551 IP 192.168.0.113.50740 > 192.168.0.105.12345: Flags [S], seq 1615778919, win 11600, options [mss 1160,sackOK,TS val 842951271 ecr 0,nop,wscale 7], length 0
+    10	21:30:02.260318 IP 192.168.0.113.50740 > 192.168.0.105.12345: Flags [S], seq 1615778919, win 11600, options [mss 1160,sackOK,TS val 842952272 ecr 0,nop,wscale 7], length 0
+    11	21:30:04.261870 IP 192.168.0.113.50740 > 192.168.0.105.12345: Flags [S], seq 1615778919, win 11600, options [mss 1160,sackOK,TS val 842954272 ecr 0,nop,wscale 7], length 0
+    12	21:30:06.738710 IP 192.168.0.113.50739 > 192.168.0.105.12345: Flags [S], seq 171183375, win 11600, options [mss 1160,sackOK,TS val 842956694 ecr 0,nop,wscale 7], length 0
+
+# MacOS for server (queue = 2)
+./sock -s -v -q2 -O30 12345
+# CentOS for client
+./sock -v 192.168.0.105 12345
+
+# tcpdump output on MacOS
+     1	21:44:38.395305 IP 192.168.0.113.50757 > 192.168.0.105.12345: Flags [S], seq 1958839462, win 11600, options [mss 1160,sackOK,TS val 843828245 ecr 0,nop,wscale 7], length 0
+     2	21:44:38.395661 IP 192.168.0.105.12345 > 192.168.0.113.50757: Flags [S.], seq 2140686202, ack 1958839463, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 707162467 ecr 843828245,sackOK,eol], length 0
+     3	21:44:38.398438 IP 192.168.0.113.50757 > 192.168.0.105.12345: Flags [.], ack 1, win 91, options [nop,nop,TS val 843828248 ecr 707162467], length 0
+     4	21:44:38.398713 IP 192.168.0.105.12345 > 192.168.0.113.50757: Flags [.], ack 1, win 8251, options [nop,nop,TS val 707162470 ecr 843828248], length 0
+     5	21:44:39.418975 IP 192.168.0.113.50758 > 192.168.0.105.12345: Flags [S], seq 1463301279, win 11600, options [mss 1160,sackOK,TS val 843829244 ecr 0,nop,wscale 7], length 0
+     6	21:44:39.419321 IP 192.168.0.105.12345 > 192.168.0.113.50758: Flags [S.], seq 558829174, ack 1463301280, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 707163485 ecr 843829244,sackOK,eol], length 0
+     7	21:44:39.422043 IP 192.168.0.113.50758 > 192.168.0.105.12345: Flags [.], ack 1, win 91, options [nop,nop,TS val 843829272 ecr 707163485], length 0
+     8	21:44:39.422325 IP 192.168.0.105.12345 > 192.168.0.113.50758: Flags [.], ack 1, win 8251, options [nop,nop,TS val 707163488 ecr 843829272], length 0
+     9	21:44:40.238265 IP 192.168.0.113.50759 > 192.168.0.105.12345: Flags [S], seq 838451739, win 11600, options [mss 1160,sackOK,TS val 843829980 ecr 0,nop,wscale 7], length 0
+    10	21:44:40.957220 IP 192.168.0.113.50760 > 192.168.0.105.12345: Flags [S], seq 854531776, win 11600, options [mss 1160,sackOK,TS val 843830740 ecr 0,nop,wscale 7], length 0
+    11	21:44:41.133940 IP 192.168.0.113.50759 > 192.168.0.105.12345: Flags [S], seq 838451739, win 11600, options [mss 1160,sackOK,TS val 843830981 ecr 0,nop,wscale 7], length 0
+    12	21:44:41.980174 IP 192.168.0.113.50760 > 192.168.0.105.12345: Flags [S], seq 854531776, win 11600, options [mss 1160,sackOK,TS val 843831740 ecr 0,nop,wscale 7], length 0
+    13	21:44:43.211475 IP 192.168.0.113.50759 > 192.168.0.105.12345: Flags [S], seq 838451739, win 11600, options [mss 1160,sackOK,TS val 843832981 ecr 0,nop,wscale 7], length 0
+    14	21:44:43.890746 IP 192.168.0.113.50760 > 192.168.0.105.12345: Flags [S], seq 854531776, win 11600, options [mss 1160,sackOK,TS val 843833740 ecr 0,nop,wscale 7], length 0
+    15	21:44:47.307438 IP 192.168.0.113.50759 > 192.168.0.105.12345: Flags [S], seq 838451739, win 11600, options [mss 1160,sackOK,TS val 843836981 ecr 0,nop,wscale 7], length 0
+    16	21:44:48.943995 IP 192.168.0.113.50760 > 192.168.0.105.12345: Flags [S], seq 854531776, win 11600, options [mss 1160,sackOK,TS val 843837740 ecr 0,nop,wscale 7], length 0
+    17	21:44:55.135512 IP 192.168.0.113.50759 > 192.168.0.105.12345: Flags [S], seq 838451739, win 11600, options [mss 1160,sackOK,TS val 843844981 ecr 0,nop,wscale 7], length 0
+    18	21:44:56.010893 IP 192.168.0.113.50760 > 192.168.0.105.12345: Flags [S], seq 854531776, win 11600, options [mss 1160,sackOK,TS val 843845740 ecr 0,nop,wscale 7], length 0
+    19	21:45:11.168539 IP 192.168.0.113.50759 > 192.168.0.105.12345: Flags [S], seq 838451739, win 11600, options [mss 1160,sackOK,TS val 843860981 ecr 0,nop,wscale 7], length 0
