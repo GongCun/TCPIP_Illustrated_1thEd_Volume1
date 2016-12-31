@@ -33,7 +33,7 @@ void tcpraw(unsigned char event, int id, int seq, int ack, char *addr, char *hos
         ip->ip_v = 4;
         ip->ip_tos = 0;
 #if defined(_LINUX) || defined(_OPENBSD)
-        ip->ip_len = htons(IP_TCP_LEN)
+        ip->ip_len = htons(IP_TCP_LEN);
 #else
         ip->ip_len = IP_TCP_LEN;
 #endif
