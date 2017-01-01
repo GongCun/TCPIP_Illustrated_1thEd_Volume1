@@ -22,9 +22,11 @@ extern int dofork;
 extern int timeout;
 extern int pauselisten;
 extern int rawopt;
-extern int seq;
-extern int ack;
+extern unsigned int seq;
+extern unsigned int ack;
 extern unsigned char event; /* ACK|PSH|RST|SYN|FIN|URG */
+extern int cbreak;
+extern int nodelay;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);
@@ -32,7 +34,10 @@ void sockopts(int, int);
 void loop(FILE *, int);
 void buffers(int);
 ssize_t  writen(int fd, const void *buf, size_t len);
-void tcpraw(unsigned char, int, int, int, char *, char *, int, int);
+void tcpraw(unsigned char, int, unsigned int, unsigned int, char *, char *, int, int);
 
+int tty_cbreak(int fd);
+int tty_reset(int fd);
+void tty_atexit(void);
 
 #endif

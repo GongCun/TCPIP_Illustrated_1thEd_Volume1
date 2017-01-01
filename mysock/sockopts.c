@@ -3,6 +3,7 @@
 void sockopts(int sockfd, int doall)
 {
         struct linger ling;
+	int option;
         socklen_t optlen;
 
         if (linger >= 0 && doall) {
@@ -22,6 +23,24 @@ void sockopts(int sockfd, int doall)
                         fprintf(stderr, "linger %s, time = %d\n",
                                         ling.l_onoff ? "on" : "off", ling.l_linger);
         }
+
+	if (nodelay && doall) {
+		option = 1;
+		if (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &option, sizeof(option)) < 0)
+			err_sys("setsockopt() for TCP_NODELAY error");
+		if (option == 0)
+			err_quit("TCP_NODELAY not set (%d)", option);
+		if (verbose)
+			fprintf(stderr, "TCP_NODELAY set\n");
+	}
+
+	if (doall) { /* just print MSS if verbose */
+		option = 0;
+		optlen = sizeof(option);
+		if (getsockopt(sockfd, IPPROTO_TCP, TCP_MAXSEG, &option, &optlen) < 0)
+			err_sys("getsockopt() for TCP_MAXSEG error");
+		fprintf(stderr, "TCP_MAXSEG = %d\n", option);
+	}
 
         return;
 }

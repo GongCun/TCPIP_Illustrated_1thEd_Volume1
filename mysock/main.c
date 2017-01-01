@@ -26,9 +26,11 @@ int timeout; /* positive turns on option,
 int pauselisten; /* seconds to sleep after listen() */
 int rawopt;
 int id;
-int seq;
-int ack;
+unsigned int seq;
+unsigned int ack;
 unsigned char event;
+int cbreak;
+int nodelay; /* TCP_NODELAY (Nagle algorithm) */
 
 static void usage(const char *msg)
 {
@@ -51,7 +53,9 @@ static void usage(const char *msg)
 "         -T n #seconds timeout for connection or recvmsg\n"
 "         -O n #seconds to pause after listen, but before first accept\n"
 "         -q n #size of listen queue for TCP server (default 5)\n"
-"         -o \"EVENT:ADDR:SEQ:ACK:ID\" raw socket event"
+"         -o \"EVENT:ADDR:SEQ:ACK:ID\" raw socket event\n"
+"         -C set terminal to cbreak mode\n"
+"         -N TCP_NODELAY option"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -67,7 +71,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "q:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "NCq:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -128,12 +132,12 @@ int main(int argc, char *argv[])
                                 if ((ptr = strrchr(optarg, ':')) == NULL)
                                         usage("unrecognized option");
                                 *ptr++ = '\0';
-                                ack = atoi(ptr);
+                                ack = strtoul(ptr, NULL, 10);
 
                                 if ((ptr = strrchr(optarg, ':')) == NULL)
                                         usage("unrecognized option");
                                 *ptr++ = '\0';
-                                seq = atoi(ptr);
+                                seq = strtoul(ptr, NULL, 10);
 
                                 if ((ptr = strrchr(optarg, ':')) == NULL)
                                         usage("unrecognized option");
@@ -163,6 +167,14 @@ int main(int argc, char *argv[])
                                                 usage("unrecognized option");
                                 }
                                 break;
+
+			case 'C':
+				cbreak = 1;
+				break;
+
+			case 'N':
+				nodelay = 1;
+				break;
 
 			case '?':
 				usage("unrecognized option");

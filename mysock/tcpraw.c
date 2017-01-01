@@ -4,7 +4,7 @@
 #define IP_LEN 20
 #define TCP_LEN 20
 
-void tcpraw(unsigned char event, int id, int seq, int ack, char *addr, char *host, int localport, int foreignport)
+void tcpraw(unsigned char event, int id, unsigned int seq, unsigned int ack, char *addr, char *host, int localport, int foreignport)
 {
         char buf[IP_TCP_LEN];
         struct ip *ip;

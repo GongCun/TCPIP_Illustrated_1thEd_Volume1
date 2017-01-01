@@ -1,5 +1,10 @@
 #include "mysock.h"
 
+static void sig_catch(int signo)
+{
+	exit(0); /* exit handler will reset tty state */
+}
+
 void loop(FILE *fp, int sockfd)
 {
 	fd_set rset;
@@ -11,6 +16,19 @@ void loop(FILE *fp, int sockfd)
 
 	stdineof = 0;
 	FD_ZERO(&rset);
+
+	if (cbreak && isatty(STDIN_FILENO)) {
+		if (tty_cbreak(STDIN_FILENO) < 0)
+			err_sys("tty_cbreak() error");
+		if (atexit(tty_atexit) != 0)
+			err_sys("tty_atexit() error");
+		if (signal(SIGINT, sig_catch) == SIG_ERR)
+			err_sys("signal of SIGINT error");
+		if (signal(SIGQUIT, sig_catch) == SIG_ERR)
+			err_sys("signal of SIGQUIT error");
+		if (signal(SIGTERM, sig_catch) == SIG_ERR)
+			err_sys("signal of SIGTERM error");
+	}
 
 	for ( ; ; ) {
 		if (stdineof == 0)
@@ -50,7 +68,7 @@ void loop(FILE *fp, int sockfd)
 			       if (stdineof == 1 || server)
 				       break; /* normal termination */
 			       else
-				       err_quit("process %d: connection closed by peer abnormally", (int)getpid());
+				       err_quit("process %d: connection closed by peer", (int)getpid());
 			}
 			if (client)
 				fd = fileno(stdout);

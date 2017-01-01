@@ -3,7 +3,7 @@ include ../Make.defines
 VERSION = 1.0
 PROGS = sock simul
 
-OBJS = main.o cliopen.o servopen.o sockopts.o buffers.o loop.o writen.o tcpraw.o
+OBJS = main.o cliopen.o servopen.o sockopts.o buffers.o loop.o writen.o tcpraw.o term.o
 
 all: ${PROGS}
 
