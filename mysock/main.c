@@ -31,6 +31,11 @@ unsigned int ack;
 unsigned char event;
 int cbreak;
 int nodelay; /* TCP_NODELAY (Nagle algorithm) */
+int sourcesink; /* source/sink mode */
+int nbuf = 1; /* number of buffers to write (sink mode) */
+int pauserw; /* seconds to sleep before each read or write */
+int pauseinit; /* seconds to sleep before first read or write */
+int pauseclose; /* seconds to sleep after recv FIN, before close */
 
 static void usage(const char *msg)
 {
@@ -55,7 +60,12 @@ static void usage(const char *msg)
 "         -q n #size of listen queue for TCP server (default 5)\n"
 "         -o \"EVENT:ADDR:SEQ:ACK:ID\" raw socket event\n"
 "         -C set terminal to cbreak mode\n"
-"         -N TCP_NODELAY option"
+"         -N TCP_NODELAY option\n"
+"         -i \"source\" client or \"sink\" server (-w/-r)\n"
+"         -n n #buffers to write for \"source\" client (default 1024)\n"
+"         -p n #seconds to pause before each read or write (source/sink)\n"
+"         -Q n #seconds to pause after receiving FIN, but before close\n"
+"         -P n #seconds to pause before first read or write (source/sink)"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -71,7 +81,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "NCq:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "Q:P:p:n:iNCq:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -176,6 +186,26 @@ int main(int argc, char *argv[])
 				nodelay = 1;
 				break;
 
+                        case 'i':
+                                sourcesink = 1;
+                                break;
+
+                        case 'n':
+                                nbuf = atol(optarg);
+                                break;
+
+                        case 'p':
+                                pauserw = atoi(optarg);
+                                break;
+
+                        case 'P':
+                                pauseinit = atoi(optarg);
+                                break;
+
+                        case 'Q':
+                                pauseclose = atoi(optarg);
+                                break;
+
 			case '?':
 				usage("unrecognized option");
 		}
@@ -219,7 +249,10 @@ int main(int argc, char *argv[])
         } else
 		fd = servopen(host, port);
 
-	loop(stdin, fd);
+        if (sourcesink)
+                sink(fd);
+        else
+                loop(stdin, fd);
 
 	return 0;
 }

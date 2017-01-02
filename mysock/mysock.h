@@ -27,6 +27,11 @@ extern unsigned int ack;
 extern unsigned char event; /* ACK|PSH|RST|SYN|FIN|URG */
 extern int cbreak;
 extern int nodelay;
+extern int sourcesink;
+extern int nbuf;
+extern int pauserw;
+extern int pauseinit;
+extern int pauseclose;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);
@@ -39,5 +44,6 @@ void tcpraw(unsigned char, int, unsigned int, unsigned int, char *, char *, int,
 int tty_cbreak(int fd);
 int tty_reset(int fd);
 void tty_atexit(void);
+void sink(int sockfd);
 
 #endif

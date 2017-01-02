@@ -1,11 +1,22 @@
-[ $# -lt 4 ] && { echo "`basename $0` <src> <dst> <sport> <dport> [<pcap>]" >&2; exit 1; }
+[ $# -lt 5 ] && { echo "`basename $0` <src> <dst> <sport> <dport> <dev> [<pcap>]" >&2; exit 1; }
 src=$1
 dst=$2
 sport=$3
 dport=$4
-file=${5-"./sock.pcap"}
+dev=$5
+file=${6-"./sock.pcap"}
 
-cmd=`tcpdump -n -r $file -S -vv "dst host $dst and tcp[13:1] & 1 != 0" 2>&1 | sed '1d' | \
+dir=`dirname $0`
+cd $dir
+
+sudo tcpdump -w $file -i $dev &
+pid=$!
+./sock -v -b$sport $dst $dport
+sleep 3
+sudo su - root -c "kill -TERM $pid"
+wait
+
+cmd=`sudo tcpdump -n -r $file -S -vv "dst host $dst and tcp[13:1] & 1 != 0" 2>&1 | sed '1d' | \
 tr ',' '\n' | sed 's/^ *//' | awk '{
    if (/^id/) {
       id = $2
@@ -22,8 +33,8 @@ tr ',' '\n' | sed 's/^ *//' | awk '{
       ack = $2
    }
 }END{
-   printf "sock -o \"fin:%s:%s:%s:%s\" -b%s %s %s", src,seq,ack,id,sport,dst,dport
+   printf "sudo sock -o \"fin:%s:%s:%s:%s\" -b%s %s %s", src,seq,ack,id,sport,dst,dport
 }' src=$src sport=$sport dst=$dst dport=$dport`
 
 echo $cmd
-#eval $cmd
+eval $cmd
