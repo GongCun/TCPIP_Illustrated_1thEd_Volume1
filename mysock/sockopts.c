@@ -39,7 +39,8 @@ void sockopts(int sockfd, int doall)
 		optlen = sizeof(option);
 		if (getsockopt(sockfd, IPPROTO_TCP, TCP_MAXSEG, &option, &optlen) < 0)
 			err_sys("getsockopt() for TCP_MAXSEG error");
-		fprintf(stderr, "TCP_MAXSEG = %d\n", option);
+                if (verbose)
+                        fprintf(stderr, "TCP_MAXSEG = %d\n", option);
 	}
 
         return;
