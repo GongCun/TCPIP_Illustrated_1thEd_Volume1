@@ -2,6 +2,8 @@
 #include <ctype.h>
 
 static void pattern(char *ptr, int len);
+static void sig_urg(int signo);
+static int fd = -1;
 
 void sink(int sockfd)
 {
@@ -31,8 +33,19 @@ void sink(int sockfd)
                                 sleep(pauserw);
                 }
         } else {
+                /*
+                 * Server process
+                 */
+
                 if (pauseinit)
                         sleep(pauseinit);
+
+                fd = sockfd;
+                if (xsignal(SIGURG, sig_urg) == SIG_ERR)
+                        err_sys("signal() of SIGURG error");
+                if (fcntl(sockfd, F_SETOWN, getpid()) < 0)
+                        err_sys("fcntl() of F_SETOWN error");
+
 
                 for ( ; ; ) {
                         if ((n = read(sockfd, rbuf, readlen)) < 0)
@@ -70,4 +83,15 @@ static void pattern(char *ptr, int len)
                         c++;
                 *ptr++ = (c++ & 0x7f);
         }
+}
+
+static void sig_urg(int signo)
+{
+        int n;
+        char c;
+
+        printf("SIGURG received\n");
+        if ((n = recv(fd, &c, 1, MSG_OOB)) != 1)
+                err_sys("recv() error");
+        printf("read OOB byte: 0x%02x\n", c);
 }
