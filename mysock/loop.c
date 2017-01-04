@@ -46,7 +46,7 @@ void loop(FILE *fp, int sockfd)
                         ptv = &tv;
                 } else
                         ptv = (struct timeval *)NULL;
-		if ((n = select(maxfd+1, &rset, NULL, NULL, ptv)) < 0)
+		if ((n = select(maxfd+1, &rset, NULL, &xset, ptv)) < 0)
 			err_sys("select() error");
                 if (n == 0) /* timed out for server */
                         err_quit("process %d exited: recvmsg timed out", (int)getpid());
