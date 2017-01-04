@@ -6,6 +6,7 @@ static void pattern(char *ptr, int len);
 void sink(int sockfd)
 {
         int i, n;
+        char oob;
 
         if (client) {
                 pattern(wbuf, writelen); /* fill send buffer with a pattern */
@@ -14,6 +15,14 @@ void sink(int sockfd)
                         sleep(pauseinit);
 
                 for (i = 1; i <= nbuf; i++) {
+                        if (urgwrite == i) {
+                                oob = (char)urgwrite;
+
+                                if ((n = send(sockfd, &oob, 1, MSG_OOB)) != 1)
+                                        err_sys("send() MSG_OOB error");
+                                if (verbose)
+                                        fprintf(stderr, "wrote %d byte of urgent data\n", n);
+                        }
                         if ((n = writen(sockfd, wbuf, writelen)) != writelen)
                                 err_sys("writen() error");
                         if (verbose)

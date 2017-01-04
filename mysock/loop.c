@@ -7,15 +7,17 @@ static void sig_catch(int signo)
 
 void loop(FILE *fp, int sockfd)
 {
-	fd_set rset;
+	fd_set rset, xset;
 	int stdineof;
 	int n;
 	int maxfd;
 	int fd;
+        int justoob = 0;
         struct timeval tv, *ptv;
 
 	stdineof = 0;
 	FD_ZERO(&rset);
+	FD_ZERO(&xset);
 
 	if (cbreak && isatty(STDIN_FILENO)) {
 		if (tty_cbreak(STDIN_FILENO) < 0)
@@ -34,6 +36,8 @@ void loop(FILE *fp, int sockfd)
 		if (stdineof == 0)
 			FD_SET(fileno(fp), &rset);
 		FD_SET(sockfd, &rset);
+                if (!justoob)
+                        FD_SET(sockfd, &xset);
 		maxfd = max(fileno(fp), sockfd);
                 
                 if (timeout && server) {
@@ -61,6 +65,15 @@ void loop(FILE *fp, int sockfd)
 				err_sys("writen() error");
 		}
 
+                if (FD_ISSET(sockfd, &xset)) {
+                        if ((n = recv(sockfd, rbuf, readlen-1, MSG_OOB)) < 0)
+                                err_sys("recv() error");
+                        rbuf[n] = 0;
+                        printf("read %d OOB byte: %s\n", n, rbuf);
+                        justoob = 1;
+                        FD_CLR(sockfd, &xset);
+                }
+
 		if (FD_ISSET(sockfd, &rset)) { /* data to read from socket */
 			if ((n = read(sockfd, rbuf, readlen)) < 0) 
 				err_sys("read() sockfd error");
@@ -76,6 +89,7 @@ void loop(FILE *fp, int sockfd)
 				fd = echo ? sockfd : fileno(stdout);
 			if (writen(fd, rbuf, n) != n)
 				err_sys("writen() error");
+                        justoob = 0;
 		}
 	}
 

@@ -36,6 +36,7 @@ int nbuf = 1; /* number of buffers to write (sink mode) */
 int pauserw; /* seconds to sleep before each read or write */
 int pauseinit; /* seconds to sleep before first read or write */
 int pauseclose; /* seconds to sleep after recv FIN, before close */
+int urgwrite; /* write urgent byte after this write */
 
 static void usage(const char *msg)
 {
@@ -65,7 +66,8 @@ static void usage(const char *msg)
 "         -n n #buffers to write for \"source\" client (default 1024)\n"
 "         -p n #seconds to pause before each read or write (source/sink)\n"
 "         -Q n #seconds to pause after receiving FIN, but before close\n"
-"         -P n #seconds to pause before first read or write (source/sink)"
+"         -P n #seconds to pause before first read or write (source/sink)\n"
+"         -U n  enter urgent mode after write number n (source only)"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -81,7 +83,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "Q:P:p:n:iNCq:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "U:Q:P:p:n:iNCq:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -204,6 +206,10 @@ int main(int argc, char *argv[])
 
                         case 'Q':
                                 pauseclose = atoi(optarg);
+                                break;
+
+                        case 'U':
+                                urgwrite = atoi(optarg);
                                 break;
 
 			case '?':

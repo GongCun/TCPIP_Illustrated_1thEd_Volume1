@@ -32,6 +32,7 @@ extern int nbuf;
 extern int pauserw;
 extern int pauseinit;
 extern int pauseclose;
+extern int urgwrite;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);
