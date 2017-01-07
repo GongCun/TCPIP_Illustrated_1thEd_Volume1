@@ -47,7 +47,7 @@ static void usage(const char *msg)
 "         -V display version\n"
 "         -v verbose\n"
 "         -A SO_REUSEADDR option\n"
-"         -d debug\n"
+"         -D SO_DEBUG option\n"
 "         -s operate as server instead of client\n"
 "         -r n #bytes per read()  (default: 1024)\n"
 "         -w n #bytes per write() (default: 1024)\n"
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "U:Q:P:p:n:iNCq:O:AVvb:sdL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
                         case 'A':
                                 reuseaddr = 1;
                                 break;
-                        case 'd':
+                        case 'D':
                                 debug = 1;
                                 break;
                         case 'L':

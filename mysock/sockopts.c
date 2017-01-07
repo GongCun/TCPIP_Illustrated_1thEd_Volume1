@@ -6,6 +6,20 @@ void sockopts(int sockfd, int doall)
 	int option;
         socklen_t optlen;
 
+        if (debug) {
+                option = 1;
+                if (setsockopt(sockfd, SOL_SOCKET, SO_DEBUG, &option, sizeof(option)) < 0)
+                        err_sys("setsockopt() for SO_DEBUG error");
+                option = 0;
+                optlen = sizeof(option);
+                if (getsockopt(sockfd, SOL_SOCKET, SO_DEBUG, &option, &optlen) < 0)
+                        err_sys("getsockopt() for SO_DEBUG error");
+                if (option == 0)
+                        err_quit("SO_DEBUG not set %d\n", option);
+                if (verbose)
+                        fprintf(stderr, "SO_DEBUG set\n");
+        }
+
         if (linger >= 0 && doall) {
                 ling.l_onoff = 1;
                 ling.l_linger = linger;
