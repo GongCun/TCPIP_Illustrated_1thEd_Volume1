@@ -4,6 +4,23 @@
 static void pattern(char *ptr, int len);
 static void sig_urg(int signo);
 static int fd = -1;
+static void 
+distime(void)
+{
+	char tmbuf[64], buf[64];
+	struct tm *tm;
+	struct timeval tv;
+
+	if (gettimeofday(&tv, NULL) < 0)
+		err_sys("gettimeofday() error");
+	tm = localtime(&tv.tv_sec);
+	if (strftime(tmbuf, sizeof(tmbuf), "%Y-%m-%d %H:%M:%S", tm) == 0)
+		err_quit("strftime() error");
+	snprintf(buf, sizeof(buf), "%s.%06d", tmbuf, (int) tv.tv_usec);
+	fprintf(stderr, "%s", buf);
+
+	return;
+}
 
 void sink(int sockfd)
 {
@@ -13,10 +30,19 @@ void sink(int sockfd)
         if (client) {
                 pattern(wbuf, writelen); /* fill send buffer with a pattern */
 
+		if (timestamp) {
+			distime();
+			fprintf(stderr, "\tstarting\n");
+		}
+
                 if (pauseinit)
                         sleep(pauseinit);
 
                 for (i = 1; i <= nbuf; i++) {
+			if (timestamp) {
+				distime();
+				fprintf(stderr, "\t");
+			}
                         if (urgwrite == i) {
                                 oob = (char)urgwrite;
 
@@ -36,6 +62,10 @@ void sink(int sockfd)
                 /*
                  * Server process
                  */
+		if (timestamp) {
+			distime();
+			fprintf(stderr, " \tstarting\n");
+		}
 
                 if (pauseinit)
                         sleep(pauseinit);
@@ -48,13 +78,16 @@ void sink(int sockfd)
 
 
                 for ( ; ; ) {
+			if (timestamp) {
+				distime();
+				fprintf(stderr, "\t");
+			}
                         if ((n = read(sockfd, rbuf, readlen)) < 0)
                                 err_sys("read() error");
                         else if (n == 0) {
                                 fprintf(stderr, "connection closed by peer\n");
                                 break;
-                        } else if (n != readlen)
-                                err_quit("read returned %d, expected %d", n, readlen);
+                        }
 
                         if (verbose)
                                 fprintf(stderr, "received %d bytes\n", n);

@@ -37,6 +37,8 @@ int pauserw; /* seconds to sleep before each read or write */
 int pauseinit; /* seconds to sleep before first read or write */
 int pauseclose; /* seconds to sleep after recv FIN, before close */
 int urgwrite; /* write urgent byte after this write */
+int mss; /* maximum sigment size */
+int timestamp; /* display timestamp */
 
 static void usage(const char *msg)
 {
@@ -53,6 +55,7 @@ static void usage(const char *msg)
 "         -w n #bytes per write() (default: 1024)\n"
 "         -R n SO_RCVBUF option\n"
 "         -S n SO_SNDBUF option\n"
+"         -M n TCP_MAXSEG options\n"
 "         -e operate as echo server (combined with -s)\n"
 "         -L n SO_LINGER option, n = linger time\n"
 "         -F fork after connection accepted (TCP concurrent server)\n"
@@ -67,7 +70,8 @@ static void usage(const char *msg)
 "         -p n #seconds to pause before each read or write (source/sink)\n"
 "         -Q n #seconds to pause after receiving FIN, but before close\n"
 "         -P n #seconds to pause before first read or write (source/sink)\n"
-"         -U n  enter urgent mode after write number n (source only)"
+"         -U n  enter urgent mode after write number n (source only)\n"
+"         -d display timestamp"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -83,7 +87,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "dM:U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -211,6 +215,14 @@ int main(int argc, char *argv[])
                         case 'U':
                                 urgwrite = atoi(optarg);
                                 break;
+
+                        case 'M':
+                                mss = atoi(optarg);
+				break;
+
+                        case 'd':
+                                ++timestamp;
+				break;
 
 			case '?':
 				usage("unrecognized option");

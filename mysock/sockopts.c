@@ -48,6 +48,11 @@ void sockopts(int sockfd, int doall)
 			fprintf(stderr, "TCP_NODELAY set\n");
 	}
 
+	if (mss) {
+		if (setsockopt(sockfd, IPPROTO_TCP, TCP_MAXSEG, &mss, sizeof(mss)) < 0)
+			err_sys("setsockopt() for TCP_MAXSEG error");
+	}
+
 	if (doall) { /* just print MSS if verbose */
 		option = 0;
 		optlen = sizeof(option);

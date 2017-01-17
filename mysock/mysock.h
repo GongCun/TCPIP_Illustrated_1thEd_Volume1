@@ -33,6 +33,8 @@ extern int pauserw;
 extern int pauseinit;
 extern int pauseclose;
 extern int urgwrite;
+extern int mss;
+extern int timestamp;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);
