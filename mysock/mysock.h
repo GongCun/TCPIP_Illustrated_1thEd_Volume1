@@ -35,6 +35,10 @@ extern int pauseclose;
 extern int urgwrite;
 extern int mss;
 extern int timestamp;
+extern int udp;
+extern int reuseport;
+extern char foreignip[];
+extern int forignport;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);

@@ -14,7 +14,9 @@ int cliopen(char *host, char *port)
         struct hostent *hp;
         in_addr_t inaddr;
         char **pptr;
-        char *protocol = "tcp";
+        char *protocol;
+
+        protocol = udp ? "udp" : "tcp";
 
         bzero(&serv_addr, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
@@ -46,15 +48,29 @@ int cliopen(char *host, char *port)
                 memcpy(&serv_addr.sin_addr, *pptr, hp->h_length);
         }
 
-        if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        if ((fd = socket(AF_INET, udp ? SOCK_DGRAM : SOCK_STREAM, 0)) < 0)
                 err_sys("socket() error");
         if (reuseaddr) {
                 on = 1;
                 if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
                         err_sys("setsockopt() of SO_REUSEADDR error");
         }
+        if (udp && reuseport) {
+#ifdef SO_REUSEPORT
+                on = 1;
+                if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0)
+                        err_sys("setsockopt() of SO_REUSEPORT error");
+#endif
+        }
 
-        if (bindport) {
+        /*
+         * User can specify port number for client to bind. Only real use
+         * is to see a TCP connection initiated by both ends at the same time.
+         * Also, if UDP is being used, we specifically call bind() to assign
+         * an ephemeral port to the socket.
+         */
+
+        if (bindport || udp) {
                 bzero(&cli_addr, sizeof(cli_addr));
                 cli_addr.sin_family = AF_INET;
                 cli_addr.sin_addr.s_addr = htonl(INADDR_ANY); /* wildcard */
@@ -69,9 +85,7 @@ int cliopen(char *host, char *port)
  	 * TCP options (window scale, etc.)
 	 */
 	buffers(fd);
-#if 0
         sockopts(fd, 0); /* may also want to set SO_DEBUG */
-#endif
 
         signal_func_t sigfunc;
         if (timeout) {
@@ -80,6 +94,12 @@ int cliopen(char *host, char *port)
                 if (alarm(timeout) != 0) /* Return 0 if no alarm is currently set */
                         err_quit("sig_alrm(): alarm was already set");
         }
+        
+        /*
+         * Connect to the server. Required for TCP, optional for UDP.
+         * Use write/read instead of sendto/recvfrom with a connected
+         * UDP socket.
+         */
         if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
                 if (errno == EINTR)
                         errno = ETIMEDOUT;

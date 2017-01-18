@@ -10,6 +10,7 @@ int server;
 int verbose;
 int debug;
 int reuseaddr;
+int reuseport;
 int linger = -1; /* 0 or positive turns on option */
 int listenq = 5; /* listen queue for TCP server */
 int readlen = 1024; /* default read length for socket */
@@ -39,6 +40,9 @@ int pauseclose; /* seconds to sleep after recv FIN, before close */
 int urgwrite; /* write urgent byte after this write */
 int mss; /* maximum sigment size */
 int timestamp; /* display timestamp */
+int udp; /* use UDP instead of TCP */
+char foreignip[32];
+int foreignport;
 
 static void usage(const char *msg)
 {
@@ -57,6 +61,7 @@ static void usage(const char *msg)
 "         -S n SO_SNDBUF option\n"
 "         -M n TCP_MAXSEG options\n"
 "         -e operate as echo server (combined with -s)\n"
+"         -f a.b.c.d.p foreign IP address = a.b.c.d, foreign port# = p\n"
 "         -L n SO_LINGER option, n = linger time\n"
 "         -F fork after connection accepted (TCP concurrent server)\n"
 "         -T n #seconds timeout for connection or recvmsg\n"
@@ -71,7 +76,8 @@ static void usage(const char *msg)
 "         -Q n #seconds to pause after receiving FIN, but before close\n"
 "         -P n #seconds to pause before first read or write (source/sink)\n"
 "         -U n  enter urgent mode after write number n (source only)\n"
-"         -d display timestamp"
+"         -d display timestamp\n"
+"         -u use UDP instead of TCP"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -87,7 +93,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "dM:U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "f:audM:U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 				printf("Version: %s\n", VERSION);
@@ -104,6 +110,9 @@ int main(int argc, char *argv[])
                                 break;
                         case 'A':
                                 reuseaddr = 1;
+                                break;
+                        case 'a':
+                                reuseport = 1;
                                 break;
                         case 'D':
                                 debug = 1;
@@ -224,10 +233,37 @@ int main(int argc, char *argv[])
                                 ++timestamp;
 				break;
 
+                        case 'u': /* use UDP instead of TCP */
+                                ++udp;
+				break;
+
+                        case 'f':
+                                if ((ptr = strrchr(optarg, '.')) == NULL)
+                                        usage("invalid -f option");
+                                *ptr++ = 0;
+                                foreignport = atoi(ptr);
+                                strcpy(foreignip, optarg);
+                                break;
+
 			case '?':
 				usage("unrecognized option");
 		}
 	}
+
+        if (udp && debug)
+                usage("can't specify -D and -u");
+        if (udp && linger >= 0)
+                usage("can't specify -L and -u");
+        if (udp && nodelay)
+                usage("can't specify -N and -u");
+        if (udp && rawopt)
+                usage("can't specify -o and -u");
+        if (udp && mss)
+                usage("can't specify -M and -u");
+        if (udp && urgwrite)
+                usage("can't specify -U and -u");
+        if (udp && pauseclose)
+                usage("can't specify -Q and -u");
 
 	if (client) {
 		if (optind != argc - 2)

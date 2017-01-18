@@ -5,6 +5,9 @@ static void sig_catch(int signo)
 	exit(0); /* exit handler will reset tty state */
 }
 
+static ssize_t
+recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct sockaddr *sa, socklen_t *socklen, struct in_addr *dst);
+
 void loop(FILE *fp, int sockfd)
 {
 	fd_set rset, xset;
@@ -14,6 +17,12 @@ void loop(FILE *fp, int sockfd)
 	int fd;
         int justoob = 0;
         struct timeval tv, *ptv;
+
+        /* For UDP verbose output */
+        int flags;
+        socklen_t socklen;
+	struct sockaddr_in servaddr, cliaddr;
+        struct in_addr dstaddr;
 
 	stdineof = 0;
 	FD_ZERO(&rset);
@@ -74,22 +83,38 @@ void loop(FILE *fp, int sockfd)
                         FD_CLR(sockfd, &xset);
                 }
 
-		if (FD_ISSET(sockfd, &rset)) { /* data to read from socket */
-			if ((n = read(sockfd, rbuf, readlen)) < 0) 
-				err_sys("read() sockfd error");
-			else if (n == 0) {
-			       if (stdineof == 1 || server)
-				       break; /* normal termination */
-			       else
-				       err_quit("process %d: connection closed by peer", (int)getpid());
+		if (FD_ISSET(sockfd, &rset)) {	/* data to read from socket */
+			if (udp && server) {
+                                socklen = sizeof(struct sockaddr_in);
+                                if ((n = recvdst(sockfd, rbuf, readlen, &flags, (struct sockaddr *)&cliaddr,
+                                                                &socklen, &dstaddr)) < 0)
+                                {
+                                        err_sys("recvfrom() error");
+                                }
+                                if (echo) {
+                                        if (writen(fd, rbuf, n) != n)
+                                                err_sys("writen() error");
+                                } else {
+                                        if (sendto(sockfd, rbuf, n, 0, (struct sockaddr *)&cliaddr, socklen) < 0)
+                                                err_sys("sendto() error");
+                                }
+			} else {
+				if ((n = read(sockfd, rbuf, readlen)) < 0)
+					err_sys("read() sockfd error");
+				else if (n == 0) {
+					if (stdineof == 1 || server)
+						break;	/* normal termination */
+					else
+						err_quit("process %d: connection closed by peer", (int)getpid());
+				}
+				if (client)
+					fd = fileno(stdout);
+				else
+					fd = echo ? sockfd : fileno(stdout);
+				if (writen(fd, rbuf, n) != n)
+					err_sys("writen() error");
+				justoob = 0;
 			}
-			if (client)
-				fd = fileno(stdout);
-			else
-				fd = echo ? sockfd : fileno(stdout);
-			if (writen(fd, rbuf, n) != n)
-				err_sys("writen() error");
-                        justoob = 0;
 		}
 	}
 

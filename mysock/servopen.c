@@ -3,14 +3,17 @@
 int servopen(char *host, char *port)
 {
         int newfd, fd, i, on;
-        char *protocol = "tcp";
+        char *protocol;
         struct sockaddr_in cli_addr, serv_addr;
         struct servent *sp;
         in_addr_t inaddr;
 	pid_t pid;
 
+        protocol = udp ? "udp" : "tcp";
+
         bzero(&serv_addr, sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
+
         if (host == NULL)
                 serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); /* wildcard */
         else {
@@ -26,13 +29,22 @@ int servopen(char *host, char *port)
         } else
                 serv_addr.sin_port = htons(i);
 
-        if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        if ((fd = socket(AF_INET, udp ? SOCK_DGRAM : SOCK_STREAM, 0)) < 0)
                 err_sys("socket() error");
         if (reuseaddr) {
                 on = 1;
                 if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
                         err_sys("setsockopt() of SO_REUSEADDR error");
         }
+
+        if (udp && reuseport) {
+#ifdef SO_REUSEPORT
+                on = 1;
+                if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0)
+                        err_sys("setsockopt() of SO_REUSEPORT error");
+#endif
+        }
+
         if (bind(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
                 err_sys("bind() error");
 
@@ -40,9 +52,22 @@ int servopen(char *host, char *port)
  	 * correct window advertised on SYN
 	 */
 	buffers(fd);
-#if 0
+
+        if (udp) {
+                if (foreignip[0] != 0) { /* connect to foreignip/port# */
+                        bzero((char *)&cli_addr, sizeof(cli_addr));
+                        cli_addr.sin_family = AF_INET;
+                        cli_addr.sin_addr.s_addr = inet_addr(foreignip);
+                        cli_addr.sin_port = htons(foreignport);
+                        if (connect(fd, (struct sockaddr *)&cli_addr, sizeof(cli_addr)) < 0)
+                                err_sys("connect() error");
+                }
+                sockopts(fd, 1);
+                return(fd); /* nothing else to do */
+        }
+
         sockopts(fd, 0); /* only set some socket for fd */
-#endif
+
         if (listen(fd, listenq) < 0)
                 err_sys("listen() error");
 
