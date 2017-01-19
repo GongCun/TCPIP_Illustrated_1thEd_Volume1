@@ -5,9 +5,6 @@ static void sig_catch(int signo)
 	exit(0); /* exit handler will reset tty state */
 }
 
-static ssize_t
-recvdst(int sockfd, char *buf, size_t buflen, int *flags, struct sockaddr *sa, socklen_t *socklen, struct in_addr *dst);
-
 void loop(FILE *fp, int sockfd)
 {
 	fd_set rset, xset;
@@ -21,7 +18,7 @@ void loop(FILE *fp, int sockfd)
         /* For UDP verbose output */
         int flags;
         socklen_t socklen;
-	struct sockaddr_in servaddr, cliaddr;
+	struct sockaddr_in cliaddr;
         struct in_addr dstaddr;
 
 	stdineof = 0;
@@ -64,14 +61,24 @@ void loop(FILE *fp, int sockfd)
 			if ((n = read(fileno(fp), rbuf, readlen)) < 0)
 				err_sys("read() error from fp");
 			else if (n == 0) {
+				if (udp)
+					break;
 				stdineof = 1;
 				if (shutdown(sockfd, 1) < 0) /* default half close */
 					err_sys("shutdown() error");
 				FD_CLR(fileno(fp), &rset);
 				continue;
 			}
-			if (writen(sockfd, rbuf, n) != n)
-				err_sys("writen() error");
+			if (client) {
+				if (multicast) {
+					if (sendto(sockfd, rbuf, n, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+						err_sys("sendto() error");
+
+				} else {
+					if (writen(sockfd, rbuf, n) != n)
+						err_sys("writen() error");
+				}
+			}
 		}
 
                 if (FD_ISSET(sockfd, &xset)) {
@@ -91,12 +98,24 @@ void loop(FILE *fp, int sockfd)
                                 {
                                         err_sys("recvfrom() error");
                                 }
+				if (verbose) {
+					fprintf(stderr, "from %s.%d", inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+#if defined(HAVE_MSGHDR_MSG_CONTROL) 
+#if defined(IP_RECVDSTADDR) || defined(IP_PKTINFO)
+					if (recvdstaddr) {
+						fprintf(stderr, " to %s", inet_ntoa(dstaddr));
+					}
+#endif /* HAVE_MSGHDR_MSG_CONTROL */
+#endif /* IP_RECVDSTADDR */
+					putc('\n', stderr);
+
+				} /* end of verbose */
                                 if (echo) {
-                                        if (writen(fd, rbuf, n) != n)
-                                                err_sys("writen() error");
-                                } else {
                                         if (sendto(sockfd, rbuf, n, 0, (struct sockaddr *)&cliaddr, socklen) < 0)
                                                 err_sys("sendto() error");
+                                } else {
+                                        if (writen(fileno(stdout), rbuf, n) != n)
+                                                err_sys("writen() error");
                                 }
 			} else {
 				if ((n = read(sockfd, rbuf, readlen)) < 0)

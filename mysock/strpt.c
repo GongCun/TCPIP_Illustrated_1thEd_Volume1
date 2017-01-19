@@ -1,4 +1,4 @@
-/* $Id: strpt.c,v 1.1 2017/01/17 12:56:52 gongcunjust Exp gongcunjust $ */
+/* $Id: strpt.c,v 1.1 2017/01/18 06:46:57 root Exp $ */
 #include "mysock.h"
 #include <nlist.h> /* knlist() */
 #include <netinet/ip_var.h>

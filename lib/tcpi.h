@@ -159,6 +159,13 @@ signal_func_t xsignal(int sig, signal_func_t func);
 /* multicast functions */
 int mcast_join(int sockfd, const char *dev, char *maddr);
 
+/*
+ * Use IP_RECVDSTADDR option and recvmsg() to get
+ * the destination IP address of received UDP datagram.
+ */
+ssize_t
+recvdst(int, char *, size_t, int *, struct sockaddr *, socklen_t *, struct in_addr *);
+
 #endif /* __TCPI_H */
 
 

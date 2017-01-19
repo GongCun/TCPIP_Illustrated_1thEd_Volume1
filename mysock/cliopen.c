@@ -9,12 +9,13 @@ int cliopen(char *host, char *port)
 {
         int i, fd;
         int on;
-        struct sockaddr_in cli_addr, serv_addr;
+        struct sockaddr_in cli_addr;
         struct servent *sp;
         struct hostent *hp;
         in_addr_t inaddr;
         char **pptr;
         char *protocol;
+	char *p, *addr;
 
         protocol = udp ? "udp" : "tcp";
 
@@ -48,6 +49,16 @@ int cliopen(char *host, char *port)
                 memcpy(&serv_addr.sin_addr, *pptr, hp->h_length);
         }
 
+	addr = inet_ntoa(serv_addr.sin_addr);
+	if ((p = strchr(addr, '.')) == NULL)
+		err_quit("invalid ip address");
+	*p = 0;
+	if (atoi(addr) >= 224 && atoi(addr) <= 239) {
+		multicast = 1;
+		if (verbose)
+			fprintf(stderr, "Send to Class-D IP\n");
+	}
+
         if ((fd = socket(AF_INET, udp ? SOCK_DGRAM : SOCK_STREAM, 0)) < 0)
                 err_sys("socket() error");
         if (reuseaddr) {
@@ -73,7 +84,7 @@ int cliopen(char *host, char *port)
         if (bindport || udp) {
                 bzero(&cli_addr, sizeof(cli_addr));
                 cli_addr.sin_family = AF_INET;
-                cli_addr.sin_addr.s_addr = htonl(INADDR_ANY); /* wildcard */
+		cli_addr.sin_addr.s_addr = htonl(INADDR_ANY); /* wildcard */
                 cli_addr.sin_port = htons(bindport);
 
                 if (bind(fd, (struct sockaddr *)&cli_addr, sizeof(cli_addr)) < 0)
@@ -98,20 +109,22 @@ int cliopen(char *host, char *port)
         /*
          * Connect to the server. Required for TCP, optional for UDP.
          * Use write/read instead of sendto/recvfrom with a connected
-         * UDP socket.
+         * UDP socket, but multicast can't use connect() if it want
+	 * to receive the reply from server. 
          */
-        if (connect(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-                if (errno == EINTR)
-                        errno = ETIMEDOUT;
-                err_sys("connect() error");
-        }
+	if (!multicast && connect(fd, (struct sockaddr *) & serv_addr, sizeof(serv_addr)) < 0) {
+		if (errno == EINTR)
+			errno = ETIMEDOUT;
+		err_sys("connect() error");
+	}
+
         if (timeout) {
                 alarm(0);
                 if (xsignal(SIGALRM, sigfunc) == SIG_ERR)
                         err_sys("xsignal() error");
         }
 
-        if (verbose) {
+        if (verbose && !multicast) {
                 i = sizeof(cli_addr);
                 if (getsockname(fd, (struct sockaddr *)&cli_addr, (socklen_t *)&i) < 0)
                         err_sys("getsockname() error");

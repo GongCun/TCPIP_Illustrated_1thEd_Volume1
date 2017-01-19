@@ -4,7 +4,7 @@ int servopen(char *host, char *port)
 {
         int newfd, fd, i, on;
         char *protocol;
-        struct sockaddr_in cli_addr, serv_addr;
+        struct sockaddr_in cli_addr;
         struct servent *sp;
         in_addr_t inaddr;
 	pid_t pid;
@@ -62,8 +62,13 @@ int servopen(char *host, char *port)
                         if (connect(fd, (struct sockaddr *)&cli_addr, sizeof(cli_addr)) < 0)
                                 err_sys("connect() error");
                 }
-                sockopts(fd, 1);
-                return(fd); /* nothing else to do */
+		if (dev[0] != 0) {
+			if (mcast_join(fd, dev, inet_ntoa(serv_addr.sin_addr)) < 0)
+				err_sys("mcast_join() error");
+		}
+
+		sockopts(fd, 1);
+		return(fd); /* nothing else to do */
         }
 
         sockopts(fd, 0); /* only set some socket for fd */

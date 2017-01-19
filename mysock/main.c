@@ -1,5 +1,4 @@
 #include "mysock.h"
-#include "version.h"
 
 char *host;
 char *port;
@@ -43,6 +42,11 @@ int timestamp; /* display timestamp */
 int udp; /* use UDP instead of TCP */
 char foreignip[32];
 int foreignport;
+int recvdstaddr; /* IP_RECVDSTADDR option */
+int broadcast; /* SO_BROADCAST */
+char dev[16]; /* multicast interface */
+int multicast;
+struct sockaddr_in serv_addr;
 
 static void usage(const char *msg)
 {
@@ -52,6 +56,7 @@ static void usage(const char *msg)
 "options: -b n bind n as client's local port number\n"
 "         -V display version\n"
 "         -v verbose\n"
+"         -a SO_REUSEPORT option\n"
 "         -A SO_REUSEADDR option\n"
 "         -D SO_DEBUG option\n"
 "         -s operate as server instead of client\n"
@@ -59,7 +64,7 @@ static void usage(const char *msg)
 "         -w n #bytes per write() (default: 1024)\n"
 "         -R n SO_RCVBUF option\n"
 "         -S n SO_SNDBUF option\n"
-"         -M n TCP_MAXSEG options\n"
+"         -m n TCP_MAXSEG options\n"
 "         -e operate as echo server (combined with -s)\n"
 "         -f a.b.c.d.p foreign IP address = a.b.c.d, foreign port# = p\n"
 "         -L n SO_LINGER option, n = linger time\n"
@@ -75,9 +80,12 @@ static void usage(const char *msg)
 "         -p n #seconds to pause before each read or write (source/sink)\n"
 "         -Q n #seconds to pause after receiving FIN, but before close\n"
 "         -P n #seconds to pause before first read or write (source/sink)\n"
-"         -U n  enter urgent mode after write number n (source only)\n"
+"         -U n enter urgent mode after write number n (source only)\n"
 "         -d display timestamp\n"
-"         -u use UDP instead of TCP"
+"         -u use UDP instead of TCP\n"
+"         -E display destination IP address of a received UDP datagram\n"
+"         -B SO_BROADCAST option\n"
+"         -M \"Multicase Interface\", should bind Class-D IP"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -93,11 +101,14 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "f:audM:U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "M:BEf:audm:U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
-				printf("Version: %s\n", VERSION);
+#define P(s) (void)fputs(s "\n", stderr);
+#include "version.h"
+#undef P
 				exit(0);
+
 			case 'b':
 				bindport = atoi(optarg);
 				break;
@@ -225,7 +236,7 @@ int main(int argc, char *argv[])
                                 urgwrite = atoi(optarg);
                                 break;
 
-                        case 'M':
+                        case 'm':
                                 mss = atoi(optarg);
 				break;
 
@@ -245,6 +256,18 @@ int main(int argc, char *argv[])
                                 strcpy(foreignip, optarg);
                                 break;
 
+			case 'E':
+				++recvdstaddr;
+				break;
+
+			case 'B':
+				++broadcast;
+				break;
+
+			case 'M':
+				strcpy(dev, optarg);
+				break;
+
 			case '?':
 				usage("unrecognized option");
 		}
@@ -259,11 +282,19 @@ int main(int argc, char *argv[])
         if (udp && rawopt)
                 usage("can't specify -o and -u");
         if (udp && mss)
-                usage("can't specify -M and -u");
+                usage("can't specify -m and -u");
         if (udp && urgwrite)
                 usage("can't specify -U and -u");
         if (udp && pauseclose)
                 usage("can't specify -Q and -u");
+	if (!udp && broadcast)
+		usage("can't specify -B with TCP");
+	if (!udp && foreignip[0] != 0)
+		usage("can't specify -f with TCP");
+	if (!udp && dev[0] != 0)
+		usage("can't specify -M with TCP");
+	if (client && dev[0] != 0)
+		usage("can't specify -M with client");
 
 	if (client) {
 		if (optind != argc - 2)

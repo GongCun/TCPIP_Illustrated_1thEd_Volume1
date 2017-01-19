@@ -38,7 +38,12 @@ extern int timestamp;
 extern int udp;
 extern int reuseport;
 extern char foreignip[];
-extern int forignport;
+extern int foreignport;
+extern int recvdstaddr;
+extern int broadcast; /* SO_BROADCAST */
+extern char dev[];
+extern int multicast;
+extern struct sockaddr_in serv_addr;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);
