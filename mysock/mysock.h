@@ -44,6 +44,7 @@ extern int broadcast; /* SO_BROADCAST */
 extern char dev[];
 extern int multicast;
 extern struct sockaddr_in serv_addr;
+extern int keepalive;
 
 int cliopen(char *, char *);
 int servopen(char *, char *);

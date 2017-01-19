@@ -1,0 +1,282 @@
+% ./sock -v -D -b8888 22.236.180.217 echo
+connected on 22.236.180.216.8888 to 22.236.180.217.7
+SO_DEBUG set
+TCP_MAXSEG = 1448
+hello
+hello
+world
+read() sockfd error: Connection timed out
+
+--------
+% ifconfig en1 down
+% netstat -an | grep -w 7
+tcp4       0      0  *.7                    *.*                    LISTEN
+tcp4       0      0  22.236.180.217.7       22.236.180.216.8888    ESTABLISHED
+
+--------
+% netstat -Aan | grep -w 8888
+
+% trpt -f -a -t -s -p f1000e000197c3b8
+
+f1000e000197c3b8:
+243 ESTABLISHED:user SOCKADDR -> ESTABLISHED
+        rcv_nxt 22302281 rcv_wnd 3ffc8 snd_una 97bf276b snd_nxt 97bf276b
+snd_max 97bf276b
+        snd_wl1 22302281 snd_wl2 97bf276b snd_wnd ffff
+244 ESTABLISHED:input (src=22.236.180.217,0,
+dst=22.236.180.216,1)22302281@97bf276b(win=fff2) -> ESTABLISHED
+        rcv_nxt 22302281 rcv_wnd 3ffc8 snd_una 97bf276b snd_nxt 97bf276b
+snd_max 97bf276b
+        snd_wl1 22302281 snd_wl2 97bf276b snd_wnd 3ffc8
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268480013 268480017>
+514 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf276b..97bf277d)@22302281(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302281 rcv_wnd 3ffc8 snd_una 97bf276b snd_nxt 97bf2771
+snd_max 97bf2771
+        snd_wl1 22302281 snd_wl2 97bf276b snd_wnd 3ffc8
+        REXMT=3 (t_rxtshft=0)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268480557 268480561>
+514 ESTABLISHED:user SEND -> ESTABLISHED
+        rcv_nxt 22302281 rcv_wnd 3ffc8 snd_una 97bf276b snd_nxt 97bf2771
+snd_max 97bf2771
+        snd_wl1 22302281 snd_wl2 97bf276b snd_wnd 3ffc8
+        REXMT=3 (t_rxtshft=0)
+515 ESTABLISHED:input (src=22.236.180.217,0,
+dst=22.236.180.216,1)[22302281..22302287)@97bf2771(win=fff2)<SYN,ACK,FIN,RST,PUSH,URG>
+-> 
+ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2771
+snd_max 97bf2771
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268481645 268481649>
+515 ESTABLISHED:user RCVD -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2771
+snd_max 97bf2771
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+534 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf277d)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2771
+snd_max 97bf2771
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268482733 268482737>
+784 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=3 (t_rxtshft=0)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268483277 268483281>
+784 ESTABLISHED:user SEND -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=3 (t_rxtshft=0)
+924 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=6 (t_rxtshft=1)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268484365 268484369>
+924 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=6 (t_rxtshft=1)
+224 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=12 (t_rxtshft=2)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268485453 268485457>
+224 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=12 (t_rxtshft=2)
+824 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=24 (t_rxtshft=3)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268486541 268486545>
+824 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=24 (t_rxtshft=3)
+024 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=48 (t_rxtshft=4)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268487629 268487633>
+024 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=48 (t_rxtshft=4)
+424 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=96 (t_rxtshft=5)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268488717 268488721>
+424 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=96 (t_rxtshft=5)
+224 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=6)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268489805 268489809>
+224 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=6)
+624 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=7)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268490893 268490897>
+624 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=7)
+025 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=8)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268491981 268491985>
+025 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=8)
+425 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=9)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268493069 268493073>
+425 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=9)
+825 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=10)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268494157 268494161>
+825 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=10)
+225 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=11)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268495245 268495249>
+225 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=11)
+625 ESTABLISHED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2771..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+->
+ ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=12)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268496333 268496337>
+625 ESTABLISHED:user SLOWTIMO<REXMT> -> ESTABLISHED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=12)
+026 CLOSED:output (src=22.236.180.216,0,
+dst=22.236.180.217,1)[97bf2777..97bf2783)@22302287(win=7ff9)<SYN,ACK,FIN,RST,PUSH,URG>
+-> CLOS
+ED
+        rcv_nxt 22302287 rcv_wnd 3ffc8 snd_una 97bf2771 snd_nxt 97bf2777
+snd_max 97bf2777
+        snd_wl1 22302281 snd_wl2 97bf2771 snd_wnd 3ffc8
+        REXMT=128 (t_rxtshft=0)
+tcpopt_size=12     tcp options : <nop,nop,timestamp 268497421 268497425>
+
+-----------------
+% tcpdump -n -ttt -r ./en1.pcap 'port 8888'
+reading from file ./en1.pcap, link-type 1
+00:00:00.000000 IP 22.236.180.216.8888 > 22.236.180.217.7: S 2545887082:2545887082(0) win 65535 <mss 8960,nop,wscale 3,nop,nop,timestamp 1502334154 0>
+00:00:00.006716 IP 22.236.180.217.7 > 22.236.180.216.8888: S 573579904:573579904(0) ack 2545887083 win 65535 <mss 1460,nop,wscale 2,nop,nop,timestamp 1496184973 1502334154,nop,opt-14:03>
+00:00:00.000023 IP 22.236.180.216.8888 > 22.236.180.217.7: . ack 1 win 32761 <nop,nop,timestamp 1502334154 1496184973>
+00:00:00.010063 IP 22.236.180.217.7 > 22.236.180.216.8888: . ack 1 win 65522 <nop,nop,timestamp 1496184973 1502334154>
+00:00:22.700952 IP 22.236.180.216.8888 > 22.236.180.217.7: P 1:7(6) ack 1 win 32761 <nop,nop,timestamp 1502334199 1496184973>
+00:00:00.009001 IP 22.236.180.217.7 > 22.236.180.216.8888: P 1:7(6) ack 7 win 65522 <nop,nop,timestamp 1496185018 1502334199>
+00:00:00.190831 IP 22.236.180.216.8888 > 22.236.180.217.7: . ack 7 win 32761 <nop,nop,timestamp 1502334200 1496185018>
+00:00:12.499926 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334225 1496185018>
+00:00:01.398664 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334227 1496185018>
+00:00:03.000107 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334233 1496185018>
+00:00:06.000188 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334245 1496185018>
+00:00:12.000386 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334269 1496185018>
+00:00:24.000749 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334317 1496185018>
+00:00:48.001509 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334413 1496185018>
+00:01:04.002043 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334541 1496185018>
+00:01:04.001959 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334669 1496185018>
+00:01:04.001958 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334797 1496185018>
+00:01:04.001950 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502334925 1496185018>
+00:01:04.001903 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502335053 1496185018>
+00:01:04.001928 IP 22.236.180.216.8888 > 22.236.180.217.7: P 7:13(6) ack 7 win 32761 <nop,nop,timestamp 1502335181 1496185018>
+00:01:04.001906 IP 22.236.180.216.8888 > 22.236.180.217.7: R 13:13(0) ack 7 win 32761 <nop,nop,timestamp 1502335309 1496185018>
+

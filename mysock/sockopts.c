@@ -127,6 +127,20 @@ void sockopts(int sockfd, int doall)
 			fprintf(stderr, "IP_MULTICAST_LOOP set\n");
 	}
 
+        if (keepalive && !udp) {
+                option = 1;
+                if (setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &option, sizeof(option)) < 0)
+                        err_sys("SO_KEEPALIVE setsockopt error");
+                option = 0;
+                optlen = sizeof(option);
+                if (getsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &option, &optlen) < 0)
+                        err_sys("SO_KEEPALIVE getsockopt error");
+                if (optlen == 0)
+                        err_quit("SO_KEEPALIVE not set (%d)", option);
+                if (verbose)
+                        fprintf(stderr, "SO_KEEPALIVE set\n");
+        }
+
         return;
 }
 

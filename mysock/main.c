@@ -47,6 +47,7 @@ int broadcast; /* SO_BROADCAST */
 char dev[16]; /* multicast interface */
 int multicast;
 struct sockaddr_in serv_addr;
+int keepalive;
 
 static void usage(const char *msg)
 {
@@ -85,7 +86,8 @@ static void usage(const char *msg)
 "         -u use UDP instead of TCP\n"
 "         -E display destination IP address of a received UDP datagram\n"
 "         -B SO_BROADCAST option\n"
-"         -M \"Multicase Interface\", should bind Class-D IP"
+"         -M \"Multicase Interface\", should bind Class-D IP\n"
+"         -K SO_KEEPALIVE option"
 	);
 	if (msg[0] != 0)
 		err_quit("%s", msg);
@@ -101,7 +103,7 @@ int main(int argc, char *argv[])
 		usage("");
 
 	opterr = 0;
-	while ((c = getopt(argc, argv, "M:BEf:audm:U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
+	while ((c = getopt(argc, argv, "KM:BEf:audm:U:Q:P:p:n:iNCq:O:AVvb:sDL:r:w:R:S:eFT:o:")) != EOF) {
 		switch (c) {
 			case 'V':
 #define P(s) (void)fputs(s "\n", stderr);
@@ -268,6 +270,10 @@ int main(int argc, char *argv[])
 				strcpy(dev, optarg);
 				break;
 
+                        case 'K':
+                                keepalive = 1;
+                                break;
+
 			case '?':
 				usage("unrecognized option");
 		}
@@ -295,6 +301,8 @@ int main(int argc, char *argv[])
 		usage("can't specify -M with TCP");
 	if (client && dev[0] != 0)
 		usage("can't specify -M with client");
+        if (udp && keepalive)
+                usage("can't specify -K with -u");
 
 	if (client) {
 		if (optind != argc - 2)

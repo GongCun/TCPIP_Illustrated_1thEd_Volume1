@@ -1,0 +1,11 @@
+# MacOS
+$ sudo sysctl -a | grep -i keep
+net.inet.tcp.keepidle: 7200000
+net.inet.tcp.keepintvl: 75000
+
+# CentOS
+$ sudo sysctl -a | grep -i keep
+net.ipv4.tcp_keepalive_time = 7200
+net.ipv4.tcp_keepalive_probes = 9
+net.ipv4.tcp_keepalive_intvl = 75
+
