@@ -2,6 +2,7 @@
 $ sudo sysctl -a | grep -i keep
 net.inet.tcp.keepidle: 7200000
 net.inet.tcp.keepintvl: 75000
+net.inet.tcp.keepinit: 75000
 
 # CentOS
 $ sudo sysctl -a | grep -i keep
@@ -9,3 +10,46 @@ net.ipv4.tcp_keepalive_time = 7200
 net.ipv4.tcp_keepalive_probes = 9
 net.ipv4.tcp_keepalive_intvl = 75
 
+##
+# Case 1: close the CentOS (192.168.0.111)
+##
+$ ./sock -K 192.168.0.111 echo
+hello
+hello
+read() sockfd error: Operation timed out
+
+$ sudo tcpdump -n -r ./keep.pcap 'host 192.168.0.111 and port 7'
+07:03:39.267796 IP 192.168.0.105.55269 > 192.168.0.111.7: Flags [S], seq 2868915629, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 334187075 ecr 0,sackOK,eol], length 0
+07:03:39.329344 IP 192.168.0.111.7 > 192.168.0.105.55269: Flags [S.], seq 1101168433, ack 2868915630, win 11480, options [mss 1160,sackOK,TS val 890542002 ecr 334187075,nop,wscale 7], length 0
+07:03:39.329504 IP 192.168.0.105.55269 > 192.168.0.111.7: Flags [.], ack 1, win 8251, options [nop,nop,TS val 334187136 ecr 890542002], length 0
+07:03:41.282782 IP 192.168.0.105.55269 > 192.168.0.111.7: Flags [P.], seq 1:7, ack 1, win 8251, options [nop,nop,TS val 334189076 ecr 890542002], length 6
+07:03:41.377210 IP 192.168.0.111.7 > 192.168.0.105.55269: Flags [.], ack 7, win 90, options [nop,nop,TS val 890544050 ecr 334189076], length 0
+07:03:41.381208 IP 192.168.0.111.7 > 192.168.0.105.55269: Flags [P.], seq 1:7, ack 7, win 90, options [nop,nop,TS val 890544054 ecr 334189076], length 6
+07:03:41.381342 IP 192.168.0.105.55269 > 192.168.0.111.7: Flags [.], ack 7, win 8250, options [nop,nop,TS val 334189174 ecr 890544054], length 0
+07:04:11.979238 IP 192.168.0.105.55269 > 192.168.0.111.7: Flags [.], ack 7, win 8250, length 0
+07:04:12.479772 IP 192.168.0.105.55269 > 192.168.0.111.7: Flags [R.], seq 7, ack 7, win 8250, length 0
+
+##
+# Case 2: Restart the CentOS xinetd service
+##
+$ ./sock -v -K 192.168.0.111 12345
+SO_KEEPALIVE set
+connected on 192.168.0.105.55758 to 192.168.0.111.12345
+TCP_MAXSEG = 1148
+SO_KEEPALIVE set
+hello
+hello
+read() sockfd error: Connection reset by peer
+
+$ sudo tcpdump -n -r ./keep.pcap 'host 192.168.0.111 and port 12345'
+07:30:00.101143 IP 192.168.0.105.55758 > 192.168.0.111.12345: Flags [S], seq 307401799, win 65535, options [mss 1460,nop,wscale 4,nop,nop,TS val 335762620 ecr 0,sackOK,eol], length 0
+07:30:00.103975 IP 192.168.0.111.12345 > 192.168.0.105.55758: Flags [S.], seq 761246744, ack 307401800, win 11480, options [mss 1160,sackOK,TS val 891670005 ecr 335762620,nop,wscale 7], length 0
+07:30:00.104108 IP 192.168.0.105.55758 > 192.168.0.111.12345: Flags [.], ack 1, win 8251, options [nop,nop,TS val 335762676 ecr 891670005], length 0
+07:30:01.710280 IP 192.168.0.105.55758 > 192.168.0.111.12345: Flags [P.], seq 1:7, ack 1, win 8251, options [nop,nop,TS val 335764277 ecr 891670005], length 6
+07:30:01.842588 IP 192.168.0.111.12345 > 192.168.0.105.55758: Flags [.], ack 7, win 90, options [nop,nop,TS val 891671642 ecr 335764277], length 0
+07:30:01.842662 IP 192.168.0.111.12345 > 192.168.0.105.55758: Flags [P.], seq 1:7, ack 7, win 90, options [nop,nop,TS val 891671642 ecr 335764277], length 6
+07:30:01.842787 IP 192.168.0.105.55758 > 192.168.0.111.12345: Flags [.], ack 7, win 8250, options [nop,nop,TS val 335764409 ecr 891671642], length 0
+07:30:01.943712 IP 192.168.0.111.12345 > 192.168.0.105.55758: Flags [P.], seq 1:7, ack 7, win 90, options [nop,nop,TS val 891671845 ecr 335764277], length 6
+07:30:01.943996 IP 192.168.0.105.55758 > 192.168.0.111.12345: Flags [.], ack 7, win 8250, options [nop,nop,TS val 335764509 ecr 891671845], length 0
+07:31:07.279421 IP 192.168.0.105.55758 > 192.168.0.111.12345: Flags [.], ack 7, win 8250, length 0
+07:31:07.285357 IP 192.168.0.111.12345 > 192.168.0.105.55758: Flags [R], seq 761246751, win 0, length 0

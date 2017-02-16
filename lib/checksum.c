@@ -1,4 +1,5 @@
 #include "tcpi.h"
+#include "rdt.h"
 
 uint16_t checksum(uint16_t * addr, int len)
 {
@@ -102,6 +103,16 @@ int do_checksum(u_char *buf, int protocol, int len)
                         ip->ip_sum = CKSUM_CARRY(sum);
                         break;
                 }
+#ifdef IPPROTO_RDT
+                case IPPROTO_RDT:
+                {
+                        struct rdthdr *rdthdr = (struct rdthdr *)(buf + iplen);
+                        rdthdr->rdt_sum = 0;
+                        sum = in_checksum((uint16_t *)rdthdr, len);
+                        rdthdr->rdt_sum = CKSUM_CARRY(sum);
+                        break;
+                }
+#endif
                 default:
                 {
                         err_msg("Unsupported protocol: %d", protocol);
