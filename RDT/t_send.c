@@ -11,13 +11,13 @@ int main(int argc, char *argv[])
         char buf[1024];
 
         if (argc != 2)
-                err_quit("usage: rdt <IPaddress>");
+                err_quit("usage: %s <IPaddress>", basename(argv[0]));
         if (inet_aton(argv[1], &dst) != 1) {
                 errno = EINVAL;
                 err_sys("inet_aton() error");
         }
 
-        src = getlocaddr(dst);
+        src = get_addr(dst);
         printf("local address %s\n", inet_ntoa(src));
 
         if ((rawfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
@@ -26,8 +26,8 @@ int main(int argc, char *argv[])
                 err_sys("setsockopt() of IP_HDRINCL error");
         sockaddr.sin_family = AF_INET;
         memcpy(&sockaddr.sin_addr, &dst, sizeof(dst));
-        n = make_pkt(src, dst, 0, 0, 0, RDT_REQ, NULL, 0, buf);
-        if (n != to_net(rawfd, buf, n, (struct sockaddr *)&sockaddr, sizeof(sockaddr)))
+        n = make_pkt(src, dst, 1, 0, 0, RDT_REQ, NULL, 0, buf);
+        if (n != to_net(rawfd, buf, n, dst))
                 err_sys("to_net() error");
 
         return(0);

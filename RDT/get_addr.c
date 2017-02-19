@@ -1,7 +1,7 @@
 #include "tcpi.h"
 #include "rdt.h"
 
-struct in_addr getlocaddr(struct in_addr dst)
+struct in_addr get_addr(struct in_addr dst)
 {
         int sockfd;
         struct sockaddr_in servaddr;
