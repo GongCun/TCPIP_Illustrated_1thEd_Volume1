@@ -63,6 +63,8 @@
 #ifdef HAVE_IFADDRS_H
 #include <ifaddrs.h>
 #endif
+#include <sys/un.h>
+#include <sys/stat.h>
 
 #define CKSUM_CARRY(x) \
         (x = (x >> 16) + (x & 0xffff), (~(x + (x >> 16)) & 0xffff))
@@ -165,6 +167,20 @@ int mcast_join(int sockfd, const char *dev, char *maddr);
  */
 ssize_t
 recvdst(int, char *, size_t, int *, struct sockaddr *, socklen_t *, struct in_addr *);
+
+/*
+ * For Unique Connections of Unix Domain Sockets.
+ */
+#ifndef offsetof
+#define offsetof(type, f) ((size_t) \
+                ((char *)&((type *)0)->f - (char *)(type *)0))
+#endif
+int ux_listen(const char *);
+int ux_accept(int);
+int ux_conn(const char *);
+int ux_serv(const char *);
+int ux_cli(const char *, struct sockaddr_un *);
+
 
 #endif /* __TCPI_H */
 

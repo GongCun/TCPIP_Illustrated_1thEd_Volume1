@@ -1,4 +1,3 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 ssize_t to_net(int fd, const void *buf, size_t nbyte, struct in_addr dst)

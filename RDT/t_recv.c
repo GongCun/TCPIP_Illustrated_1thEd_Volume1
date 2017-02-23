@@ -1,4 +1,3 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 char dev[IFNAMSIZ];

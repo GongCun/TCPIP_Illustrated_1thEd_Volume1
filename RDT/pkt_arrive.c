@@ -1,4 +1,3 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 /* A packet has arrived, process it with
@@ -26,7 +25,16 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 	switch (cptr->cstate) {
 	case ESTABLISHED:
 	{
-                fprintf(stderr, "pkt arrived (ESTABLISHED)\n");
+                /*
+                 * fprintf(stderr, "pkt arrived (ESTABLISHED)\n");
+                 */
+                switch (rdthdr->rdt_flags) {
+                        case RDT_CONF:
+                        case RDT_REQ:
+                        case RDT_ACC:
+                                return (0);
+                        default:;
+                }
 		if (ip->ip_src.s_addr == cptr->dst.s_addr &&
 		    ip->ip_dst.s_addr == cptr->src.s_addr &&
 		    rdthdr->rdt_scid == cptr->dcid &&
@@ -45,14 +53,23 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 	}
         case LISTEN:
 	{
-                fprintf(stderr, "pkt arrived (LISTEN)\n");
+                if (rdthdr->rdt_flags != RDT_REQ ||
+                    (!chk_chksum((u_short *)rdthdr, rdthdr->rdt_len)))
+                {
+                        return (0);
+                }
+                /*
+                 * fprintf(stderr, "pkt arrived (LISTEN)\n");
+                 */
 		if (ip->ip_dst.s_addr == cptr->src.s_addr &&
-		    rdthdr->rdt_dcid == cptr->scid) {
+		    rdthdr->rdt_dcid == cptr->scid &&
+                    rdthdr->rdt_flags == RDT_REQ) {
+                        pkt_debug(rdthdr);
                         memcpy(&cptr->dst, &ip->ip_src, sizeof(ip->ip_src));
                         cptr->dcid = rdthdr->rdt_scid;
 
                         /* Send the ACK to establish a connection */
-                        cptr->xfd = make_sock(cptr->dst);
+                        cptr->xfd = make_sock();
                         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid, 0, RDT_ACC, NULL, 0, buf);
                         if (n != to_net(cptr->xfd, buf, n, cptr->dst))
                                 err_sys("to_net() error");
@@ -62,6 +79,21 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 		}
                 break;
 	}
+        case WAITING:
+        {
+                if (rdthdr->rdt_flags != RDT_ACC)
+                        return (0);
+		if (ip->ip_src.s_addr == cptr->dst.s_addr &&
+		    ip->ip_dst.s_addr == cptr->src.s_addr &&
+		    rdthdr->rdt_scid == cptr->dcid &&
+		    rdthdr->rdt_dcid == cptr->scid)
+                {
+                        cptr->cstate = ESTABLISHED;
+			write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
+                        fprintf(stderr, "WAITING -> ESTABLISHED\n");
+                        return (1);
+                }
+        }
         default: break;
         }
 

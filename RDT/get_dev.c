@@ -1,4 +1,3 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 int get_dev(struct in_addr addr, char *dev)

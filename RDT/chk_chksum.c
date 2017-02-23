@@ -1,4 +1,3 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 int chk_chksum(u_short *ptr, int len)

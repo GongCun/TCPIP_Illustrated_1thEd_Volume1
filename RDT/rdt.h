@@ -1,6 +1,8 @@
 #ifndef _RDT_H
 #define _RDT_H
 
+#include "tcpi.h"
+
 #define MAX_CONN 32
 #define IP_LEN 20
 #define RDT_LEN sizeof(struct rdthdr)
@@ -12,7 +14,10 @@
 #define FILTER "ip[9:1] == 143"
 #define PCAP_TIMEOUT 500 /* 500 milliseconds */
 
-typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, SENDING, RECEIVING, DISCONN} cstate;
+#define RDT_UX_SOCK "/tmp/RDTUXSock" /* Unix Domain Socket for User IPC */
+#define RDT_FIFO "/tmp/RDTPipe" /* FIFO pipe for User IPC */
+
+typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, DISCONN} cstate;
 
 /*
  *  0                   1                   2                   3
@@ -45,13 +50,14 @@ struct rdthdr {
 
 struct conn {
         pid_t pid;
-        int xfd, pfd, scid, dcid;
+        int xfd, pfd, sfd, scid, dcid;
         struct in_addr src, dst;
         cstate cstate;
+	unsigned char *pkt;	/* pkt last sent include IP header */
+	int pktlen;		/* length of pkt last sent */
         unsigned char *sndbuf;
         unsigned char *rcvbuf;
         int sndlen, rcvlen;
-        int timer;
         unsigned long sndbyte; /* have sent bytes */
         unsigned long rcvbyte; /* have recv bytes */
         /* Have dropped bytes:
@@ -61,6 +67,12 @@ struct conn {
          */
         unsigned long drpbyte;
 } conn[MAX_CONN];
+
+struct conn_info {
+        struct in_addr src, dst;
+        int scid, dcid;
+};
+
 extern char dev[IFNAMSIZ];
 extern int linktype;
 extern int mtu;
@@ -75,8 +87,12 @@ int chk_chksum(u_short *ptr, int len);
 pid_t make_child(int i);
 void xmit_pkt(int i);
 int krdt_listen(struct in_addr src, int scid);
+int krdt_connect(struct in_addr dst, int scid, int dcid);
 int pkt_arrive(struct conn *cptr, const u_char *pkt, int len);
-int make_sock(struct in_addr dst);
+int make_sock(void);
+ssize_t rexmt_pkt(int i);
+void pkt_debug(const struct rdthdr *);
+int rdt_connect(struct in_addr dst, int scid, int dcid);
 
 #endif
 

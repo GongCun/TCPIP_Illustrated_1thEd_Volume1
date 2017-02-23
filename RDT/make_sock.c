@@ -1,8 +1,7 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 int 
-make_sock(struct in_addr dst)
+make_sock(void)
 {
 	int fd;
 	const int on = 1;

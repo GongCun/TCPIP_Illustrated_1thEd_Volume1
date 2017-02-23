@@ -1,4 +1,3 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 int main(int argc, char *argv[])

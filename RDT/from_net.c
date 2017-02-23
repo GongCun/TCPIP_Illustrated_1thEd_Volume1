@@ -1,4 +1,3 @@
-#include "tcpi.h"
 #include "rdt.h"
 
 int linktype;
@@ -43,7 +42,9 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
                 if (pkt_arrive(&conn[i], packet + size_eth, header->caplen - size_eth))
                         return;
         }
-        if (i >= MAX_CONN)
+        if (i >= MAX_CONN) {
+                pkt_debug((struct rdthdr *)(packet+size_eth+size_ip));
                 fprintf(stderr, "can't delivery packet\n");
+        }
 }
 

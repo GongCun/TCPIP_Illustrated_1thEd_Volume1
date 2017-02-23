@@ -1,14 +1,12 @@
-#include "tcpi.h"
 #include "rdt.h"
+
+char dev[IFNAMSIZ];
+int mtu;
 
 int main(int argc, char *argv[])
 {
-        int rawfd, n;
-        const int on = 1;
-        struct in_addr src;
+        int i;
         struct in_addr dst;
-        struct sockaddr_in sockaddr;
-        char buf[1024];
 
         if (argc != 2)
                 err_quit("usage: %s <IPaddress>", basename(argv[0]));
@@ -17,18 +15,9 @@ int main(int argc, char *argv[])
                 err_sys("inet_aton() error");
         }
 
-        src = get_addr(dst);
-        printf("local address %s\n", inet_ntoa(src));
-
-        if ((rawfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
-                err_sys("socket() error");
-        if (setsockopt(rawfd, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on)) < 0)
-                err_sys("setsockopt() of IP_HDRINCL error");
-        sockaddr.sin_family = AF_INET;
-        memcpy(&sockaddr.sin_addr, &dst, sizeof(dst));
-        n = make_pkt(src, dst, 1, 0, 0, RDT_REQ, NULL, 0, buf);
-        if (n != to_net(rawfd, buf, n, dst))
-                err_sys("to_net() error");
+        i = krdt_connect(dst, 1, 0);
+        make_child(i);
+        from_net();
 
         return(0);
 }
