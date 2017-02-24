@@ -16,6 +16,9 @@
 
 #define RDT_UX_SOCK "/tmp/RDTUXSock" /* Unix Domain Socket for User IPC */
 #define RDT_FIFO "/tmp/RDTPipe" /* FIFO pipe for User IPC */
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, DISCONN} cstate;
 
@@ -68,9 +71,17 @@ struct conn {
         unsigned long drpbyte;
 } conn[MAX_CONN];
 
+typedef enum {ACTIVE, PASSIVE} cact;
 struct conn_info {
+        pid_t pid; /* user pid */
+        cact cact;
         struct in_addr src, dst;
         int scid, dcid;
+};
+
+struct conn_ret {
+        int ret;
+        int err;
 };
 
 extern char dev[IFNAMSIZ];
@@ -84,7 +95,7 @@ void from_net(void);
 int get_dev(struct in_addr addr, char *dev);
 int get_mtu(char *dev);
 int chk_chksum(u_short *ptr, int len);
-pid_t make_child(int i);
+pid_t make_child(int, pid_t);
 void xmit_pkt(int i);
 int krdt_listen(struct in_addr src, int scid);
 int krdt_connect(struct in_addr dst, int scid, int dcid);
@@ -93,6 +104,8 @@ int make_sock(void);
 ssize_t rexmt_pkt(int i);
 void pkt_debug(const struct rdthdr *);
 int rdt_connect(struct in_addr dst, int scid, int dcid);
+int rdt_listen(struct in_addr src, int scid);
+void conn_info_debug(struct conn_info *);
 
 #endif
 

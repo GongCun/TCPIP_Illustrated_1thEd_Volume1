@@ -5,7 +5,7 @@ int mtu;
 
 int main(int argc, char *argv[])
 {
-        int i;
+        int fd;
         int scid;
         struct in_addr src;
 
@@ -17,10 +17,8 @@ int main(int argc, char *argv[])
         }
 
         scid = atoi(argv[2]);
-        i = krdt_listen(src, scid);
-
-        make_child(i); /* parent returns */
-        from_net();
+        fd = rdt_listen(src, scid);
+        pause();
 
         return(0);
 }

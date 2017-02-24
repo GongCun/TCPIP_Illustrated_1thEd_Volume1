@@ -9,6 +9,8 @@
  *   1 - Have processed.
  */
 
+#define CONN_RET_LEN sizeof(struct conn_ret)
+
 int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 {
         const struct ip *ip;
@@ -16,6 +18,7 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         int size_ip;
         ssize_t n;
         char buf[MAXLINE];
+        struct conn_ret conn_ret;
 
         ip = (struct ip *)pkt;
         size_ip = ip->ip_hl * 4;
@@ -72,9 +75,22 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         cptr->xfd = make_sock();
                         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid, 0, RDT_ACC, NULL, 0, buf);
                         if (n != to_net(cptr->xfd, buf, n, cptr->dst))
-                                err_sys("to_net() error");
+                        {
+                                conn_ret.ret = -1;
+                                conn_ret.err = EINVAL;
+                                if (write(cptr->sfd, &conn_ret, CONN_RET_LEN) != CONN_RET_LEN)
+                                {
+                                        err_sys("write() error");
+                                }
+                        }
                         cptr->cstate = ESTABLISHED;
                         fprintf(stderr, "LISTEN -> ESTABLISHED\n");
+                        conn_ret.ret = 0;
+                        conn_ret.err = 0;
+                        if (write(cptr->sfd, &conn_ret, CONN_RET_LEN) != CONN_RET_LEN)
+                        {
+                                err_sys("write() error");
+                        }
 			return (1);
 		}
                 break;
