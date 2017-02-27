@@ -1,4 +1,5 @@
 #include "rdt.h"
+#include "rtt.h"
 
 /*
                    -+- Data Transfer Path -+-
@@ -49,6 +50,9 @@ int main(int argc, char *argv[])
 	if (ioctl(fd, FIONBIO, &on) < 0)
 		err_sys("ioctl() of FIONBIO error");
 
+        /* Initialize the RTT value for every connection */
+        rtt_alloc(MAX_CONN);
+
         from_net();
 
         return(0);
@@ -81,6 +85,9 @@ static void sig_io(int signo)
                 default:
                         err_quit("unknown connection type: %d", ciptr->cact);
         }
+
+
+        fprintf(stderr, "Action: %d, idx = %d\n", ciptr->cact, i);
 
         make_child(i, ciptr->pid);
 

@@ -7,6 +7,8 @@ int main(int argc, char *argv[])
 {
         int fd;
         struct in_addr dst;
+        char buf[MAXLINE];
+        int n;
 
         if (argc != 3)
                 err_quit("usage: %s <IPaddress> <#CID>", basename(argv[0]));
@@ -16,6 +18,9 @@ int main(int argc, char *argv[])
         }
 
         fd = rdt_connect(dst, -1, atoi(argv[2]));
+        while ((n = read(0, buf, MAXLINE)) > 0)
+                if (write(fd, buf, n) != n)
+                        err_sys("write() error");
         pause();
 
         return(0);

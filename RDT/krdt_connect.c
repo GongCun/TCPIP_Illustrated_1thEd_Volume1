@@ -51,6 +51,7 @@ int krdt_connect(struct in_addr dst, int scid, int dcid)
 
         cptr = &conn[i];
         cptr->scid = scid;
+        cptr->dcid = dcid;
         src = get_addr(dst);
         memcpy(&cptr->src, &src, sizeof(src));
         memcpy(&cptr->dst, &dst, sizeof(dst));
@@ -80,9 +81,9 @@ int krdt_connect(struct in_addr dst, int scid, int dcid)
         }
         cptr->xfd = make_sock();
         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid, 0, RDT_REQ, NULL, 0, cptr->pkt);
+        cptr->pktlen = n;
         if (n != to_net(cptr->xfd, cptr->pkt, n, cptr->dst))
                 err_sys("to_net() error");
-        cptr->pktlen = n;
 
         /* Initialize the RTO for retransmission */
         rtt_alloc(MAX_CONN);

@@ -4,4 +4,9 @@
 (cd /tmp; ls -l RDT*)
 (cd /tmp; sudo rm RDT*)
 
+# tab is 'ctrl-v + tab' in sed 
+sed -i -e '17,38s/^.*$/	&/' ./rdt_fsm.c
+
+#
+ulimit -c unlimited
 

@@ -17,20 +17,36 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         const struct rdthdr *rdthdr;
         int size_ip;
         ssize_t n;
-        char buf[MAXLINE];
-        struct conn_ret conn_ret;
+        struct conn_addr conn_addr;
 
         ip = (struct ip *)pkt;
         size_ip = ip->ip_hl * 4;
         if (len - size_ip < RDT_LEN)
                 return (0);
         rdthdr = (struct rdthdr *)(pkt + size_ip);
+
+        fprintf(stderr, "debug before checksum():\n");
+        pkt_debug(rdthdr);
+
+        
+	if (!chk_chksum((u_short *)(pkt + size_ip), ntohs(rdthdr->rdt_len))) {
+	/*if (!chk_chksum((u_short *)(pkt + size_ip), len - size_ip)) { */
+                fprintf(stderr, "checksum wrong\n");
+		return (0);
+        }
+
+        /* Fill the struct conn_addr and pass to child,
+         * cause the LISTEN status don't have the partner info.
+         */
+        bzero(&conn_addr, sizeof(struct conn_addr));
+        memcpy(&conn_addr.src, &ip->ip_src, sizeof(ip->ip_src));
+        memcpy(&conn_addr.dst, &ip->ip_dst, sizeof(ip->ip_dst));
+        conn_addr.scid = rdthdr->rdt_scid;
+        conn_addr.dcid = rdthdr->rdt_dcid;
+
 	switch (cptr->cstate) {
 	case ESTABLISHED:
 	{
-                /*
-                 * fprintf(stderr, "pkt arrived (ESTABLISHED)\n");
-                 */
                 switch (rdthdr->rdt_flags) {
                         case RDT_CONF:
                         case RDT_REQ:
@@ -49,21 +65,22 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                          * to the RDT mechanism.
                          */
 			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
-			fprintf(stderr, "deliveried %zd bytes\n", n);
+			fprintf(stderr, "ESTABLISHED: pass %zd bytes to child\n", n);
+                        if (rdthdr->rdt_flags == RDT_FIN) {
+                                cptr->cstate = CLOSED;
+                                fprintf(stderr, "parent: ESTABLISHED -> CLOSED\n");
+                        }
                         return (1);
 		}
                 break;
 	}
         case LISTEN:
 	{
-                if (rdthdr->rdt_flags != RDT_REQ ||
-                    (!chk_chksum((u_short *)rdthdr, rdthdr->rdt_len)))
+                if (rdthdr->rdt_flags != RDT_REQ)
                 {
                         return (0);
                 }
-                /*
-                 * fprintf(stderr, "pkt arrived (LISTEN)\n");
-                 */
+
 		if (ip->ip_dst.s_addr == cptr->src.s_addr &&
 		    rdthdr->rdt_dcid == cptr->scid &&
                     rdthdr->rdt_flags == RDT_REQ) {
@@ -71,30 +88,16 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         memcpy(&cptr->dst, &ip->ip_src, sizeof(ip->ip_src));
                         cptr->dcid = rdthdr->rdt_scid;
 
-                        /* Send the ACK to establish a connection */
-                        cptr->xfd = make_sock();
-                        n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid, 0, RDT_ACC, NULL, 0, buf);
-                        if (n != to_net(cptr->xfd, buf, n, cptr->dst))
-                        {
-                                conn_ret.ret = -1;
-                                conn_ret.err = EINVAL;
-                                if (write(cptr->sfd, &conn_ret, CONN_RET_LEN) != CONN_RET_LEN)
-                                {
-                                        err_sys("write() error");
-                                }
-                        }
+                        /* Pass the connection info to child */
+                        n = pass_pkt(cptr->pfd, &conn_addr, (u_char *)(pkt + size_ip), len - size_ip);
+			fprintf(stderr, "LISTEN: pass %zd bytes to child, "
+                                        "buf = %d, conn_addr = %zd\n", n, len-size_ip, sizeof(conn_addr));
                         cptr->cstate = ESTABLISHED;
-                        fprintf(stderr, "LISTEN -> ESTABLISHED\n");
-                        conn_ret.ret = 0;
-                        conn_ret.err = 0;
-                        if (write(cptr->sfd, &conn_ret, CONN_RET_LEN) != CONN_RET_LEN)
-                        {
-                                err_sys("write() error");
-                        }
+
 			return (1);
 		}
                 break;
-	}
+	} /* end of LISTEN */
         case WAITING:
         {
                 if (rdthdr->rdt_flags != RDT_ACC)
@@ -104,14 +107,38 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 		    rdthdr->rdt_scid == cptr->dcid &&
 		    rdthdr->rdt_dcid == cptr->scid)
                 {
-                        cptr->cstate = ESTABLISHED;
 			write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
-                        fprintf(stderr, "WAITING -> ESTABLISHED\n");
+                        cptr->cstate = ESTABLISHED;
                         return (1);
                 }
+                break;
         }
-        default: break;
-        }
+        case DISCONN:
+        {
+                /* In theory it should still receive Data or Ack in the half-closed state,
+                 * but if user's socket was closed, we can't delivery the data to above,
+                 * it will be improved in future.
+                 */
+                if (rdthdr->rdt_flags != RDT_CONF)
+                {
+                        return(0);
+                }
+		if (ip->ip_src.s_addr == cptr->dst.s_addr &&
+		    ip->ip_dst.s_addr == cptr->src.s_addr &&
+		    rdthdr->rdt_scid == cptr->dcid &&
+		    rdthdr->rdt_dcid == cptr->scid)
+                {
+			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
+                        cptr->cstate = CLOSED;
+			fprintf(stderr, "DISCONN: pass %zd bytes to child\n", n);
+                        return (1);
+                }
+                break;
+        } /* end of DISCONN */
+
+        default:;
+
+        } /* end of switch() */
 
         return (0);
 }

@@ -15,14 +15,6 @@ pid_t make_child(int i, pid_t upid)
 
         cptr = &conn[i];
 
-        /* Parent and child all need IPC with user via
-         * unix domain stream socket.
-         * _Need_ add some wait mechanism before ux_conn().
-         */
-        sprintf(buf, "%s.%ld", RDT_UX_SOCK, (long)upid);
-        connfd = ux_conn(buf);
-        cptr->sfd = connfd;
-
         /* The pipefd of cptr->pfd for parent process
          * is used for writing, for child process is
          * used for reading.
@@ -43,6 +35,13 @@ pid_t make_child(int i, pid_t upid)
         close(fd[1]);
         cptr->pid = getpid();
         cptr->pfd = fd[0];
+
+        /* Child IPC with user by unix domain stream socket.
+         * _NEED_ add wait mechanism before ux_conn().
+         */
+        sprintf(buf, "%s.%ld", RDT_UX_SOCK, (long)upid);
+        connfd = ux_conn(buf);
+        cptr->sfd = connfd;
 
         xmit_pkt(i);
 

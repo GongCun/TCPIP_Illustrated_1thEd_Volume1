@@ -1,13 +1,35 @@
 #include "rdt.h"
 
+static char sockname[PATH_MAX];
+
+static void sockexit(void)
+{
+        unlink(sockname);
+}
+
+static void sig_hand(int signo)
+{
+        if (signo == SIGINT || signo == SIGHUP || signo == SIGQUIT)
+                exit(1);
+}
+
 int rdt_connect(struct in_addr dst, int scid, int dcid)
 {
         int n, fd, listenfd, connfd;
-        char buf[PATH_MAX];
         struct sockaddr_un un;
         struct in_addr src;
         struct conn_info conn_info;
         struct conn_ret conn_ret;
+
+        if (signal(SIGINT, sig_hand) == SIG_ERR ||
+            signal(SIGHUP, sig_hand) == SIG_ERR ||
+            signal(SIGQUIT, sig_hand) == SIG_ERR)
+        {
+                err_sys("signal() error");
+        }
+
+        if (atexit(sockexit) != 0)
+                err_sys("can't register sockexit()");
 
         bzero(&src, sizeof(src));
         conn_info.pid = getpid();
@@ -26,8 +48,8 @@ int rdt_connect(struct in_addr dst, int scid, int dcid)
                 err_sys("sendto() error");
         }
 
-        sprintf(buf, "%s.%ld", RDT_UX_SOCK, (long)getpid());
-        if ((listenfd = ux_listen(buf)) < 0)
+        sprintf(sockname, "%s.%ld", RDT_UX_SOCK, (long)getpid());
+        if ((listenfd = ux_listen(sockname)) < 0)
                 err_sys("ux_listen() error");
         if ((connfd = ux_accept(listenfd)) < 0)
                 err_sys("ux_accept() error");

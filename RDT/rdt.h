@@ -2,6 +2,7 @@
 #define _RDT_H
 
 #include "tcpi.h"
+#include <sys/uio.h>
 
 #define MAX_CONN 32
 #define IP_LEN 20
@@ -21,6 +22,8 @@
 #endif
 
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, DISCONN} cstate;
+typedef enum {ABOVE0, ACK0, ABOVE1, ACK1} sndstate;
+typedef enum {BELOW0, BELOW1} rcvstate;
 
 /*
  *  0                   1                   2                   3
@@ -56,6 +59,8 @@ struct conn {
         int xfd, pfd, sfd, scid, dcid;
         struct in_addr src, dst;
         cstate cstate;
+        sndstate sndstate;
+        rcvstate rcvstate;
 	unsigned char *pkt;	/* pkt last sent include IP header */
 	int pktlen;		/* length of pkt last sent */
         unsigned char *sndbuf;
@@ -74,7 +79,7 @@ struct conn {
 typedef enum {ACTIVE, PASSIVE} cact;
 struct conn_info {
         pid_t pid; /* user pid */
-        cact cact;
+        cact cact; /* passive or active */
         struct in_addr src, dst;
         int scid, dcid;
 };
@@ -82,6 +87,11 @@ struct conn_info {
 struct conn_ret {
         int ret;
         int err;
+};
+
+struct conn_addr {
+        struct in_addr src, dst;
+        int scid, dcid;
 };
 
 extern char dev[IFNAMSIZ];
@@ -106,6 +116,9 @@ void pkt_debug(const struct rdthdr *);
 int rdt_connect(struct in_addr dst, int scid, int dcid);
 int rdt_listen(struct in_addr src, int scid);
 void conn_info_debug(struct conn_info *);
+
+ssize_t get_pkt(int fd, struct conn_addr *captr, u_char *buf, ssize_t buflen);
+ssize_t pass_pkt(int fd, struct conn_addr *captr, u_char *buf, ssize_t buflen);
 
 #endif
 

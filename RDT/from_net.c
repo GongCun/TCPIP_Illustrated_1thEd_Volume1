@@ -25,6 +25,7 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         int size_eth;
         int size_ip;
 
+
         /* DLT_NULL of loopback which head is 4-byte
          * DLT_EN10MB of IEEE 802.3 Ethernet
          * (10Mb, 100Mb, 1000Mb, and up) which head is 14-byte
@@ -37,14 +38,33 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         if ((size_ip = ip->ip_hl * 4) < 20)
                 return;
 
+        const struct rdthdr *rdthdr;
+        rdthdr = (struct rdthdr *)(packet + size_eth + size_ip);
+
         /* Delive data to the child process */
         for (i = 0; i < MAX_CONN; i++) {
+
+                fprintf(stderr, "from_net() i = %d\n", i);
+
+	        switch (conn[i].cstate) {
+	        case LISTEN:
+                        fprintf(stderr, "state: LISTEN\n");
+                        break;
+	        case WAITING:
+                        fprintf(stderr, "TAG: 0x%02x, state: WAITING\n", rdthdr->rdt_flags);
+                        break;
+	        case ESTABLISHED:
+                        fprintf(stderr, "TAG: 0x%02x, state: ESTABLISHED\n", rdthdr->rdt_flags);
+                        break;
+                default:;
+                }
+
                 if (pkt_arrive(&conn[i], packet + size_eth, header->caplen - size_eth))
                         return;
         }
         if (i >= MAX_CONN) {
-                pkt_debug((struct rdthdr *)(packet+size_eth+size_ip));
-                fprintf(stderr, "can't delivery packet\n");
+                fprintf(stderr, "can't delivery the following packet: \n");
+                pkt_debug((struct rdthdr *)(packet + size_eth+size_ip));
         }
 }
 

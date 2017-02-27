@@ -6,6 +6,8 @@ ssize_t make_pkt(struct in_addr src, struct in_addr dst, int scid, int dcid, int
         struct ip *ip;
         struct rdthdr *rdthdr;
 
+        bzero(buf, IP_LEN + RDT_LEN + nbyte);
+
         /* Fill the IP header
          */
         ip = (struct ip *)buf;

@@ -18,13 +18,14 @@ ssize_t rexmt_pkt(int i)
         rtt_newpack(rptr);
 
 rexmt:
-        to_net(cptr->xfd, cptr->pkt, cptr->pktlen, cptr->dst);
+        if ((n = to_net(cptr->xfd, cptr->pkt, cptr->pktlen, cptr->dst)) < 0)
+                return(n);
         alarm(rtt_start(rptr));
 
         if (sigsetjmp(jmpbuf, 1) != 0) {
                 if (rtt_timeout(rptr) < 0) {
                         errno = ETIMEDOUT;
-                        return (-1);
+                        return(-1);
                 }
                 rtt_debug(rptr);
                 goto rexmt;
@@ -37,7 +38,7 @@ rexmt:
         alarm(0);
         rtt_stop(rptr);
         rtt_debug(rptr);
-        return (n);
+        return(n);
 }
 
 
