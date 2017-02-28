@@ -162,9 +162,11 @@ struct ifi_info *get_ifi_info(void)
 }
 
 
-        
+struct ifi_info *Get_ifi_info(void)
+{
+	struct ifi_info *ptr;
+	if ((ptr = get_ifi_info()) == NULL)
+		err_sys("get_ifi_info() error");
 
-
-
-
-
+	return(ptr);
+}

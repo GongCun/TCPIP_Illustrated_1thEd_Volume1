@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
         }
 
         fd = rdt_connect(dst, -1, atoi(argv[2]));
-        while ((n = read(0, buf, MAXLINE)) > 0)
+        while ((n = read(0, buf, sizeof(buf))) > 0)
                 if (write(fd, buf, n) != n)
                         err_sys("write() error");
         pause();

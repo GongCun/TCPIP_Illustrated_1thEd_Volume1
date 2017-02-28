@@ -116,6 +116,7 @@ struct ifi_info {
     struct ifi_info *ifi_next; /* next of these structures */
 };
 struct ifi_info *get_ifi_info(void); /* only for inet4 */
+struct ifi_info *Get_ifi_info(void); /* wrap get_ifi_info() */
 void free_ifi_info(struct ifi_info *);
 void prmac(void);
 

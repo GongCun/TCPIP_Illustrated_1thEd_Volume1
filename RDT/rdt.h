@@ -104,7 +104,8 @@ ssize_t to_net(int fd, const void *buf, size_t nbyte, struct in_addr dst);
 void from_net(void);
 int get_dev(struct in_addr addr, char *dev);
 int get_mtu(char *dev);
-int chk_chksum(u_short *ptr, int len);
+u_short cksum(const u_char *ptr, int len);
+int chk_chksum(const u_char *ptr, int len);
 pid_t make_child(int, pid_t);
 void xmit_pkt(int i);
 int krdt_listen(struct in_addr src, int scid);
@@ -119,6 +120,7 @@ void conn_info_debug(struct conn_info *);
 
 ssize_t get_pkt(int fd, struct conn_addr *captr, u_char *buf, ssize_t buflen);
 ssize_t pass_pkt(int fd, struct conn_addr *captr, u_char *buf, ssize_t buflen);
+
 
 #endif
 

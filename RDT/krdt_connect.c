@@ -62,8 +62,10 @@ int krdt_connect(struct in_addr dst, int scid, int dcid)
                 mtu = get_mtu(dev);
         }
 
-        cptr->sndlen = mtu - IP_LEN - RDT_LEN;
-        cptr->rcvlen = mtu - IP_LEN;
+        /* cptr->sndlen = mtu - IP_LEN - RDT_LEN; */
+        cptr->sndlen = 1500;
+        /* cptr->rcvlen = mtu - IP_LEN; */
+        cptr->rcvlen = 1500;
         if (cptr->sndbuf == NULL &&
                         (cptr->sndbuf = malloc(cptr->sndlen)) == NULL)
         {

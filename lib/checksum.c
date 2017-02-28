@@ -1,6 +1,14 @@
 #include "tcpi.h"
 #include "rdt.h"
 
+/*
+ * RFC1071: Checksum is Byte Order _Independence_
+ * On a 2's complement machine, the 1's complement sum must be
+ * computed by means of an "end around carry", i.e., any overflows
+ * from the most significant bits are added into the least
+ * significant bits.
+ */
+
 uint16_t checksum(uint16_t * addr, int len)
 {
 	int nleft = len;
@@ -17,8 +25,11 @@ uint16_t checksum(uint16_t * addr, int len)
 		*((unsigned char *)&answer) = *((unsigned char *)w);	/* only 1 byte */
 		sum += answer;
 	}
-	sum = (sum >> 16) + (sum & 0xffff);	/* hi 16 + low 16 */
-	sum += (sum >> 16);
+
+        /* Fold 32-bit sum to 16 bits */
+        while (sum >> 16)
+	        sum = (sum >> 16) + (sum & 0xffff);	/* hi 16 + low 16 */
+
 	answer = ~sum;		/* truncate to 16 bit */
 	return answer;
 }
@@ -108,8 +119,7 @@ int do_checksum(u_char *buf, int protocol, int len)
                 {
                         struct rdthdr *rdthdr = (struct rdthdr *)(buf + iplen);
                         rdthdr->rdt_sum = 0;
-                        sum = in_checksum((uint16_t *)rdthdr, len);
-                        rdthdr->rdt_sum = CKSUM_CARRY(sum);
+                        rdthdr->rdt_sum = checksum((uint16_t *)rdthdr, len);
                         break;
                 }
 #endif

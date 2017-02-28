@@ -7,6 +7,26 @@
 # tab is 'ctrl-v + tab' in sed 
 sed -i -e '17,38s/^.*$/	&/' ./rdt_fsm.c
 
-#
+# enable err_dump()
 ulimit -c unlimited
+
+# make dummy test file
+dd bs=256 count=1 if=/dev/zero | tr '\0' 'a' >./s2.tmp
+
+# test checksum (RFC1071 Numberical Example)
+$ echo "obase=16; ibase=16; 0001+F203+F4F5+F6F7" | bc
+2DDF0
+
+# calc ~DDF2
+$ echo "obase=2; ibase=16; DDF2" | bc
+1101110111110010 (bitwise NOT = 0010001000001101)
+
+$ echo "obase=16; ibase=2; 0010001000001101" | bc
+220D
+
+$ echo "obase=16; ibase=16; 220D+0001+F203+F4F5+F6F7" | bc
+2FFFD
+
+$ echo "obase=16; ibase=16; FFFD+2" | bc
+FFFF (bitwise NOT = 0000)
 

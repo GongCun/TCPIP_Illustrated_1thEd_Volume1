@@ -161,7 +161,9 @@ xmit_pkt(int i)
                                         } else if ((cptr->rcvstate == BELOW0 && rcvseq == RDT_SEQ0) ||
                                             (cptr->rcvstate == BELOW1 && rcvseq == RDT_SEQ1)) {
                                                 /* deliver data to user */
+                                                /* n = rcvlen - RDTHDR_LEN; */
                                                 n = rcvlen - RDTHDR_LEN; 
+                                                fprintf(stderr, "write() to user #byte: %d\n", n);
                                                 if (write(cptr->sfd, (void *)(cptr->rcvbuf + RDTHDR_LEN), n) != n) {
                                                         err_dump("write() to user error"); 
                                                 }
@@ -192,18 +194,26 @@ xmit_pkt(int i)
                         /* SEND DataPkt event */
 	                if (FD_ISSET(cptr->sfd, &rset)) {
 	                        n = read(cptr->sfd, cptr->sndbuf, cptr->sndlen);
+                                fprintf(stderr, ">> from user data len = %d\n", n);
                                 cptr->pktlen = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid, (seq++ % 2), RDT_DATA, cptr->sndbuf, n, cptr->pkt);
                                 n = cptr->pktlen;
                                 fprintf(stderr, "debug before to_net():\n");
                                 pkt_debug((struct rdthdr *)(cptr->pkt + IP_LEN));
+
+                                fprintf(stderr, "> cksum() before to_net():\n");
+                                if (!chk_chksum(cptr->pkt + IP_LEN, ntohs(((struct rdthdr *)(cptr->pkt + IP_LEN))->rdt_len)))
+                                {
+                                        fprintf(stderr, "> checksum wrong\n");
+                                }
+
                                 if (to_net(cptr->xfd, cptr->pkt, n, cptr->dst) != n)
                                 {
                                         err_dump("to_net() error");
                                 }
                                 rtt_newpack(rptr);
-                                fprintf(stderr, "to_net() RTT\n");
-                                rtt_debug(rptr);
                                 alarm(rtt_start(rptr));
+                                fprintf(stderr, "to_net() start timer RTT:\n");
+                                rtt_debug(rptr);
                                 status = cptr->sndstate;
                                 switch (status) {
                                 case ABOVE0:

@@ -29,8 +29,7 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         pkt_debug(rdthdr);
 
         
-	if (!chk_chksum((u_short *)(pkt + size_ip), ntohs(rdthdr->rdt_len))) {
-	/*if (!chk_chksum((u_short *)(pkt + size_ip), len - size_ip)) { */
+	if (!chk_chksum(pkt + size_ip, ntohs(rdthdr->rdt_len))) {
                 fprintf(stderr, "checksum wrong\n");
 		return (0);
         }
