@@ -4,22 +4,30 @@
 static void sig_alrm(int);
 static sigjmp_buf jmpbuf;
 
-ssize_t rexmt_pkt(int i)
+ssize_t rexmt_pkt(struct conn_user *cptr)
 {
-        ssize_t n;
-        struct conn *cptr;
+        int n, ret;
+        static int init = 0;
+
         struct rtt_info *rptr;
 
-        cptr = &conn[i];
-        rptr = &rtt_info[i];
+        rptr = &rtt_info;
+
+        if (init++ == 0)
+                rtt_init(rptr);
 
         if (signal(SIGALRM, sig_alrm) == SIG_ERR)
                 err_sys("signal() of SIGALRM error");
+
         rtt_newpack(rptr);
 
+        /* conn_user_debug(cptr); */
+
 rexmt:
-        if ((n = to_net(cptr->xfd, cptr->pkt, cptr->pktlen, cptr->dst)) < 0)
-                return(n);
+        n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
+                        0, RDT_REQ, NULL, 0, cptr->pkt);
+        if ((ret = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
+                return(ret);
         alarm(rtt_start(rptr));
 
         if (sigsetjmp(jmpbuf, 1) != 0) {
@@ -32,7 +40,7 @@ rexmt:
         }
 
         do {
-                n = read(cptr->pfd, cptr->rcvbuf, cptr->rcvlen);
+                n = read(cptr->pfd, cptr->pkt, cptr->mss);
         } while (n < sizeof(struct rdthdr));
 
         alarm(0);

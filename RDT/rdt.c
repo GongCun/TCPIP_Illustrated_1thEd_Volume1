@@ -2,28 +2,29 @@
 #include "rtt.h"
 
 /*
-                   -+- Data Transfer Path -+-
+             -+- Data Transfer Path -+-
 
-   +---------+ pass connection info by     +-------+
-   | user    | unix domain datagram socket |parent |
-   | process | --------------------------> |process|
-   +---+-----+                             +-------+
-       ^                                       /\
-       |                                SIGIO /  \
-       |                                     /    \
-       |                                    v      v
-       |send/receive pkt by        +--------+      +--------+
-       |unix domain stream socket  |sig_io()|      |packet  |
-       |                           |        |      |capture |
-       |                           +--------+      +--------+
-       |                             |    pass pkt/      ^
-       |                        fork |    by pipe/       |capture
-       |                             v          /        |pkt
-       |                           +--------+  /         |
-       |                           |child   | <    +--------+
-       +-------------------------->|process |----->|external|
-                                   +--------+      +--------+
-                                            send pkt
+                 Pass/get conn info by
+   +---------+   UX dgram socket           +-------+
+   | User    |---------------------------> |RDT    |
+   | Process |<-----------------------+    |Process|
+   +---------+                        |    +-------+
+       | ^                            |        /\
+       | |                            | SIGIO /  \
+       | |                            |      /    \
+       | |                            |     v      v
+       | |                         +--------+      +--------+
+       | |                         |sig_io()|     /|Packet  |
+       | |                         |        |    / |Capture |
+       | |                         +--------+   /  +--------+
+       | |                                     /       ^
+       | |                          Pass pkt  /        | Capture
+       | |                          by FIFO  v         | pkt
+       | | Recv pkt from FIFO      +--------+          |
+       | +------------------------ |FIFO    |      +--------+
+       +-------------------------> |RawSock |----->|External|
+           Send pkt by raw sock    +--------+ Send +--------+
+                                              pkt
 
 */
 
@@ -50,9 +51,6 @@ int main(int argc, char *argv[])
 	if (ioctl(fd, FIONBIO, &on) < 0)
 		err_sys("ioctl() of FIONBIO error");
 
-        /* Initialize the RTT value for every connection */
-        rtt_alloc(MAX_CONN);
-
         from_net();
 
         return(0);
@@ -70,26 +68,23 @@ static void sig_io(int signo)
         n = sizeof(struct conn_info);
         if (recvfrom(fd, ciptr, n, 0, NULL, 0) != n)
         {
-                err_sys("recvmsg() error");
+                err_sys("recvfrom() error");
         }
 
         conn_info_debug(ciptr);
 
         switch (ciptr->cact) {
                 case ACTIVE:
-                        i = krdt_connect(ciptr->dst, ciptr->scid, ciptr->dcid);
+                        i = krdt_connect(ciptr->dst, ciptr->scid, ciptr->dcid, ciptr->pid);
                         break;
                 case PASSIVE:
-                        i = krdt_listen(ciptr->src, ciptr->scid);
+                        i = krdt_listen(ciptr->src, ciptr->scid, ciptr->pid);
                         break;
                 default:
                         err_quit("unknown connection type: %d", ciptr->cact);
         }
 
-
         fprintf(stderr, "Action: %d, idx = %d\n", ciptr->cact, i);
-
-        make_child(i, ciptr->pid);
 
         return;
 }

@@ -5,7 +5,6 @@ int mtu;
 
 int main(int argc, char *argv[])
 {
-        int fd;
         int scid;
         struct in_addr src;
         char buf[MAXLINE];
@@ -19,10 +18,7 @@ int main(int argc, char *argv[])
         }
 
         scid = atoi(argv[2]);
-        fd = rdt_listen(src, scid);
-        while ((n = read(fd, buf, MAXLINE)) > 0)
-                if (write(1, buf, n) != n)
-                        err_sys("write() error");
+        rdt_listen(src, scid);
         pause();
 
         return(0);

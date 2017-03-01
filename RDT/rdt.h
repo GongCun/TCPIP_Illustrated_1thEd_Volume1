@@ -16,7 +16,8 @@
 #define PCAP_TIMEOUT 500 /* 500 milliseconds */
 
 #define RDT_UX_SOCK "/tmp/RDTUXSock" /* Unix Domain Socket for User IPC */
-#define RDT_FIFO "/tmp/RDTPipe" /* FIFO pipe for User IPC */
+#define RDT_FIFO "/tmp/RDTFifo" /* FIFO pipe for User IPC */
+#define FILE_MODE 0666
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
@@ -54,44 +55,38 @@ struct rdthdr {
         uint16_t rdt_sum;
 };
 
-struct conn {
-        pid_t pid;
-        int xfd, pfd, sfd, scid, dcid;
-        struct in_addr src, dst;
-        cstate cstate;
-        sndstate sndstate;
-        rcvstate rcvstate;
-	unsigned char *pkt;	/* pkt last sent include IP header */
-	int pktlen;		/* length of pkt last sent */
-        unsigned char *sndbuf;
-        unsigned char *rcvbuf;
-        int sndlen, rcvlen;
-        unsigned long sndbyte; /* have sent bytes */
-        unsigned long rcvbyte; /* have recv bytes */
-        /* Have dropped bytes:
-         * 1. Received from network layer (IP),
-         *    but can't delivery to transport layer (RDT);
-         * 2. Have deliveried to RDT, but the data is corrupt.
-         */
-        unsigned long drpbyte;
-} conn[MAX_CONN];
 
+/* For user process transfer data */
+struct conn_user {
+        struct in_addr src, dst;
+        int scid, dcid;
+        int sfd, pfd;
+        unsigned char *pkt;
+        int mss;
+} conn_user;
+
+/* For exchange info between user and RDT process */
 typedef enum {ACTIVE, PASSIVE} cact;
 struct conn_info {
-        pid_t pid; /* user pid */
+        pid_t pid; /* user pid for FIFO's id */
         cact cact; /* passive or active */
         struct in_addr src, dst;
         int scid, dcid;
 };
 
+/* For RDT process keep the conn info and FSM state */
+struct conn {
+        int pfd;
+        cstate cstate;
+        struct in_addr src, dst;
+        int scid, dcid;
+} conn[MAX_CONN];
+
+/*--------------------------------*/
+
 struct conn_ret {
         int ret;
         int err;
-};
-
-struct conn_addr {
-        struct in_addr src, dst;
-        int scid, dcid;
 };
 
 extern char dev[IFNAMSIZ];
@@ -104,22 +99,22 @@ ssize_t to_net(int fd, const void *buf, size_t nbyte, struct in_addr dst);
 void from_net(void);
 int get_dev(struct in_addr addr, char *dev);
 int get_mtu(char *dev);
-u_short cksum(const u_char *ptr, int len);
-int chk_chksum(const u_char *ptr, int len);
-pid_t make_child(int, pid_t);
-void xmit_pkt(int i);
-int krdt_listen(struct in_addr src, int scid);
-int krdt_connect(struct in_addr dst, int scid, int dcid);
+int chk_chksum(uint16_t *ptr, int len);
+int krdt_listen(struct in_addr src, int scid, pid_t pid);
+int krdt_connect(struct in_addr dst, int scid, int dcid, pid_t pid);
 int pkt_arrive(struct conn *cptr, const u_char *pkt, int len);
 int make_sock(void);
-ssize_t rexmt_pkt(int i);
+int make_fifo(pid_t);
+int open_fifo(pid_t);
+ssize_t rexmt_pkt(struct conn_user *);
 void pkt_debug(const struct rdthdr *);
 int rdt_connect(struct in_addr dst, int scid, int dcid);
 int rdt_listen(struct in_addr src, int scid);
 void conn_info_debug(struct conn_info *);
+void conn_user_debug(struct conn_user *);
 
-ssize_t get_pkt(int fd, struct conn_addr *captr, u_char *buf, ssize_t buflen);
-ssize_t pass_pkt(int fd, struct conn_addr *captr, u_char *buf, ssize_t buflen);
+ssize_t get_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
+ssize_t pass_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 
 
 #endif

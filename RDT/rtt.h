@@ -11,9 +11,7 @@ struct rtt_info {
 	int rtt_nrexmt;		/* # times retransmitted: 0, 1, 2, ... */
 	uint32_t rtt_base;	/* sec since 1/1/1970 at start */
 	uint32_t rtt_ts;	/* millisec from the base */
-};
-
-extern struct rtt_info *rtt_info;	/* shared by parent and child */
+} rtt_info;
 
 
 #define RTT_RXMIN 2		/* min retransmit timeout value, in sec */

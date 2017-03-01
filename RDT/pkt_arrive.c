@@ -9,7 +9,6 @@
  *   1 - Have processed.
  */
 
-#define CONN_RET_LEN sizeof(struct conn_ret)
 
 int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 {
@@ -17,7 +16,7 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         const struct rdthdr *rdthdr;
         int size_ip;
         ssize_t n;
-        struct conn_addr conn_addr;
+        struct conn_info conn_info;
 
         ip = (struct ip *)pkt;
         size_ip = ip->ip_hl * 4;
@@ -29,19 +28,19 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         pkt_debug(rdthdr);
 
         
-	if (!chk_chksum(pkt + size_ip, ntohs(rdthdr->rdt_len))) {
+	if (!chk_chksum((uint16_t *)(pkt + size_ip), ntohs(rdthdr->rdt_len))) {
                 fprintf(stderr, "checksum wrong\n");
 		return (0);
         }
 
-        /* Fill the struct conn_addr and pass to child,
+        /* Fill the struct conn_info and pass to child,
          * cause the LISTEN status don't have the partner info.
          */
-        bzero(&conn_addr, sizeof(struct conn_addr));
-        memcpy(&conn_addr.src, &ip->ip_src, sizeof(ip->ip_src));
-        memcpy(&conn_addr.dst, &ip->ip_dst, sizeof(ip->ip_dst));
-        conn_addr.scid = rdthdr->rdt_scid;
-        conn_addr.dcid = rdthdr->rdt_dcid;
+        bzero(&conn_info, sizeof(struct conn_info));
+        memcpy(&conn_info.src, &ip->ip_src, sizeof(ip->ip_src));
+        memcpy(&conn_info.dst, &ip->ip_dst, sizeof(ip->ip_dst));
+        conn_info.scid = rdthdr->rdt_scid;
+        conn_info.dcid = rdthdr->rdt_dcid;
 
 	switch (cptr->cstate) {
 	case ESTABLISHED:
@@ -67,6 +66,8 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 			fprintf(stderr, "ESTABLISHED: pass %zd bytes to child\n", n);
                         if (rdthdr->rdt_flags == RDT_FIN) {
                                 cptr->cstate = CLOSED;
+                                if (close(cptr->pfd) < 0)
+                                        err_msg("close() FIFO error");
                                 fprintf(stderr, "parent: ESTABLISHED -> CLOSED\n");
                         }
                         return (1);
@@ -88,9 +89,9 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         cptr->dcid = rdthdr->rdt_scid;
 
                         /* Pass the connection info to child */
-                        n = pass_pkt(cptr->pfd, &conn_addr, (u_char *)(pkt + size_ip), len - size_ip);
+                        n = pass_pkt(cptr->pfd, &conn_info, (u_char *)(pkt + size_ip), len - size_ip);
 			fprintf(stderr, "LISTEN: pass %zd bytes to child, "
-                                        "buf = %d, conn_addr = %zd\n", n, len-size_ip, sizeof(conn_addr));
+                                        "buf = %d, conn_info = %zd\n", n, len-size_ip, sizeof(conn_info));
                         cptr->cstate = ESTABLISHED;
 
 			return (1);
@@ -128,8 +129,10 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 		    rdthdr->rdt_dcid == cptr->scid)
                 {
 			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
-                        cptr->cstate = CLOSED;
 			fprintf(stderr, "DISCONN: pass %zd bytes to child\n", n);
+                        cptr->cstate = CLOSED;
+                        if (close(cptr->pfd) < 0)
+                                err_msg("close() FIFO error");
                         return (1);
                 }
                 break;

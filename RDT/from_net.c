@@ -47,16 +47,23 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
                 fprintf(stderr, "from_net() i = %d\n", i);
 
 	        switch (conn[i].cstate) {
+	        case CLOSED:
+                        fprintf(stderr, "state: CLOSED\n");
+                        break;
 	        case LISTEN:
                         fprintf(stderr, "state: LISTEN\n");
                         break;
 	        case WAITING:
-                        fprintf(stderr, "TAG: 0x%02x, state: WAITING\n", rdthdr->rdt_flags);
+                        fprintf(stderr, "state: WAITING\n");
                         break;
 	        case ESTABLISHED:
-                        fprintf(stderr, "TAG: 0x%02x, state: ESTABLISHED\n", rdthdr->rdt_flags);
+                        fprintf(stderr, "state: ESTABLISHED\n");
                         break;
-                default:;
+	        case DISCONN:
+                        fprintf(stderr, "state: DISCONN\n");
+                        break;
+                default:
+                        fprintf(stderr, "state: Unknown\n");
                 }
 
                 if (pkt_arrive(&conn[i], packet + size_eth, header->caplen - size_eth))
