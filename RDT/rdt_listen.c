@@ -63,6 +63,8 @@ int rdt_listen(struct in_addr src, int scid)
 
 	n = make_pkt(conn_user.src, conn_user.dst, conn_user.scid, conn_user.dcid,
 			0, RDT_ACC, NULL, 0, conn_user.pkt);
+        fprintf(stderr, "rdt_listen() make_pkt\n");
+        pkt_debug((struct rdthdr *)(conn_user.pkt + IP_LEN));
 	if ((ret = to_net(conn_user.sfd, conn_user.pkt, n, conn_user.dst)) < 0)
 		return(ret);
 	fprintf(stderr, "rdt_listen() succeed\n");
