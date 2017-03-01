@@ -4,26 +4,26 @@
 /*
              -+- Data Transfer Path -+-
 
-                 Pass/get conn info by
-   +---------+   UX dgram socket           +-------+
+                 Pass user info by
+   +---------+   UX Domain Socket          +-------+
    | User    |---------------------------> |RDT    |
-   | Process |<-----------------------+    |Process|
-   +---------+                        |    +-------+
-       | ^                            |        /\
-       | |                            | SIGIO /  \
-       | |                            |      /    \
-       | |                            |     v      v
+   | Process |                             |Process|
+   +---------+                             +-------+
+       | ^                                     /\
+       | |                              SIGIO /  \
+       | |                                   /    \
+       | |                                  v      v
        | |                         +--------+      +--------+
        | |                         |sig_io()|     /|Packet  |
-       | |                         |        |    / |Capture |
-       | |                         +--------+   /  +--------+
-       | |                                     /       ^
-       | |                          Pass pkt  /        | Capture
-       | |                          by FIFO  v         | pkt
-       | | Recv pkt from FIFO      +--------+          |
+       | |                         |--------|    / |Capture |
+       | |                              |       /  +--------+
+       | |               Pass conn info |      /         ^
+       | |               by FIFO        |     / Pass pkt | Capture
+       | |                              v    v  by FIFO  | pkt
+       | | Recv pkt from FIFO      +--------+            |
        | +------------------------ |FIFO    |      +--------+
-       +-------------------------> |RawSock |----->|External|
-           Send pkt by raw sock    +--------+ Send +--------+
+       +-------------------------> |RawSock |----->|external|
+           Send pkt by Raw Sock    +--------+ Send +--------+
                                               pkt
 
 */
@@ -61,6 +61,11 @@ static void sig_io(int signo)
         int i, n;
         struct conn_info conn_info;
         struct conn_info *ciptr = &conn_info;
+
+#if defined (_AIX) || defined (_AIX64)
+	if (signal(SIGIO, sig_io) == SIG_ERR)
+		err_sys("signal() of SIGIO error");
+#endif
 
 	fprintf(stderr, "caught SIGIO\n");
 

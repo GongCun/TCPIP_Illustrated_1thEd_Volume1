@@ -38,10 +38,13 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         if ((size_ip = ip->ip_hl * 4) < 20)
                 return;
 
+	fprintf(stderr, "capture pkt: %s -> ", inet_ntoa(ip->ip_src));
+	fprintf(stderr, "%s \n", inet_ntoa(ip->ip_dst));
+
         const struct rdthdr *rdthdr;
         rdthdr = (struct rdthdr *)(packet + size_eth + size_ip);
 
-        /* Delive data to the child process */
+        /* Delive data to the user process */
         for (i = 0; i < MAX_CONN; i++) {
 
                 fprintf(stderr, "from_net() i = %d\n", i);

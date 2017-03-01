@@ -17,6 +17,7 @@ int krdt_connect(struct in_addr dst, int scid, int dcid, pid_t pid)
         int i, j;
         struct conn *cptr;
         struct in_addr src;
+	struct conn_info conn_info;
         
         /* Choose a scid internal if 
          * not in the legal range.
@@ -53,6 +54,9 @@ int krdt_connect(struct in_addr dst, int scid, int dcid, pid_t pid)
         memcpy(&cptr->dst, &dst, sizeof(dst));
 
         cptr->pfd = open_fifo(pid);
+	bzero(&conn_info, sizeof(conn_info));
+	conn_info.scid = scid;
+	pass_pkt(cptr->pfd, &conn_info, NULL, 0);
         cptr->cstate = WAITING;
 
         return (i);

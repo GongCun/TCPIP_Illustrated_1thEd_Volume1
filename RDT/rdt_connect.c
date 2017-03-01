@@ -51,8 +51,10 @@ int rdt_connect(struct in_addr dst, int scid, int dcid)
         {
                 err_sys("sendto() error");
         }
+	get_pkt(conn_user.pfd, &conn_info, NULL, 0);
+	conn_user.scid = conn_info.scid;
 
-        if (rexmt_pkt(&conn_user) < 0)
+        if (rexmt_pkt(&conn_user, 0, RDT_REQ, NULL, 0) < 0)
                 err_sys("rexmt_pkt() error");
 
         fprintf(stderr, "rdt_connect() succeed\n");

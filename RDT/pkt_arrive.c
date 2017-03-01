@@ -1,12 +1,13 @@
 #include "rdt.h"
 
-/* A packet has arrived, process it with
- * connection management scheme by parent. 
- * If the cstate is in the "ESTABLISHED" state,
- * the packet will handed over to the child.
+
+/*
+ * When a packet has arrived, delivery it to user process.
+ *
  * Return:
  *   0 - Can't process;
  *   1 - Have processed.
+ *
  */
 
 
@@ -24,16 +25,13 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                 return (0);
         rdthdr = (struct rdthdr *)(pkt + size_ip);
 
-        fprintf(stderr, "debug before checksum():\n");
-        pkt_debug(rdthdr);
-
-        
 	if (!chk_chksum((uint16_t *)(pkt + size_ip), ntohs(rdthdr->rdt_len))) {
-                fprintf(stderr, "checksum wrong\n");
+                fprintf(stderr, "pkt_arrive() checksum wrong\n");
 		return (0);
-        }
+        } else 
+		fprintf(stderr, "pkt_arrive() checksum right\n");
 
-        /* Fill the struct conn_info and pass to child,
+        /* Fill the struct conn_info and pass to user,
          * cause the LISTEN status don't have the partner info.
          */
         bzero(&conn_info, sizeof(struct conn_info));
@@ -57,18 +55,16 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 		    rdthdr->rdt_scid == cptr->dcid &&
 		    rdthdr->rdt_dcid == cptr->scid)
                 {
-                        /* If child process don't read the pipe
+                        /* If user process don't read the pipe
                          * will cause an EPIPE error, or other
                          * write() error will be handed over
                          * to the RDT mechanism.
                          */
 			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
-			fprintf(stderr, "ESTABLISHED: pass %zd bytes to child\n", n);
+			fprintf(stderr, "ESTABLISHED: pass %zd bytes to user\n", n);
                         if (rdthdr->rdt_flags == RDT_FIN) {
                                 cptr->cstate = CLOSED;
-                                if (close(cptr->pfd) < 0)
-                                        err_msg("close() FIFO error");
-                                fprintf(stderr, "parent: ESTABLISHED -> CLOSED\n");
+                                fprintf(stderr, "pkt_arrive(): ESTABLISHED -> CLOSED\n");
                         }
                         return (1);
 		}
@@ -88,11 +84,12 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         memcpy(&cptr->dst, &ip->ip_src, sizeof(ip->ip_src));
                         cptr->dcid = rdthdr->rdt_scid;
 
-                        /* Pass the connection info to child */
+                        /* Pass the connection info to user */
                         n = pass_pkt(cptr->pfd, &conn_info, (u_char *)(pkt + size_ip), len - size_ip);
-			fprintf(stderr, "LISTEN: pass %zd bytes to child, "
+			fprintf(stderr, "LISTEN: pass %zd bytes to user, "
                                         "buf = %d, conn_info = %zd\n", n, len-size_ip, sizeof(conn_info));
                         cptr->cstate = ESTABLISHED;
+			fprintf(stderr, "pkt_arrive(): LISTEN -> ESTABLISHED\n");
 
 			return (1);
 		}
@@ -107,8 +104,9 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 		    rdthdr->rdt_scid == cptr->dcid &&
 		    rdthdr->rdt_dcid == cptr->scid)
                 {
-			write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
+			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
                         cptr->cstate = ESTABLISHED;
+			fprintf(stderr, "pkt_arrive(): WAITING -> ESTABLISHED\n");
                         return (1);
                 }
                 break;
@@ -129,10 +127,9 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 		    rdthdr->rdt_dcid == cptr->scid)
                 {
 			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
-			fprintf(stderr, "DISCONN: pass %zd bytes to child\n", n);
+			fprintf(stderr, "DISCONN: pass %zd bytes to user\n", n);
                         cptr->cstate = CLOSED;
-                        if (close(cptr->pfd) < 0)
-                                err_msg("close() FIFO error");
+			fprintf(stderr, "pkt_arrive(): DISCONN -> ESTABLISHED\n");
                         return (1);
                 }
                 break;

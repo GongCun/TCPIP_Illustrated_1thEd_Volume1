@@ -9,7 +9,7 @@ static void sig_hand(int signo)
 
 int rdt_listen(struct in_addr src, int scid)
 {
-        int n, fd;
+        int ret, n, fd;
         pid_t pid;
         struct sockaddr_un un;
         struct conn_info conn_info;
@@ -53,11 +53,19 @@ int rdt_listen(struct in_addr src, int scid)
 
         /* Get partner info from FIFO */
         get_pkt(conn_user.pfd, &conn_info, conn_user.pkt, conn_user.mss);
-        conn_user.dst = conn_info.dst;
-        conn_user.dcid = conn_info.dcid;
+        conn_user.dst = conn_info.src;
+        conn_user.dcid = conn_info.scid;
         conn_user.sfd = make_sock();
+	fprintf(stderr, ">> conn_user_debug()\n");
         conn_user_debug(&conn_user);
         pkt_debug((struct rdthdr *)conn_user.pkt);
+
+
+	n = make_pkt(conn_user.src, conn_user.dst, conn_user.scid, conn_user.dcid,
+			0, RDT_ACC, NULL, 0, conn_user.pkt);
+	if ((ret = to_net(conn_user.sfd, conn_user.pkt, n, conn_user.dst)) < 0)
+		return(ret);
+	fprintf(stderr, "rdt_listen() succeed\n");
 
         return(0);
 }

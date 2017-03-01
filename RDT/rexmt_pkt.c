@@ -4,12 +4,13 @@
 static void sig_alrm(int);
 static sigjmp_buf jmpbuf;
 
-ssize_t rexmt_pkt(struct conn_user *cptr)
+ssize_t rexmt_pkt(struct conn_user *cptr, int seq, uint8_t flag, void *buf, size_t nbyte)
 {
         int n, ret;
         static int init = 0;
 
         struct rtt_info *rptr;
+	const struct rdthdr *rdthdr;
 
         rptr = &rtt_info;
 
@@ -25,7 +26,7 @@ ssize_t rexmt_pkt(struct conn_user *cptr)
 
 rexmt:
         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-                        0, RDT_REQ, NULL, 0, cptr->pkt);
+                        seq, flag, buf, nbyte, cptr->pkt);
         if ((ret = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
                 return(ret);
         alarm(rtt_start(rptr));
@@ -39,19 +40,53 @@ rexmt:
                 goto rexmt;
         }
 
+again:
         do {
                 n = read(cptr->pfd, cptr->pkt, cptr->mss);
-        } while (n < sizeof(struct rdthdr));
+		rdthdr = (struct rdthdr *)cptr->pkt;
+
+        } while ((n < sizeof(struct rdthdr)) || (rdthdr->rdt_seq != seq) || 
+			(!chk_chksum((uint16_t *)cptr->pkt, ntohs(rdthdr->rdt_len))));
+
+	switch (flag) {
+
+	case RDT_REQ:
+	{
+		if (rdthdr->rdt_flags != RDT_ACC)
+			goto again;
+		break;
+	}
+	case RDT_FIN:
+	{
+		if (rdthdr->rdt_flags != RDT_CONF)
+			goto again;
+		break;
+	}
+	case RDT_DATA:
+	{
+		if (rdthdr->rdt_flags != RDT_ACK)
+			goto again;
+		break;
+	}
+	default:;
+
+	}
 
         alarm(0);
         rtt_stop(rptr);
         rtt_debug(rptr);
-        return(n);
+
+	/* Return sent network frame length */
+        return(ret);
 }
 
 
 static void sig_alrm(int signo)
 {
+#if defined (_AIX) || defined (_AIX64)
+	if (signal(SIGALRM, sig_alrm) == SIG_ERR)
+		err_sys("signal() of SIGALRM error");
+#endif
         siglongjmp(jmpbuf, 1);
 }
 

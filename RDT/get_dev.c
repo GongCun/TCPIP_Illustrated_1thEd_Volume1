@@ -22,7 +22,7 @@ int get_dev(struct in_addr addr, char *dev)
 	freeifaddrs(ifap);
 #else				/* Don't have getifaddrs() */
 	struct ifi_info *ifi, *ifihead;
-	for (ifihead = ifi = Get_ifi_info(AF_INET, 1); ifi; ifi = ifi->ifi_next) {
+	for (ifihead = ifi = Get_ifi_info(); ifi; ifi = ifi->ifi_next) {
 		sa = (struct sockaddr_in *)ifi->ifi_addr;
 		if (sa->sin_addr.s_addr != addr.s_addr)
 			continue;
