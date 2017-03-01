@@ -33,25 +33,19 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         } else 
 		fprintf(stderr, "pkt_arrive() checksum right\n");
 
-#if 0
         if (ip->ip_src.s_addr != ip->ip_dst.s_addr &&
             ip->ip_src.s_addr == cptr->src.s_addr &&
             rdthdr->rdt_scid == cptr->scid)
         {
                 /* the pkt was sent to external by itself, just ignore */
 
-                fprintf(stderr, "pkt_arrive() process: %s.%d -> ",
+                fprintf(stderr, "ignore self pkt: %s.%d -> ",
                                 inet_ntoa(ip->ip_src), rdthdr->rdt_scid);
                 fprintf(stderr, "%s.%d \n", inet_ntoa(ip->ip_dst),
                                 rdthdr->rdt_dcid);
                 return(2);
         }
-#endif
 
-                fprintf(stderr, "pkt_arrive() process: %s.%d -> ",
-                                inet_ntoa(ip->ip_src), rdthdr->rdt_scid);
-                fprintf(stderr, "%s.%d \n", inet_ntoa(ip->ip_dst),
-                                rdthdr->rdt_dcid);
 
         /* Fill the struct conn_info and pass to user,
          * cause the LISTEN status don't have the partner info.
