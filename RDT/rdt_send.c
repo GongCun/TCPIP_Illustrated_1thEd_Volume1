@@ -14,7 +14,7 @@ ssize_t rdt_send(void *buf, size_t nbyte)
 
 	if ((n = rexmt_pkt(cptr, seq, RDT_DATA, buf, nbyte)) < 0)
 		err_sys("rexmt_pkt() error");
-	seq = ++seq % 2;
+	seq = (seq + 1) % 2;
 
 	/* Return sent user data length */
 	return(n - IP_LEN - RDT_LEN);

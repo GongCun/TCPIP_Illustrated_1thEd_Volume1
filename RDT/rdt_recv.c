@@ -45,7 +45,7 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 			rptr->rdt_seq, RDT_ACK, NULL, 0, cptr->pkt);
 	if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
 		return(n);
-	seq = ++seq % 2;
+	seq = (seq + 1) % 2;
 
 	return(ret);
 
