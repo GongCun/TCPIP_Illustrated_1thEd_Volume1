@@ -41,6 +41,13 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         const struct rdthdr *rdthdr;
         rdthdr = (struct rdthdr *)(packet + size_eth + size_ip);
 
+        fprintf(stderr, "capture pkt: %s.%d -> ",
+                        inet_ntoa(ip->ip_src), rdthdr->rdt_scid);
+        fprintf(stderr, "%s.%d \n", inet_ntoa(ip->ip_dst),
+                        rdthdr->rdt_dcid);
+        fprintf(stderr, "capture RDT:\n");
+        pkt_debug(rdthdr);
+
         /* Delive data to the user process */
         for (i = 0; i < MAX_CONN; i++) {
 
