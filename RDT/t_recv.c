@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
 
         scid = atoi(argv[2]);
         rdt_listen(src, scid);
-        sleep(1);
 
 	buflen = conn_user.mss - IP_LEN - RDT_LEN;
 	fprintf(stderr, "buflen = %d\n", buflen);
