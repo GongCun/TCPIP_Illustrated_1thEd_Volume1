@@ -22,7 +22,7 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 	{
 		/* Send _NoAck_ packet */
 		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-                        rptr->rdt_seq, RDT_ACK, NULL, 0, cptr->pkt);
+                        seq, RDT_ACK, NULL, 0, cptr->pkt);
 		if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
 			return(n);
 
