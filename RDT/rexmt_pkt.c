@@ -28,15 +28,15 @@ ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
 rexmt:
         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
                         seq, flag, buf, nbyte, cptr->pkt);
-        fprintf(stderr, "> send pkt:\n");
-        pkt_debug((struct rdthdr *)(cptr->pkt + IP_LEN));
+        alarm(rtt_start(rptr));
         while ((ret = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
         {
                 /* Shutdown the router to test transfer repeat */
-                if (errno != EHOSTUNREACH)
+                if (errno != EHOSTUNREACH && errno != ENETUNREACH)
                         return(ret);
         }
-        alarm(rtt_start(rptr));
+        fprintf(stderr, "> send pkt:\n");
+        pkt_debug((struct rdthdr *)(cptr->pkt + IP_LEN));
 
         if (sigsetjmp(jmpbuf, 1) != 0) {
                 if (rtt_timeout(rptr) < 0) {
