@@ -29,8 +29,12 @@ rexmt:
                         seq, flag, buf, nbyte, cptr->pkt);
         fprintf(stderr, "> send pkt:\n");
         pkt_debug((struct rdthdr *)(cptr->pkt + IP_LEN));
-        if ((ret = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
-                return(ret);
+        while ((ret = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
+        {
+                /* Shutdown the router to test transfer repeat */
+                if (errno != EHOSTUNREACH)
+                        return(ret);
+        }
         alarm(rtt_start(rptr));
 
         if (sigsetjmp(jmpbuf, 1) != 0) {

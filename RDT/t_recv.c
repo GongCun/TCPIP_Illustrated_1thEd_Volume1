@@ -28,7 +28,6 @@ int main(int argc, char *argv[])
 
 	while ((n = rdt_recv(buf, buflen)) > 0)
 		write(1, buf, n);
-        pause();
 
         return(0);
 }

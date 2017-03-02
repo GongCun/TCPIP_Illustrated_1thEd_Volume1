@@ -117,6 +117,7 @@ ssize_t get_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t pass_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t rdt_send(void *buf, size_t nbyte);
 ssize_t rdt_recv(void *buf, size_t nbyte);
+ssize_t rdt_close(void);
 
 
 #endif

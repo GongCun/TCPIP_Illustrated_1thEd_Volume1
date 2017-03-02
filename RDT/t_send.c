@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 		if ((ret = rdt_send(buf, n)) != n)
 			err_quit("rdt_send() %d bytes, expect %d bytes", ret, n);
 	}
-        pause();
+        rdt_close();
 
         return(0);
 }

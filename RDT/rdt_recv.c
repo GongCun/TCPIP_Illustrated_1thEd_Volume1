@@ -38,16 +38,32 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
  	 * data to user.
 	 */
 	n -= RDT_LEN;
-	if (n > nbyte)
+	if (n > nbyte || n < 0)
 		err_quit("recv %d bytes exceed the buf size %d\n", n, nbyte);
-	memcpy(buf, (void *)cptr->pkt + RDT_LEN, n);
-	ret = n;
 
-	n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-			seq, RDT_ACK, NULL, 0, cptr->pkt);
+	if (n > 0) {
+		memcpy(buf, (void *)cptr->pkt + RDT_LEN, n);
+		ret = n;
+	} else {
+		ret = 0;
+	}
+
+        fprintf(stderr, ">>> rdt_recv()\n");
+        pkt_debug(rptr);
+
+	if (rptr->rdt_flags == RDT_FIN) {
+		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
+			     0, RDT_CONF, NULL, 0, cptr->pkt);
+		seq = 0;
+	} else {
+
+		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
+			     seq, RDT_ACK, NULL, 0, cptr->pkt);
+		seq = (seq + 1) % 2;
+	}
+
 	if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
 		return(n);
-	seq = (seq + 1) % 2;
 
 	return(ret);
 

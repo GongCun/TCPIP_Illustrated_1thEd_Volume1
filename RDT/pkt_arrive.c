@@ -8,6 +8,7 @@
  *   0 - Can't process;
  *   1 - Have processed;
  *   2 - The pkt was sent by itself;
+ *   3 - The pkt will change both states.
  *
  */
 
@@ -19,6 +20,7 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         int size_ip;
         ssize_t n;
         struct conn_info conn_info;
+        int disconn = 0;
 
         ip = (struct ip *)pkt;
 
@@ -36,15 +38,25 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         if (ip->ip_src.s_addr != ip->ip_dst.s_addr &&
             ip->ip_src.s_addr == cptr->src.s_addr &&
             rdthdr->rdt_scid == cptr->scid)
-        {
-                /* the pkt was sent to external by itself, just ignore */
+	{
+		/*
+		 * the pkt was sent to external by itself, only need to known
+		 * whether close, just ignore the other.
+		 */
+		if (rdthdr->rdt_flags != RDT_FIN) {
 
-                fprintf(stderr, "ignore self pkt: %s.%d -> ",
-                                inet_ntoa(ip->ip_src), rdthdr->rdt_scid);
-                fprintf(stderr, "%s.%d \n", inet_ntoa(ip->ip_dst),
-                                rdthdr->rdt_dcid);
-                return(2);
-        }
+			fprintf(stderr, "ignore self pkt: %s.%d -> ",
+				inet_ntoa(ip->ip_src), rdthdr->rdt_scid);
+			fprintf(stderr, "%s.%d \n", inet_ntoa(ip->ip_dst),
+				rdthdr->rdt_dcid);
+			return (2);
+
+		} else if (rdthdr->rdt_flags == RDT_FIN && disconn) {
+
+			fprintf(stderr, "resend RDT_FIN\n");
+			return (2);
+		}
+	}
 
 
         /* Fill the struct conn_info and pass to user,
@@ -66,6 +78,16 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                                 return (0);
                         default:;
                 }
+                if (ip->ip_src.s_addr == cptr->src.s_addr &&
+                    rdthdr->rdt_scid == cptr->scid &&
+                    rdthdr->rdt_flags == RDT_FIN)
+                {
+                        /* Active close: send RDT_FIN to partner */
+                        ++disconn;
+                        cptr->cstate = DISCONN;
+			fprintf(stderr, "ESTABLISHED -> DISCONN\n");
+                }
+
 		if (ip->ip_src.s_addr == cptr->dst.s_addr &&
 		    ip->ip_dst.s_addr == cptr->src.s_addr &&
 		    rdthdr->rdt_scid == cptr->dcid &&
@@ -78,11 +100,16 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                          */
 			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
 			fprintf(stderr, "ESTABLISHED: pass %zd bytes to user\n", n);
+
+                        /* passive close */
                         if (rdthdr->rdt_flags == RDT_FIN) {
+                                ++disconn;
+                                close(cptr->pfd);
+                                bzero(cptr, sizeof(struct conn));
                                 cptr->cstate = CLOSED;
                                 fprintf(stderr, "pkt_arrive(): ESTABLISHED -> CLOSED\n");
                         }
-                        return (1);
+                        return (disconn ? 3 : 1);
 		}
                 break;
 	}
@@ -144,9 +171,11 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                 {
 			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
 			fprintf(stderr, "DISCONN: pass %zd bytes to user\n", n);
+                        close(cptr->pfd);
+                        bzero(cptr, sizeof(struct conn));
                         cptr->cstate = CLOSED;
-			fprintf(stderr, "pkt_arrive(): DISCONN -> ESTABLISHED\n");
-                        return (1);
+			fprintf(stderr, "pkt_arrive(): ESTABLISHED -> DISCONN\n");
+                        return (3);
                 }
                 break;
         } /* end of DISCONN */
