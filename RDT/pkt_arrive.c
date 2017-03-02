@@ -72,7 +72,6 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 	case ESTABLISHED:
 	{
                 switch (rdthdr->rdt_flags) {
-                        case RDT_CONF:
                         case RDT_REQ:
                         case RDT_ACC:
                                 return (0);
@@ -86,29 +85,33 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         ++disconn;
                         cptr->cstate = DISCONN;
 			fprintf(stderr, "ESTABLISHED -> DISCONN\n");
-                }
-
-		if (ip->ip_src.s_addr == cptr->dst.s_addr &&
-		    ip->ip_dst.s_addr == cptr->src.s_addr &&
-		    rdthdr->rdt_scid == cptr->dcid &&
-		    rdthdr->rdt_dcid == cptr->scid)
+                } else if (ip->ip_src.s_addr == cptr->dst.s_addr &&
+			   ip->ip_dst.s_addr == cptr->src.s_addr &&
+			   rdthdr->rdt_scid == cptr->dcid &&
+			   rdthdr->rdt_dcid == cptr->scid)
                 {
-                        /* If user process don't read the pipe
-                         * will cause an EPIPE error, or other
-                         * write() error will be handed over
-                         * to the RDT mechanism.
+                        /* If user process closed the pipe
+                         * will cause an EPIPE error, we just
+                         * cleanup the states for reuse.
                          */
-			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
-			fprintf(stderr, "ESTABLISHED: pass %zd bytes to user\n", n);
-
-                        /* passive close */
-                        if (rdthdr->rdt_flags == RDT_FIN) {
-                                ++disconn;
+                        n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
+                        if (n < 0) {
                                 close(cptr->pfd);
                                 bzero(cptr, sizeof(struct conn));
                                 cptr->cstate = CLOSED;
                                 fprintf(stderr, "pkt_arrive(): ESTABLISHED -> CLOSED\n");
+                        } else 
+                                fprintf(stderr, "pkt_arrive(): ESTABLISHED pass %zd bytes to user\n", n);
+
+                        if (rdthdr->rdt_flags == RDT_FIN) {
+                                ++disconn;
+				if (n >= 0) { /* RDT_FIN _NOT_ re-trasmit */
+					close(cptr->pfd);
+					bzero(cptr, sizeof(struct conn));
+					cptr->cstate = CLOSED;
+				}
                         }
+
                         return (disconn ? 3 : 1);
 		}
                 break;
@@ -160,7 +163,7 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                  * but if user's socket was closed, we can't delivery the data to above,
                  * it will be improved in future.
                  */
-                if (rdthdr->rdt_flags != RDT_CONF)
+                if (rdthdr->rdt_flags != RDT_ACK)
                 {
                         return(0);
                 }
@@ -186,3 +189,4 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 
         return (0);
 }
+

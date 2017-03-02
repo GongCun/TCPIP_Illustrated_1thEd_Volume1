@@ -4,15 +4,16 @@
 static void sig_alrm(int);
 static sigjmp_buf jmpbuf;
 
-ssize_t rexmt_pkt(struct conn_user *cptr, int seq, uint8_t flag, void *buf, size_t nbyte)
+ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
 {
-        int n, ret;
+        int n, ret, seq;
         static int init = 0;
 
         struct rtt_info *rptr;
 	const struct rdthdr *rdthdr;
 
         rptr = &rtt_info;
+	seq = cptr->wseq;
 
         if (init++ == 0)
                 rtt_init(rptr);
@@ -62,13 +63,8 @@ again:
 			goto again;
 		break;
 	}
-	case RDT_FIN:
-	{
-		if (rdthdr->rdt_flags != RDT_CONF)
-			goto again;
-		break;
-	}
 	case RDT_DATA:
+	case RDT_FIN:
 	{
 		if (rdthdr->rdt_flags != RDT_ACK)
 			goto again;

@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
 	while ((n = read(0, buf, buflen)) > 0) {
 		if ((ret = rdt_send(buf, n)) != n)
 			err_quit("rdt_send() %d bytes, expect %d bytes", ret, n);
+		if ((n= rdt_recv(buf, buflen)) > 0)
+			write(1, buf, n);
 	}
         rdt_close();
 

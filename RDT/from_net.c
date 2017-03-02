@@ -26,6 +26,7 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         int size_ip;
 
 
+
         /* DLT_NULL of loopback which head is 4-byte
          * DLT_EN10MB of IEEE 802.3 Ethernet
          * (10Mb, 100Mb, 1000Mb, and up) which head is 14-byte
@@ -80,9 +81,9 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
                 else if (ret == 3 && ++hand == 2)
                         break;
         }
+
         if (i >= MAX_CONN && hand == 0) {
                 fprintf(stderr, "can't delivery the following packet: \n");
                 pkt_debug((struct rdthdr *)(packet + size_eth+size_ip));
         }
 }
-

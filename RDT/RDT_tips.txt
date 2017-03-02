@@ -30,3 +30,4 @@ $ echo "obase=16; ibase=16; 220D+0001+F203+F4F5+F6F7" | bc
 $ echo "obase=16; ibase=16; FFFD+2" | bc
 FFFF (bitwise NOT = 0000)
 
+sed -n '1,500p' /etc/services >./sendfile

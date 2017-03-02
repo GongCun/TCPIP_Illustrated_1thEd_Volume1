@@ -3,12 +3,12 @@
 /* Receive network frame from below */
 ssize_t rdt_recv(void *buf, size_t nbyte)
 {
-	int ret, n;
-	static int seq = 0;
+	int ret, n, seq;
 	struct rdthdr *rptr;
 	struct conn_user *cptr;
 
 	cptr = &conn_user;
+	seq = cptr->rseq;
 
 	n = read(cptr->pfd, cptr->pkt, cptr->mss);
 	rptr = (struct rdthdr *)cptr->pkt;
@@ -48,22 +48,19 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 		ret = 0;
 	}
 
-        fprintf(stderr, ">>> rdt_recv()\n");
-        pkt_debug(rptr);
 
-	if (rptr->rdt_flags == RDT_FIN) {
-		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-			     0, RDT_CONF, NULL, 0, cptr->pkt);
-		seq = 0;
-	} else {
-
-		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-			     seq, RDT_ACK, NULL, 0, cptr->pkt);
-		seq = (seq + 1) % 2;
-	}
+	n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
+			seq, RDT_ACK, NULL, 0, cptr->pkt);
+	cptr->rseq = (cptr->rseq + 1) % 2;
 
 	if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
 		return(n);
+
+        if (ret == 0) {
+                close(cptr->sfd);
+                close(cptr->pfd);
+                bzero(cptr, sizeof(struct conn_user));
+        }
 
 	return(ret);
 

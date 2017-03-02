@@ -5,7 +5,7 @@ int mtu;
 
 int main(int argc, char *argv[])
 {
-        int n;
+        int ret, n;
         int scid;
 	int buflen;
         struct in_addr src;
@@ -27,7 +27,8 @@ int main(int argc, char *argv[])
 		err_sys("malloc() error");
 
 	while ((n = rdt_recv(buf, buflen)) > 0)
-		write(1, buf, n);
+		if ((ret = rdt_send(buf, n)) != n)
+			err_quit("rdt_send() %d bytes, expect %d bytes", ret, n);
 
         return(0);
 }

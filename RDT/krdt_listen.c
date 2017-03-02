@@ -15,8 +15,11 @@ int krdt_listen(struct in_addr src, int scid, pid_t pid)
         struct conn *cptr;
 
         for (i = 0; i < MAX_CONN; i++)
-                if (conn[i].cstate != CLOSED && conn[i].scid == scid)
+                if (conn[i].cstate != CLOSED && conn[i].scid == scid) {
+			fprintf(stderr, "krdt_listen() i = %d\n", i);
+			conn_debug(&conn[i]);
                         err_quit("Can't start listen() because the SCID is in use.");
+		}
 
         for (i = 0; i < MAX_CONN; i++)
                 if (conn[i].cstate == CLOSED)

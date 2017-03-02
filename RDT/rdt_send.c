@@ -4,7 +4,6 @@
 ssize_t rdt_send(void *buf, size_t nbyte)
 {
 	int n;
-	static int seq = 0;
 	struct conn_user *cptr;
 	cptr = &conn_user;
 
@@ -12,9 +11,9 @@ ssize_t rdt_send(void *buf, size_t nbyte)
 	if (nbyte > n)
 		err_quit("data %d bytes exceed the pkt mss %d bytes", nbyte, n);
 
-	if ((n = rexmt_pkt(cptr, seq, RDT_DATA, buf, nbyte)) < 0)
+	if ((n = rexmt_pkt(cptr, RDT_DATA, buf, nbyte)) < 0)
 		err_sys("rexmt_pkt() error");
-	seq = (seq + 1) % 2;
+	cptr->wseq = (cptr->wseq + 1) % 2;
 
 	/* Return sent user data length */
 	return(n - IP_LEN - RDT_LEN);

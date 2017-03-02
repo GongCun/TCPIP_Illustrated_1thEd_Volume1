@@ -32,6 +32,7 @@ int rdt_connect(struct in_addr dst, int scid, int dcid)
         conn_info.dcid = conn_user.dcid = dcid;
         conn_user.pfd = make_fifo(pid);
         conn_user.sfd = make_sock();
+	conn_user.wseq = conn_user.rseq = 0;
 
         if (!mtu) {
                 if (dev[0] == 0 && !get_dev(src, dev))
@@ -54,7 +55,7 @@ int rdt_connect(struct in_addr dst, int scid, int dcid)
 	get_pkt(conn_user.pfd, &conn_info, NULL, 0);
 	conn_user.scid = conn_info.scid;
 
-        if (rexmt_pkt(&conn_user, 0, RDT_REQ, NULL, 0) < 0)
+        if (rexmt_pkt(&conn_user, RDT_REQ, NULL, 0) < 0)
                 err_sys("rexmt_pkt() error");
 
         fprintf(stderr, "rdt_connect() succeed\n");
