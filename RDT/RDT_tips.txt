@@ -30,4 +30,24 @@ $ echo "obase=16; ibase=16; 220D+0001+F203+F4F5+F6F7" | bc
 $ echo "obase=16; ibase=16; FFFD+2" | bc
 FFFF (bitwise NOT = 0000)
 
-sed -n '1,500p' /etc/services >./sendfile
+sed -n '1,500p' /etc/services >/tmp/serv.part
+
+# duplex
+time ./t_send 127.0.0.1 0 </tmp/serv.part >./x.out
+
+# test on AIX with IPfilter
+
+/usr/sbin/rmfilt -v 4 -n 'all'
+
+SRC=192.168.9.241
+DST=192.168.9.242
+/usr/sbin/genfilt -v 4  -a 'D' -s $SRC -m '255.255.255.255' -d $DST -M '255.255.255.255' \
+-g 'y' -c 'all' -o 'any' -p '0' -O 'any' -P '0' -r 'B' -w 'B' -l 'N' -t '0' -i en0
+
+lsdev | grep ipsec
+/usr/sbin/mkdev -c ipsec -t 4
+
+/usr/sbin/mkfilt -v 4 -u
+/usr/sbin/lsfilt -O -a -v4
+
+/usr/sbin/mkfilt -v 4 -d

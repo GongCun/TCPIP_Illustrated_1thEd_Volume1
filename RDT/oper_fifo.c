@@ -1,21 +1,25 @@
 #include "rdt.h"
-
-char fifoname[PATH_MAX];
+pid_t Pid;
 
 void fifoexit(void)
 {
-	unlink(fifoname);
+	char cmd[MAXLINE];
+	sprintf(cmd, "rm %s*%ld 2>/dev/null", RDT_FIFO, (long)Pid);
+	system(cmd);
 }
 
 /* User process create FIFO for read */
 int make_fifo(pid_t pid, const char *str)
 {
 	int fd;
+	char fifoname[PATH_MAX];
+
+	Pid = pid;
 
 	if (atexit(fifoexit) < 0)
 		err_ret("atexit() error");
 
-	sprintf(fifoname, "%s%s.%ld", RDT_FIFO, str, (long)pid);
+	sprintf(fifoname, "%s.%s.%ld", RDT_FIFO, str, (long)pid);
 	if (mkfifo(fifoname, FILE_MODE) < 0)
 		err_sys("mkfifo() %s error", fifoname);
 
@@ -34,11 +38,14 @@ int make_fifo(pid_t pid, const char *str)
 int open_fifo(pid_t pid, const char *str)
 {
 	int fd;
+	char fifoname[PATH_MAX];
+
+	Pid = pid;
 
 	if (atexit(fifoexit) < 0)
 		err_ret("atexit() error");
 
-	sprintf(fifoname, "%s%s.%ld", RDT_FIFO, str, (long)pid);
+	sprintf(fifoname, "%s.%s.%ld", RDT_FIFO, str, (long)pid);
 
 	if ((fd = open(fifoname, O_WRONLY, 0)) < 0)
 		err_sys("opern() %s error", fifoname);

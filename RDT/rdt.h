@@ -59,10 +59,11 @@ struct rdthdr {
 struct conn_user {
         struct in_addr src, dst;
         int scid, dcid;
-        int sfd, pfd, sndfd, rcvfd;
-        unsigned char *pkt, *sndpkt, *rcvpkt;
+        int sfd, sndfd, rcvfd;
+        unsigned char *sndpkt;
+	unsigned char *rcvpkt;
         int mss;
-	int wseq, rseq;
+	int seq, ack;
 } conn_user;
 
 /* For exchange info between user and RDT process */
@@ -76,7 +77,7 @@ struct conn_info {
 
 /* For RDT process keep the conn info and FSM state */
 struct conn {
-        int pfd, sndfd, rcvfd;
+        int sndfd, rcvfd;
         cstate cstate;
         struct in_addr src, dst;
         int scid, dcid;

@@ -3,26 +3,26 @@
 /* Receive network frame from below */
 ssize_t rdt_recv(void *buf, size_t nbyte)
 {
-	int ret, n, seq;
+	int ret, n, ack;
 	struct rdthdr *rptr;
 	struct conn_user *cptr;
 
 	cptr = &conn_user;
-	seq = cptr->rseq;
+	ack = cptr->ack;
 
 	n = read(cptr->rcvfd, cptr->rcvpkt, cptr->mss);
 	rptr = (struct rdthdr *)cptr->rcvpkt;
 
-        fprintf(stderr, "> rdt_recv() expect seq: %d\n", seq);
+        fprintf(stderr, "> rdt_recv() expect seq: %d\n", ack);
         fprintf(stderr, "> recv pkt:\n");
         pkt_debug(rptr);
 
-	while((n < sizeof(struct rdthdr)) || ((rptr->rdt_seq) != seq) ||
+	while((n < sizeof(struct rdthdr)) || ((rptr->rdt_seq) != ack) ||
 			(!chk_chksum((uint16_t *)cptr->rcvpkt, ntohs(rptr->rdt_len))))
 	{
 		/* Send _NoAck_ packet */
 		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-                        seq, RDT_ACK, NULL, 0, cptr->rcvpkt);
+                        ack, RDT_ACK, NULL, 0, cptr->rcvpkt);
 		if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
 			return(n);
 
@@ -50,15 +50,14 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 
 
 	n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-			seq, RDT_ACK, NULL, 0, cptr->rcvpkt);
-	cptr->rseq = (cptr->rseq + 1) % 2;
+			ack, RDT_ACK, NULL, 0, cptr->rcvpkt);
+	cptr->ack = (cptr->ack + 1) % 2;
 
 	if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
 		return(n);
 
         if (ret == 0) {
                 close(cptr->sfd);
-                close(cptr->pfd);
                 close(cptr->sndfd);
                 close(cptr->rcvfd);
                 bzero(cptr, sizeof(struct conn_user));

@@ -100,7 +100,6 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                                 n = write(cptr->rcvfd, (u_char *) (pkt + size_ip), len - size_ip);
 
                         if (n < 0) {
-                                close(cptr->pfd);
                                 close(cptr->sndfd);
                                 close(cptr->rcvfd);
                                 bzero(cptr, sizeof(struct conn));
@@ -112,7 +111,6 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         if (rdthdr->rdt_flags == RDT_FIN) {
                                 ++disconn;
 				if (n >= 0) { /* RDT_FIN _NOT_ re-trasmit */
-					close(cptr->pfd);
                                         close(cptr->sndfd);
                                         close(cptr->rcvfd);
 					bzero(cptr, sizeof(struct conn));
@@ -139,7 +137,7 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         cptr->dcid = rdthdr->rdt_scid;
 
                         /* Pass the connection info to user */
-                        n = pass_pkt(cptr->pfd, &conn_info, (u_char *)(pkt + size_ip), len - size_ip);
+                        n = pass_pkt(cptr->rcvfd, &conn_info, (u_char *)(pkt + size_ip), len - size_ip);
 			fprintf(stderr, "LISTEN: pass %zd bytes to user, "
                                         "buf = %d, conn_info = %zd\n", n, len-size_ip, sizeof(conn_info));
                         cptr->cstate = ESTABLISHED;
@@ -158,7 +156,7 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
 		    rdthdr->rdt_scid == cptr->dcid &&
 		    rdthdr->rdt_dcid == cptr->scid)
                 {
-			n = write(cptr->pfd, (u_char *) (pkt + size_ip), len - size_ip);
+			n = write(cptr->sndfd, (u_char *) (pkt + size_ip), len - size_ip);
                         cptr->cstate = ESTABLISHED;
 			fprintf(stderr, "pkt_arrive(): WAITING -> ESTABLISHED\n");
                         return (1);
@@ -182,7 +180,6 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                 {
 			n = write(cptr->sndfd, (u_char *) (pkt + size_ip), len - size_ip);
 			fprintf(stderr, "DISCONN: pass %zd bytes to user\n", n);
-                        close(cptr->pfd);
                         close(cptr->sndfd);
                         close(cptr->rcvfd);
                         bzero(cptr, sizeof(struct conn));

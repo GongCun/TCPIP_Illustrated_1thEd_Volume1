@@ -12,7 +12,8 @@ ssize_t rdt_close(void)
 	if ((n = rexmt_pkt(cptr, RDT_FIN, NULL, 0)) < 0)
 		err_sys("rexmt_pkt() error");
 	close(cptr->sfd);
-	close(cptr->pfd);
+	close(cptr->sndfd);
+	close(cptr->rcvfd);
         bzero(cptr, sizeof(conn_user));
 
 	/* Return sent user data length (should be 0) */

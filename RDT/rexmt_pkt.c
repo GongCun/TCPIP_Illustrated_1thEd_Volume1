@@ -13,7 +13,7 @@ ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
 	const struct rdthdr *rdthdr;
 
         rptr = &rtt_info;
-	seq = cptr->wseq;
+	seq = cptr->seq;
 
         if (init++ == 0)
                 rtt_init(rptr);
@@ -34,8 +34,8 @@ rexmt:
         alarm(rtt_start(rptr));
         while ((ret = to_net(cptr->sfd, cptr->sndpkt, n, cptr->dst)) < 0)
         {
-                /* Shutdown the router to test transfer repeat */
-                if (errno != EHOSTUNREACH && errno != ENETUNREACH)
+                /* Shutdown the router or setup ipfilter to test transfer repeat */
+                if (errno != EHOSTUNREACH && errno != ENETUNREACH && errno != EACCES)
                         return(ret);
         }
 
