@@ -10,25 +10,25 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 	cptr = &conn_user;
 	seq = cptr->rseq;
 
-	n = read(cptr->pfd, cptr->pkt, cptr->mss);
-	rptr = (struct rdthdr *)cptr->pkt;
+	n = read(cptr->rcvfd, cptr->rcvpkt, cptr->mss);
+	rptr = (struct rdthdr *)cptr->rcvpkt;
 
         fprintf(stderr, "> rdt_recv() expect seq: %d\n", seq);
         fprintf(stderr, "> recv pkt:\n");
         pkt_debug(rptr);
 
 	while((n < sizeof(struct rdthdr)) || ((rptr->rdt_seq) != seq) ||
-			(!chk_chksum((uint16_t *)cptr->pkt, ntohs(rptr->rdt_len))))
+			(!chk_chksum((uint16_t *)cptr->rcvpkt, ntohs(rptr->rdt_len))))
 	{
 		/* Send _NoAck_ packet */
 		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-                        seq, RDT_ACK, NULL, 0, cptr->pkt);
-		if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
+                        seq, RDT_ACK, NULL, 0, cptr->rcvpkt);
+		if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
 			return(n);
 
 		/* Wait packet again */
-		n = read(cptr->pfd, cptr->pkt, cptr->mss);
-		rptr = (struct rdthdr *)cptr->pkt;
+		n = read(cptr->rcvfd, cptr->rcvpkt, cptr->mss);
+		rptr = (struct rdthdr *)cptr->rcvpkt;
 
                 fprintf(stderr, "> recv pkt:\n");
                 pkt_debug(rptr);
@@ -42,7 +42,7 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 		err_quit("recv %d bytes exceed the buf size %d\n", n, nbyte);
 
 	if (n > 0) {
-		memcpy(buf, (void *)cptr->pkt + RDT_LEN, n);
+		memcpy(buf, (void *)cptr->rcvpkt + RDT_LEN, n);
 		ret = n;
 	} else {
 		ret = 0;
@@ -50,15 +50,17 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 
 
 	n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-			seq, RDT_ACK, NULL, 0, cptr->pkt);
+			seq, RDT_ACK, NULL, 0, cptr->rcvpkt);
 	cptr->rseq = (cptr->rseq + 1) % 2;
 
-	if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
+	if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
 		return(n);
 
         if (ret == 0) {
                 close(cptr->sfd);
                 close(cptr->pfd);
+                close(cptr->sndfd);
+                close(cptr->rcvfd);
                 bzero(cptr, sizeof(struct conn_user));
         }
 

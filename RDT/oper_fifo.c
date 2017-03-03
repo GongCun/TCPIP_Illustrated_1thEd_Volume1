@@ -8,14 +8,14 @@ void fifoexit(void)
 }
 
 /* User process create FIFO for read */
-int make_fifo(pid_t pid)
+int make_fifo(pid_t pid, const char *str)
 {
 	int fd;
 
 	if (atexit(fifoexit) < 0)
 		err_ret("atexit() error");
 
-	sprintf(fifoname, "%s.%ld", RDT_FIFO, (long)pid);
+	sprintf(fifoname, "%s%s.%ld", RDT_FIFO, str, (long)pid);
 	if (mkfifo(fifoname, FILE_MODE) < 0)
 		err_sys("mkfifo() %s error", fifoname);
 
@@ -31,14 +31,14 @@ int make_fifo(pid_t pid)
 }
 
 /* RDT process open FIFO for write */
-int open_fifo(pid_t pid)
+int open_fifo(pid_t pid, const char *str)
 {
 	int fd;
 
 	if (atexit(fifoexit) < 0)
 		err_ret("atexit() error");
 
-	sprintf(fifoname, "%s.%ld", RDT_FIFO, (long)pid);
+	sprintf(fifoname, "%s%s.%ld", RDT_FIFO, str, (long)pid);
 
 	if ((fd = open(fifoname, O_WRONLY, 0)) < 0)
 		err_sys("opern() %s error", fifoname);

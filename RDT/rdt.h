@@ -59,8 +59,8 @@ struct rdthdr {
 struct conn_user {
         struct in_addr src, dst;
         int scid, dcid;
-        int sfd, pfd;
-        unsigned char *pkt;
+        int sfd, pfd, sndfd, rcvfd;
+        unsigned char *pkt, *sndpkt, *rcvpkt;
         int mss;
 	int wseq, rseq;
 } conn_user;
@@ -76,7 +76,7 @@ struct conn_info {
 
 /* For RDT process keep the conn info and FSM state */
 struct conn {
-        int pfd;
+        int pfd, sndfd, rcvfd;
         cstate cstate;
         struct in_addr src, dst;
         int scid, dcid;
@@ -105,8 +105,8 @@ int krdt_listen(struct in_addr src, int scid, pid_t pid);
 int krdt_connect(struct in_addr dst, int scid, int dcid, pid_t pid);
 int pkt_arrive(struct conn *cptr, const u_char *pkt, int len);
 int make_sock(void);
-int make_fifo(pid_t);
-int open_fifo(pid_t);
+int make_fifo(pid_t, const char *);
+int open_fifo(pid_t, const char *);
 ssize_t rexmt_pkt(struct conn_user *, uint8_t, void *, size_t);
 void pkt_debug(const struct rdthdr *);
 int rdt_connect(struct in_addr dst, int scid, int dcid);

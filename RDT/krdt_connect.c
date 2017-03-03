@@ -53,7 +53,9 @@ int krdt_connect(struct in_addr dst, int scid, int dcid, pid_t pid)
         memcpy(&cptr->src, &src, sizeof(src));
         memcpy(&cptr->dst, &dst, sizeof(dst));
 
-        cptr->pfd = open_fifo(pid);
+        cptr->pfd = open_fifo(pid, "");
+        cptr->sndfd = open_fifo(pid, "snd");
+        cptr->rcvfd = open_fifo(pid, "rcv");
 	bzero(&conn_info, sizeof(conn_info));
 	conn_info.scid = scid;
 	pass_pkt(cptr->pfd, &conn_info, NULL, 0);

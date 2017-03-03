@@ -28,7 +28,9 @@ int rdt_listen(struct in_addr src, int scid)
         conn_info.src = conn_user.src = src;
         conn_info.scid = conn_user.scid = scid;
         conn_info.dcid = conn_user.dcid = -1;
-        conn_user.pfd = make_fifo(pid);
+        conn_user.pfd = make_fifo(pid, "");
+        conn_user.sndfd = make_fifo(pid, "snd");
+        conn_user.rcvfd = make_fifo(pid, "rcv");
 	conn_user.wseq = conn_user.rseq = 0;
 
         if (!mtu) {
@@ -39,7 +41,11 @@ int rdt_listen(struct in_addr src, int scid)
         n = min(mtu, 1500); /* not exceed the capture length */
         conn_user.mss = n;
         if ((conn_user.pkt = malloc(n)) == NULL)
-                err_sys("malloc() sndbuf error");
+                err_sys("malloc() pkt error");
+        if ((conn_user.sndpkt = malloc(n)) == NULL)
+                err_sys("malloc() sndpkt error");
+        if ((conn_user.rcvpkt = malloc(n)) == NULL)
+                err_sys("malloc() rcvpkt error");
 
         if ((fd = ux_cli(RDT_UX_SOCK, &un)) < 0)
                 err_sys("ux_cli() error");
