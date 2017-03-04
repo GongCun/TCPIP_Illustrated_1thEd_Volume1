@@ -22,6 +22,9 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
         struct conn_info conn_info;
         int disconn = 0;
 
+        if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+                err_sys("ignore SIGPIPE error");
+
         ip = (struct ip *)pkt;
 
         size_ip = ip->ip_hl * 4;
