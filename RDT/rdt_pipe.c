@@ -1,6 +1,6 @@
 #include "rdt.h"
 
-static void sig_chld(int signo)
+void waitchild(void)
 {
         while (waitpid(-1, NULL, WNOHANG) > 0)
                 ;
@@ -14,8 +14,8 @@ void rdt_pipe(int fd[2])
 	pid_t pid;
 	char buf[MAXLINE];
 
-        if (signal(SIGCHLD, sig_chld) == SIG_ERR)
-                err_sys("signal() SIGCHLD error");
+        if (atexit(waitchild) < 0)
+                err_sys("atexit() error");
 
 	if (pipe(pfd) < 0)
 		err_sys("pipe() error");
@@ -51,6 +51,7 @@ void rdt_pipe(int fd[2])
 		while ((len = read(pfd[0], buf, n)) > 0)
 			if ((n = rdt_send(buf, len)) != len)
 				err_sys("rdt_send() %d bytes, expect %d bytes", n, len);
+                rdt_fin();
                 exit(0);
 	}
 	fd[1] = pfd[1]; /* write only for send data to network */

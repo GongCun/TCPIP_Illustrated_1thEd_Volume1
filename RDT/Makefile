@@ -7,7 +7,7 @@ OBJS  = get_addr.o get_dev.o get_mtu.o make_pkt.o to_net.o \
 	pkt_debug.o krdt_listen.o rdt_connect.o rdt_listen.o \
 	conn_info_debug.o conn_user_debug.o pass_pkt.o get_pkt.o \
 	rdt_send.o rdt_recv.o rdt_close.o conn_debug.o rdt_pipe.o \
-	conn_alloc.o
+	conn_alloc.o rdt_fin.o
 
 all: ${PROGS}
 

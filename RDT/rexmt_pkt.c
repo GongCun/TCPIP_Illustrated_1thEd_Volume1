@@ -28,7 +28,7 @@ ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
 rexmt:
         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
                         seq, flag, buf, nbyte, cptr->sndpkt);
-        fprintf(stderr, "> send pkt:\n");
+        fprintf(stderr, "> rexmt_pkt() send pkt:\n");
         pkt_debug((struct rdthdr *)(cptr->sndpkt + IP_LEN));
 
         alarm(rtt_start(rptr));
@@ -51,6 +51,9 @@ again:
 
         } while ((n < sizeof(struct rdthdr)) || (rdthdr->rdt_seq != seq) || 
 			(!chk_chksum((uint16_t *)cptr->sndpkt, ntohs(rdthdr->rdt_len))));
+
+        fprintf(stderr, "> rexmt_pkt() recv pkt:\n");
+        pkt_debug(rdthdr);
 
 	switch (flag) {
 

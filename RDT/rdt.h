@@ -26,7 +26,7 @@
 #undef MAXLINE
 #define MAXLINE 1472 /* 1500 - 20 - 8 */
 
-typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, DISCONN, FIN_WAIT} cstate;
+typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED} cstate;
 
 /*
  *  0                   1                   2                   3
@@ -123,9 +123,11 @@ ssize_t get_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t pass_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t rdt_send(void *buf, size_t nbyte);
 ssize_t rdt_recv(void *buf, size_t nbyte);
-ssize_t rdt_close(void);
+void rdt_fin(void); /* close active */
+void rdt_close(void); /* close passive */
 void rdt_xmit(int fd[2]);
 void conn_alloc(void);
+void rdt_pipe(int fd[2]);
 
 
 #endif
