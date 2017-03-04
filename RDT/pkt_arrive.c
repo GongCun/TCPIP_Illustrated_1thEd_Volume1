@@ -102,14 +102,15 @@ int pkt_arrive(struct conn *cptr, const u_char *pkt, int len)
                         else
                                 n = write(cptr->rcvfd, (u_char *) (pkt + size_ip), len - size_ip);
 
-                        if (n < 0) {
+                        if (n < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
                                 close(cptr->sndfd);
                                 close(cptr->rcvfd);
                                 bzero(cptr, sizeof(struct conn));
                                 cptr->cstate = CLOSED;
                                 fprintf(stderr, "pkt_arrive(): ESTABLISHED -> CLOSED\n");
-                        } else 
+                        } else if (n > 0) {
                                 fprintf(stderr, "pkt_arrive(): ESTABLISHED pass %zd bytes to user\n", n);
+                        }
 
                         if (rdthdr->rdt_flags == RDT_FIN) {
                                 ++disconn;

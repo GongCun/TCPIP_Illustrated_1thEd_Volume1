@@ -24,9 +24,13 @@ void rdt_xmit(int fd[2])
 	if (pid == 0) { /* child process for recv data from network */
 		/* recv data from network */
 		close(pfd[0]); 
-		while ((len = rdt_recv(buf, MAXLINE)) > 0)
-			if ((n = write(pfd[1], buf, len)) != len)
+		while ((len = rdt_recv(buf, MAXLINE)) > 0) {
+			if ((n = write(pfd[1], buf, len)) != len &&
+                                        errno != EWOULDBLOCK && errno != EAGAIN)
+                        {
 				err_sys("write() %d bytes, expect %d bytes", n, len);
+                        }
+                }
                 rdt_close();
 		exit(0);
 	}

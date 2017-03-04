@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	rdt_xmit(fd);
 
 	while ((n = read(0, buf, MAXLINE)) > 0) {
-		if (write(fd[1], buf, n) != n)
+		if (write(fd[1], buf, n) != n && errno != EWOULDBLOCK && errno != EAGAIN)
 			err_sys("write() error");
 		if ((n = read(fd[0], buf, MAXLINE)) > 0)
 			write(1, buf, n);
