@@ -23,6 +23,9 @@
 #endif
 #define CLOSE_WAIT 20
 
+#undef MAXLINE
+#define MAXLINE 1472 /* 1500 - 20 - 8 */
+
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, DISCONN, FIN_WAIT} cstate;
 
 /*

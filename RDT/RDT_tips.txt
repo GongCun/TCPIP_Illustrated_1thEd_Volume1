@@ -51,3 +51,7 @@ lsdev | grep ipsec
 /usr/sbin/lsfilt -O -a -v4
 
 /usr/sbin/mkfilt -v 4 -d
+
+##
+sudo time ./t_send 192.168.0.112 0  </etc/services >./x.out
+      286.76 real         0.00 user         0.07 sys

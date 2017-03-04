@@ -9,7 +9,8 @@ int main(int argc, char *argv[])
         int scid;
 	int fd[2];
         struct in_addr src;
-        char buf[MAXLINE];
+        char buf[MAXLINE]; /* the MAXLINE shouldn't exceed
+                              the MTU - IP_LEN -RDT_LEN */
 
         if (argc != 3)
                 err_quit("usage: %s <IPaddress> <#CID>", basename(argv[0]));
@@ -20,7 +21,7 @@ int main(int argc, char *argv[])
 
         scid = atoi(argv[2]);
         rdt_listen(src, scid);
-	rdt_xmit(fd);
+	rdt_pipe(fd);
 
 	while ((n = read(fd[0], buf, MAXLINE)) > 0)
 		if (write(fd[1], buf, n) != n && errno != EWOULDBLOCK && errno != EAGAIN)

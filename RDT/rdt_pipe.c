@@ -7,7 +7,7 @@ static void sig_chld(int signo)
 }
 
 
-void rdt_xmit(int fd[2])
+void rdt_pipe(int fd[2])
 {
 	int n, len;
 	int pfd[2];
