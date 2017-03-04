@@ -31,7 +31,7 @@ void rdt_pipe(int fd[2])
 				err_sys("write() %d bytes, expect %d bytes", n, len);
                         }
                 }
-                rdt_close();
+                /* rdt_close(); */
 		exit(0);
 	}
 	fd[0] = pfd[0]; /* read only for recv data from network */

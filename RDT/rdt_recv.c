@@ -59,10 +59,9 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 		return(n);
 
         if (ret == 0) {
-                close(cptr->sfd);
-                close(cptr->sndfd);
-                close(cptr->rcvfd);
-                bzero(cptr, sizeof(struct conn_user));
+                /* Send Fin and wait Ack */
+	        if ((n = rexmt_pkt(cptr, RDT_FIN, NULL, 0)) < 0)
+	        	err_sys("rexmt_pkt() error");
         }
 
 	return(ret);
