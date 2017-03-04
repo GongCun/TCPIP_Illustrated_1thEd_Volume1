@@ -5,11 +5,12 @@ int mtu;
 
 int main(int argc, char *argv[])
 {
-        int ret, n;
+        int n;
         int scid;
-	int buflen;
+	int fd[2];
         struct in_addr src;
-        char *buf;
+        char buf[MAXLINE]; /* the MAXLINE shouldn't exceed
+                              the MTU - IP_LEN -RDT_LEN */
 
         if (argc != 3)
                 err_quit("usage: %s <IPaddress> <#CID>", basename(argv[0]));
@@ -20,15 +21,11 @@ int main(int argc, char *argv[])
 
         scid = atoi(argv[2]);
         rdt_listen(src, scid);
+	rdt_pipe(fd);
 
-	buflen = conn_user.mss - IP_LEN - RDT_LEN;
-	fprintf(stderr, "buflen = %d\n", buflen);
-	if ((buf = malloc(buflen)) == NULL)
-		err_sys("malloc() error");
-
-	while ((n = rdt_recv(buf, buflen)) > 0)
-		if ((ret = rdt_send(buf, n)) != n)
-			err_quit("rdt_send() %d bytes, expect %d bytes", ret, n);
+	while ((n = read(fd[0], buf, MAXLINE)) > 0)
+		if (write(fd[1], buf, n) != n && errno != EWOULDBLOCK && errno != EAGAIN)
+			err_sys("write() error");
 
         return(0);
 }

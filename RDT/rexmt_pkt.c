@@ -13,7 +13,7 @@ ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
 	const struct rdthdr *rdthdr;
 
         rptr = &rtt_info;
-	seq = cptr->wseq;
+	seq = cptr->seq;
 
         if (init++ == 0)
                 rtt_init(rptr);
@@ -27,16 +27,13 @@ ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
 
 rexmt:
         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-                        seq, flag, buf, nbyte, cptr->pkt);
+                        seq, flag, buf, nbyte, cptr->sndpkt);
+        fprintf(stderr, "> rexmt_pkt() send pkt:\n");
+        pkt_debug((struct rdthdr *)(cptr->sndpkt + IP_LEN));
+
         alarm(rtt_start(rptr));
-        while ((ret = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
-        {
-                /* Shutdown the router to test transfer repeat */
-                if (errno != EHOSTUNREACH && errno != ENETUNREACH)
-                        return(ret);
-        }
-        fprintf(stderr, "> send pkt:\n");
-        pkt_debug((struct rdthdr *)(cptr->pkt + IP_LEN));
+        while ((ret = to_net(cptr->sfd, cptr->sndpkt, n, cptr->dst)) < 0)
+                ;
 
         if (sigsetjmp(jmpbuf, 1) != 0) {
                 if (rtt_timeout(rptr) < 0) {
@@ -49,11 +46,14 @@ rexmt:
 
 again:
         do {
-                n = read(cptr->pfd, cptr->pkt, cptr->mss);
-		rdthdr = (struct rdthdr *)cptr->pkt;
+                n = read(cptr->sndfd, cptr->sndpkt, cptr->mss);
+		rdthdr = (struct rdthdr *)cptr->sndpkt;
 
         } while ((n < sizeof(struct rdthdr)) || (rdthdr->rdt_seq != seq) || 
-			(!chk_chksum((uint16_t *)cptr->pkt, ntohs(rdthdr->rdt_len))));
+			(!chk_chksum((uint16_t *)cptr->sndpkt, ntohs(rdthdr->rdt_len))));
+
+        fprintf(stderr, "> rexmt_pkt() recv pkt:\n");
+        pkt_debug(rdthdr);
 
 	switch (flag) {
 

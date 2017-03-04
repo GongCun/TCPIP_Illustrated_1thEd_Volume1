@@ -1,6 +1,6 @@
 #include "rdt.h"
 
-void rdt_close(void)
+void rdt_fin(void)
 {
 	int n;
 	struct conn_user *cptr;
@@ -9,13 +9,17 @@ void rdt_close(void)
 
 	n = cptr->mss - IP_LEN - RDT_LEN;
 
+        /* Send Fin and wait Ack */
+	if ((n = rexmt_pkt(cptr, RDT_FIN, NULL, 0)) < 0)
+		err_sys("rexmt_pkt() error");
+
         /* Wait Fin and send Ack */
         do {
                 n = read(cptr->rcvfd, cptr->rcvpkt, cptr->mss);
 		rptr = (struct rdthdr *)cptr->rcvpkt;
         } while (n < RDT_LEN || rptr->rdt_flags != RDT_FIN);
 
-        fprintf(stderr, ">> rdt_close() recv Fin:\n");
+        fprintf(stderr, ">> rdt_fin() recv Fin:\n");
         pkt_debug(rptr);
 
         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
@@ -23,12 +27,8 @@ void rdt_close(void)
         if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
                 err_sys("to_net() error");
 
-        fprintf(stderr, ">> rdt_close() send Ack:\n");
+        fprintf(stderr, ">> rdt_fin() send Ack:\n");
         pkt_debug((struct rdthdr *)(cptr->rcvpkt + IP_LEN));
-
-        /* Send Fin and wait Ack */
-	if ((n = rexmt_pkt(cptr, RDT_FIN, NULL, 0)) < 0)
-		err_sys("rexmt_pkt() error");
 
         /* Notify RDT process to cleanup */
         /* ... */

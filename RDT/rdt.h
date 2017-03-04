@@ -21,9 +21,12 @@
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
-#define CLOSE_WAIT 10
+#define CLOSE_WAIT 20
 
-typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, DISCONN, FIN_WAIT} cstate;
+#undef MAXLINE
+#define MAXLINE 1472 /* 1500 - 20 - 8 */
+
+typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED} cstate;
 
 /*
  *  0                   1                   2                   3
@@ -59,11 +62,12 @@ struct rdthdr {
 struct conn_user {
         struct in_addr src, dst;
         int scid, dcid;
-        int sfd, pfd;
-        unsigned char *pkt;
+        int sfd, sndfd, rcvfd;
+        unsigned char *sndpkt;
+	unsigned char *rcvpkt;
         int mss;
-	int wseq, rseq;
-} conn_user;
+	int seq, ack;
+} *conn_user;
 
 /* For exchange info between user and RDT process */
 typedef enum {ACTIVE, PASSIVE} cact;
@@ -76,7 +80,7 @@ struct conn_info {
 
 /* For RDT process keep the conn info and FSM state */
 struct conn {
-        int pfd;
+        int sndfd, rcvfd;
         cstate cstate;
         struct in_addr src, dst;
         int scid, dcid;
@@ -105,8 +109,8 @@ int krdt_listen(struct in_addr src, int scid, pid_t pid);
 int krdt_connect(struct in_addr dst, int scid, int dcid, pid_t pid);
 int pkt_arrive(struct conn *cptr, const u_char *pkt, int len);
 int make_sock(void);
-int make_fifo(pid_t);
-int open_fifo(pid_t);
+int make_fifo(pid_t, const char *);
+int open_fifo(pid_t, const char *);
 ssize_t rexmt_pkt(struct conn_user *, uint8_t, void *, size_t);
 void pkt_debug(const struct rdthdr *);
 int rdt_connect(struct in_addr dst, int scid, int dcid);
@@ -119,7 +123,11 @@ ssize_t get_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t pass_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t rdt_send(void *buf, size_t nbyte);
 ssize_t rdt_recv(void *buf, size_t nbyte);
-ssize_t rdt_close(void);
+void rdt_fin(void); /* close active */
+void rdt_close(void); /* close passive */
+void rdt_xmit(int fd[2]);
+void conn_alloc(void);
+void rdt_pipe(int fd[2]);
 
 
 #endif

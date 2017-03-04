@@ -15,7 +15,7 @@ struct rtt_info {
 
 
 #define RTT_RXMIN 2		/* min retransmit timeout value, in sec */
-#define RTT_RXMAX 10		/* max retransmit timeout value, in sec */
+#define RTT_RXMAX 20		/* max retransmit timeout value, in sec */
 #define RTT_MAXNREXMT 9		/* max # times to retransmit */
 
 void rtt_init(struct rtt_info *);
@@ -25,6 +25,5 @@ int rtt_start(struct rtt_info *ptr);
 void rtt_stop(struct rtt_info *ptr);
 int rtt_timeout(struct rtt_info *ptr);
 void rtt_debug(struct rtt_info *ptr);
-void rtt_alloc(int);
 
 #endif

@@ -3,32 +3,34 @@
 /* Receive network frame from below */
 ssize_t rdt_recv(void *buf, size_t nbyte)
 {
-	int ret, n, seq;
+	int ret, n, ack;
 	struct rdthdr *rptr;
 	struct conn_user *cptr;
 
-	cptr = &conn_user;
-	seq = cptr->rseq;
+	cptr = conn_user;
+	ack = cptr->ack;
 
-	n = read(cptr->pfd, cptr->pkt, cptr->mss);
-	rptr = (struct rdthdr *)cptr->pkt;
+	n = read(cptr->rcvfd, cptr->rcvpkt, cptr->mss);
+	rptr = (struct rdthdr *)cptr->rcvpkt;
 
-        fprintf(stderr, "> rdt_recv() expect seq: %d\n", seq);
+        fprintf(stderr, "> rdt_recv() expect seq: %d\n", ack);
         fprintf(stderr, "> recv pkt:\n");
         pkt_debug(rptr);
 
-	while((n < sizeof(struct rdthdr)) || ((rptr->rdt_seq) != seq) ||
-			(!chk_chksum((uint16_t *)cptr->pkt, ntohs(rptr->rdt_len))))
+	while((n < sizeof(struct rdthdr)) || ((rptr->rdt_seq) != ack) ||
+			(!chk_chksum((uint16_t *)cptr->rcvpkt, ntohs(rptr->rdt_len))))
 	{
-		/* Send _NoAck_ packet */
+		/* Send _NoAck_ packet, partner haven't recv
+                 * our ACK.
+                 * */
 		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-                        seq, RDT_ACK, NULL, 0, cptr->pkt);
-		if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
+                        rptr->rdt_seq, RDT_ACK, NULL, 0, cptr->rcvpkt);
+		if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
 			return(n);
 
 		/* Wait packet again */
-		n = read(cptr->pfd, cptr->pkt, cptr->mss);
-		rptr = (struct rdthdr *)cptr->pkt;
+		n = read(cptr->rcvfd, cptr->rcvpkt, cptr->mss);
+		rptr = (struct rdthdr *)cptr->rcvpkt;
 
                 fprintf(stderr, "> recv pkt:\n");
                 pkt_debug(rptr);
@@ -42,7 +44,7 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 		err_quit("recv %d bytes exceed the buf size %d\n", n, nbyte);
 
 	if (n > 0) {
-		memcpy(buf, (void *)cptr->pkt + RDT_LEN, n);
+		memcpy(buf, (void *)cptr->rcvpkt + RDT_LEN, n);
 		ret = n;
 	} else {
 		ret = 0;
@@ -50,16 +52,16 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 
 
 	n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-			seq, RDT_ACK, NULL, 0, cptr->pkt);
-	cptr->rseq = (cptr->rseq + 1) % 2;
+			ack, RDT_ACK, NULL, 0, cptr->rcvpkt);
+	cptr->ack = (cptr->ack + 1) % 2;
 
-	if ((n = to_net(cptr->sfd, cptr->pkt, n, cptr->dst)) < 0)
+	if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
 		return(n);
 
         if (ret == 0) {
-                close(cptr->sfd);
-                close(cptr->pfd);
-                bzero(cptr, sizeof(struct conn_user));
+                /* Send Fin and wait Ack */
+	        if ((n = rexmt_pkt(cptr, RDT_FIN, NULL, 0)) < 0)
+	        	err_sys("rexmt_pkt() error");
         }
 
 	return(ret);

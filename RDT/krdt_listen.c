@@ -30,7 +30,8 @@ int krdt_listen(struct in_addr src, int scid, pid_t pid)
         cptr = &conn[i];
         memcpy(&cptr->src, &src, sizeof(src));
         cptr->scid = scid;
-        cptr->pfd = open_fifo(pid);
+        cptr->sndfd = open_fifo(pid, "snd");
+        cptr->rcvfd = open_fifo(pid, "rcv");
         cptr->cstate = LISTEN;
 
         return (i);

@@ -20,7 +20,7 @@ void from_net(void)
 
 static void callback(u_char *user, const struct pcap_pkthdr *header, const u_char *packet)
 {
-        int i, hand, ret;
+        int i;
         const struct ip *ip;
         int size_eth;
         int size_ip;
@@ -50,7 +50,6 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
         pkt_debug(rdthdr);
 
         /* Delive data to the user process */
-        hand = 0;
         for (i = 0; i < MAX_CONN; i++) {
 
                 fprintf(stderr, "from_net() i = %d\n", i);
@@ -68,21 +67,15 @@ static void callback(u_char *user, const struct pcap_pkthdr *header, const u_cha
 	        case ESTABLISHED:
                         fprintf(stderr, "state: ESTABLISHED\n");
                         break;
-	        case DISCONN:
-                        fprintf(stderr, "state: DISCONN\n");
-                        break;
                 default:
                         fprintf(stderr, "state: Unknown\n");
                 }
 
-                ret = pkt_arrive(&conn[i], packet + size_eth, header->caplen - size_eth);
-                if (ret == 1 || ret == 2)
-                        break;
-                else if (ret == 3 && ++hand == 2)
+                if (pkt_arrive(&conn[i], packet + size_eth, header->caplen - size_eth))
                         break;
         }
 
-        if (i >= MAX_CONN && hand == 0) {
+        if (i >= MAX_CONN) {
                 fprintf(stderr, "can't delivery the following packet: \n");
                 pkt_debug((struct rdthdr *)(packet + size_eth+size_ip));
         }
