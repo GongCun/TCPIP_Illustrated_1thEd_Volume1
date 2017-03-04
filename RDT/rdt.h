@@ -64,7 +64,7 @@ struct conn_user {
 	unsigned char *rcvpkt;
         int mss;
 	int seq, ack;
-} conn_user;
+} *conn_user;
 
 /* For exchange info between user and RDT process */
 typedef enum {ACTIVE, PASSIVE} cact;
@@ -121,6 +121,8 @@ ssize_t pass_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t rdt_send(void *buf, size_t nbyte);
 ssize_t rdt_recv(void *buf, size_t nbyte);
 ssize_t rdt_close(void);
+void rdt_xmit(int fd[2]);
+void conn_alloc(void);
 
 
 #endif

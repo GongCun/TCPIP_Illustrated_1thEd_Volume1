@@ -7,7 +7,7 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 	struct rdthdr *rptr;
 	struct conn_user *cptr;
 
-	cptr = &conn_user;
+	cptr = conn_user;
 	ack = cptr->ack;
 
 	n = read(cptr->rcvfd, cptr->rcvpkt, cptr->mss);

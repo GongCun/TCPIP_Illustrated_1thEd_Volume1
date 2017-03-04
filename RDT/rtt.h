@@ -25,6 +25,5 @@ int rtt_start(struct rtt_info *ptr);
 void rtt_stop(struct rtt_info *ptr);
 int rtt_timeout(struct rtt_info *ptr);
 void rtt_debug(struct rtt_info *ptr);
-void rtt_alloc(int);
 
 #endif

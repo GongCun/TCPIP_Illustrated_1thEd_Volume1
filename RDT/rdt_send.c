@@ -5,7 +5,7 @@ ssize_t rdt_send(void *buf, size_t nbyte)
 {
 	int n;
 	struct conn_user *cptr;
-	cptr = &conn_user;
+	cptr = conn_user;
 
 	n = cptr->mss - IP_LEN - RDT_LEN;
 	if (nbyte > n)
