@@ -20,9 +20,11 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 	while((n < sizeof(struct rdthdr)) || ((rptr->rdt_seq) != ack) ||
 			(!chk_chksum((uint16_t *)cptr->rcvpkt, ntohs(rptr->rdt_len))))
 	{
-		/* Send _NoAck_ packet */
+		/* Send _NoAck_ packet, partner haven't recv
+                 * our ACK.
+                 * */
 		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-                        ack, RDT_ACK, NULL, 0, cptr->rcvpkt);
+                        rptr->rdt_seq, RDT_ACK, NULL, 0, cptr->rcvpkt);
 		if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
 			return(n);
 
