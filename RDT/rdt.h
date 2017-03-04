@@ -21,7 +21,7 @@
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
-#define CLOSE_WAIT 10
+#define CLOSE_WAIT 20
 
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED, DISCONN, FIN_WAIT} cstate;
 

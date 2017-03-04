@@ -33,11 +33,7 @@ rexmt:
 
         alarm(rtt_start(rptr));
         while ((ret = to_net(cptr->sfd, cptr->sndpkt, n, cptr->dst)) < 0)
-        {
-                /* Shutdown the router or setup ipfilter to test transfer repeat */
-                if (errno != EHOSTUNREACH && errno != ENETUNREACH && errno != EACCES)
-                        return(ret);
-        }
+                ;
 
         if (sigsetjmp(jmpbuf, 1) != 0) {
                 if (rtt_timeout(rptr) < 0) {
