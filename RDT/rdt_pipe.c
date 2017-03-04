@@ -1,9 +1,16 @@
 #include "rdt.h"
 
+
 void waitchild(void)
 {
-        while (waitpid(-1, NULL, WNOHANG) > 0)
-                ;
+        pid_t pid;
+        while ((pid = waitpid(-1, NULL, WNOHANG)) > 0)
+                fprintf(stderr, "process %ld terminated\n", (long)pid);
+}
+
+static void sigchld(int signo)
+{
+        waitchild();
 }
 
 
@@ -16,6 +23,8 @@ void rdt_pipe(int fd[2])
 
         if (atexit(waitchild) < 0)
                 err_sys("atexit() error");
+        if (signal(SIGCHLD, sigchld) == SIG_ERR)
+                err_sys("signal() SIGCHLD error");
 
 	if (pipe(pfd) < 0)
 		err_sys("pipe() error");
