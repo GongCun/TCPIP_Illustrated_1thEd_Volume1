@@ -73,3 +73,7 @@ sudo time ./t_send 192.168.0.112 0  < /etc/services >./x.out
 # WINSIZE=30, and PCAP_TIMEOUT=10ms
 sudo time ./t_send 192.168.0.112 0  < /etc/services >./x.out
         8.06 real         0.00 user         0.04 sys
+
+# WINSIZE=30, and PCAP_TIMEOUT=5ms
+sudo time ./t_send 192.168.0.112 0  < /etc/services >./x.out
+        6.45 real         0.00 user         0.04 sys
