@@ -20,6 +20,9 @@ t_send: t_send.o ${OBJS}
 t_recv: t_recv.o ${OBJS}
 	${CC} ${CFLAGS} -o $@ $^ ${LIBS}
 
+a.out: a.o
+	${CC} ${CFLAGS} -o $@ $^ ${LIBS}
+
 ${OBJS}: rdt.h
 
 clean:

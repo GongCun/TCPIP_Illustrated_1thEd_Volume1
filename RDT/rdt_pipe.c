@@ -32,6 +32,7 @@ void rdt_pipe(int fd[2])
 		err_sys("fork() error");
 	if (pid == 0) { /* child process for recv data from network */
 		/* recv data from network */
+                fprintf(stderr, "fork recv process: %ld\n", (long)getpid());
 		close(pfd[0]); 
 		while ((len = rdt_recv(buf, MAXLINE)) > 0) {
 			if ((n = write(pfd[1], buf, len)) != len &&
@@ -40,7 +41,6 @@ void rdt_pipe(int fd[2])
 				err_sys("write() %d bytes, expect %d bytes", n, len);
                         }
                 }
-                /* rdt_close(); */
 		exit(0);
 	}
 	fd[0] = pfd[0]; /* read only for recv data from network */
@@ -55,12 +55,10 @@ void rdt_pipe(int fd[2])
 		err_sys("fork() error");
 	if (pid == 0) { /* child process for send data to network */
 		/* send data to network */
+                fprintf(stderr, "fork send process: %ld\n", (long)getpid());
 		close(pfd[1]); 
-	        n = conn_user->mss - IP_LEN - RDT_LEN;
-		while ((len = read(pfd[0], buf, n)) > 0)
-			if ((n = rdt_send(buf, len)) != len)
-				err_sys("rdt_send() %d bytes, expect %d bytes", n, len);
-                rdt_fin();
+                if (rdt_send(pfd[0]) < 0)
+                        err_sys("rdt_send() error");
                 exit(0);
 	}
 	fd[1] = pfd[1]; /* write only for send data to network */

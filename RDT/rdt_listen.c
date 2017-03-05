@@ -9,7 +9,7 @@ static void sig_hand(int signo)
 
 int rdt_listen(struct in_addr src, int scid)
 {
-        int ret, n, fd;
+        int i, ret, n, fd;
         pid_t pid;
         struct sockaddr_un un;
         struct conn_info conn_info;
@@ -32,6 +32,7 @@ int rdt_listen(struct in_addr src, int scid)
         conn_user->sndfd = make_fifo(pid, "snd");
         conn_user->rcvfd = make_fifo(pid, "rcv");
 	conn_user->seq = conn_user->ack = 0;
+        conn_user->fin = 0;
 
         if (!mtu) {
                 if (dev[0] == 0 && !get_dev(src, dev))
@@ -44,6 +45,10 @@ int rdt_listen(struct in_addr src, int scid)
                 err_sys("malloc() sndpkt error");
         if ((conn_user->rcvpkt = malloc(n)) == NULL)
                 err_sys("malloc() rcvpkt error");
+        for (i = 0; i < WINSIZE; i++) {
+                if ((conn_user->snddat[i] = malloc(n)) == NULL)
+                        err_sys("malloc() snddat[%d] error", i);
+        }
 
         if ((fd = ux_cli(RDT_UX_SOCK, &un)) < 0)
                 err_sys("ux_cli() error");

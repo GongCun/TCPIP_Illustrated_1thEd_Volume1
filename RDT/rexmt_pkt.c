@@ -12,6 +12,8 @@ ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
         struct rtt_info *rptr;
 	const struct rdthdr *rdthdr;
 
+        fprintf(stderr, "rexmt_pkt() flag = 0x%02x, process = %ld\n", flag, (long)getpid());
+
         rptr = &rtt_info;
 	seq = cptr->seq;
 
@@ -22,8 +24,6 @@ ssize_t rexmt_pkt(struct conn_user *cptr, uint8_t flag, void *buf, size_t nbyte)
                 err_sys("signal() of SIGALRM error");
 
         rtt_newpack(rptr);
-
-        /* conn_user_debug(cptr); */
 
 rexmt:
         n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
