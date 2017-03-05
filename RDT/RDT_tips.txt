@@ -61,3 +61,7 @@ sudo time ./t_send 192.168.0.112 0  </etc/services >./x.out
 sudo time ./t_send 192.168.0.112 0  </etc/services >./x.out
       232.64 real         0.00 user         0.06 sys
 
+# WINSIZE=10
+sed -n '1,2000p' /etc/services >./sendfile
+sudo time ./t_send 192.168.0.112 0  <./sendfile >./x.out
+        34.11 real         0.00 user         0.01 sys

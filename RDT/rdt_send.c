@@ -100,7 +100,7 @@ again:
                         alarm(rtt_start(rptr));
 
                         /* re-transmit un-Ack pkt */
-                        for (i = base; i < nextseq-1; i++) {
+                        for (i = base; i < nextseq; i++) {
                                 rdthdr = (struct rdthdr *)(cptr->snddat[i%WINSIZE] + IP_LEN);
                                 len = IP_LEN + ntohs(rdthdr->rdt_len);
                                 fprintf(stderr, "idx = %d, rexmit %d bytes\n", i, len);
