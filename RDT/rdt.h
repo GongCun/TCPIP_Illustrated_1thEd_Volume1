@@ -26,7 +26,7 @@
 #undef MAXLINE
 #define MAXLINE 1468 /* 1500 - 20 - 12 */
 
-#define WINSIZE 4
+#define WINSIZE 10
 
 int readin;
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED} cstate;

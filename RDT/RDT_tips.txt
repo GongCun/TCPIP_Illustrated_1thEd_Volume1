@@ -56,3 +56,8 @@ lsdev | grep ipsec
 sudo time ./t_send 192.168.0.112 0  </etc/services >./x.out
       286.76 real         0.00 user         0.07 sys
       232.13 real         0.01 user         0.06 sys
+
+# WINSIZE=4
+sudo time ./t_send 192.168.0.112 0  </etc/services >./x.out
+      232.64 real         0.00 user         0.06 sys
+
