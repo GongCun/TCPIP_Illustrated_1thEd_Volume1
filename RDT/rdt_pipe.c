@@ -35,10 +35,13 @@ void rdt_pipe(int fd[2])
                 fprintf(stderr, "fork recv process: %ld\n", (long)getpid());
 		close(pfd[0]); 
 		while ((len = rdt_recv(buf, MAXLINE)) > 0) {
-			if ((n = write(pfd[1], buf, len)) != len &&
-                                        errno != EWOULDBLOCK && errno != EAGAIN)
+again:
+			if ((n = write(pfd[1], buf, len)) != len)
                         {
-				err_sys("write() %d bytes, expect %d bytes", n, len);
+                                if (errno == EWOULDBLOCK || errno == EAGAIN)
+                                        goto again;
+                                else
+                                        err_sys("write() %d bytes, expect %d bytes", n, len);
                         }
                 }
 		exit(0);
