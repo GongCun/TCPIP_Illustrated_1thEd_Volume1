@@ -32,7 +32,6 @@ int rdt_listen(struct in_addr src, int scid)
         conn_user->sndfd = make_fifo(pid, "snd");
         conn_user->rcvfd = make_fifo(pid, "rcv");
 	conn_user->seq = conn_user->ack = 0;
-        conn_user->fin = 0;
 
         if (!mtu) {
                 if (dev[0] == 0 && !get_dev(src, dev))

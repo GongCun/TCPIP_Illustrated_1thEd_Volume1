@@ -74,7 +74,6 @@ struct conn_user {
 	unsigned char *rcvpkt;
         int mss;
 	uint32_t seq, ack;
-        int fin; /* 0: passive; 1: active */
 } *conn_user;
 
 /* For exchange info between user and RDT process */

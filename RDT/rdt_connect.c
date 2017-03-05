@@ -39,7 +39,6 @@ int rdt_connect(struct in_addr dst, int scid, int dcid)
         conn_user->rcvfd = make_fifo(pid, "rcv");
         conn_user->sfd = make_sock();
 	conn_user->seq = conn_user->ack = 0;
-        conn_user->fin = 0;
 
         if (!mtu) {
                 if (dev[0] == 0 && !get_dev(src, dev))
