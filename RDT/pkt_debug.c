@@ -3,10 +3,10 @@
 void 
 pkt_debug(const struct rdthdr *rdthdr)
 {
-	fprintf(stderr, "%d %d %zd 0x%02x %d 0x%x 0x%02x\n",
+	fprintf(stderr, "%d %d %lu 0x%02x %d 0x%x 0x%02x\n",
 		rdthdr->rdt_scid,
 		rdthdr->rdt_dcid,
-		rdthdr->rdt_seq,
+		(unsigned long)rdthdr->rdt_seq,
 		rdthdr->rdt_flags,
 		ntohs(rdthdr->rdt_len),
                 rdthdr->rdt_sum,
