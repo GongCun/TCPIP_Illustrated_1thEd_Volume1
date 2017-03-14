@@ -24,6 +24,10 @@ int main(int argc, char *argv[])
 	rdt_pipe(fd);
 
 	while ((n = read(fd[0], buf, MAXLINE)) > 0) {
+                /*
+                 * fprintf(stderr, "t_recv() read %d bytes:\n", n);
+                 * write(2, buf, n);
+                 */
 again:
 		if (write(fd[1], buf, n) != n) {
                        if (errno == EWOULDBLOCK || errno == EAGAIN)

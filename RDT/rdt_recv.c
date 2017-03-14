@@ -8,14 +8,18 @@ void
 rdt_recv(int fd)
 {
 	int len, n;
-	int base, nextack, ack;
+	int base, ack;
 	struct rdthdr *rptr;
 	struct conn_user *cptr;
         struct rcvlist *plist, *rcvhead, *rcvlist;
+        u_char *buf;
 
         cptr = conn_user;
         base = cptr->ack;
         rcvlist = rcvhead = NULL;
+        if ((buf = malloc(cptr->mss)) == NULL)
+                err_sys("rdt_recv(): malloc() error");
+
 
 	for (;;) {
 
@@ -43,16 +47,19 @@ rdt_recv(int fd)
                 if (ack < base || ack >= base + WINSIZE) {
                         continue;
                 }
-		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-			     ack, RDT_ACK, NULL, 0, cptr->rcvpkt);
 
-		if ((n = to_net(cptr->sfd, cptr->rcvpkt, n, cptr->dst)) < 0)
+		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
+			     ack, RDT_ACK, NULL, 0, buf);
+
+		if ((n = to_net(cptr->sfd, buf, n, cptr->dst)) < 0)
                         err_sys("rdt_recv(): to_net() Ack error");
 
                 /*
                  * If the seq is exected, pop the list and delivery
                  * data the user.
                  */
+                if (len - RDT_LEN == 0)
+                        break;
                 if (ack == base) {
                         len -= RDT_LEN;
                         nwrite(fd, (void *)cptr->rcvpkt+RDT_LEN, len);
@@ -93,13 +100,9 @@ rdt_recv(int fd)
 
 		cptr->ack = base;;
 
-		if (ret == 0) {
-			close(readin);	/* notify send process do rdt_fin() */
-			break;
-		}
 	}
 
-
+        close(readin);	/* notify send process do rdt_fin() */
 }
 
 static ssize_t 

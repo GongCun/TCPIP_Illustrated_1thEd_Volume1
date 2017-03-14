@@ -90,7 +90,7 @@ again:
                                                 break;
                                 }
                                 base = i;
-                        } else {
+                        } else if (ack > base && ack < nextseq) {
                                 *cptr->snddat[ack%WINSIZE] = HASACK;
                         }
                         

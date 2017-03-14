@@ -1,4 +1,5 @@
 #include "rdt.h"
+#include <sys/mman.h>
 
 
 void waitchild(void)
@@ -16,10 +17,8 @@ static void sigchld(int signo)
 
 void rdt_pipe(int fd[2])
 {
-	int n, len;
 	int pfd[2];
 	pid_t pid;
-	char buf[MAXLINE];
 
         if (atexit(waitchild) < 0)
                 err_sys("atexit() error");
@@ -34,16 +33,7 @@ void rdt_pipe(int fd[2])
 		/* recv data from network */
                 fprintf(stderr, "fork recv process: %ld\n", (long)getpid());
 		close(pfd[0]); 
-		while ((len = rdt_recv(buf, MAXLINE)) > 0) {
-again:
-			if ((n = write(pfd[1], buf, len)) != len)
-                        {
-                                if (errno == EWOULDBLOCK || errno == EAGAIN)
-                                        goto again;
-                                else
-                                        err_sys("write() %d bytes, expect %d bytes", n, len);
-                        }
-                }
+                rdt_recv(pfd[1]);
 		exit(0);
 	}
 	fd[0] = pfd[0]; /* read only for recv data from network */
