@@ -44,15 +44,16 @@ rdt_recv(int fd)
                  */
                 len = n;
                 ack = rptr->rdt_seq;
-                if (ack < base || ack >= base + WINSIZE) {
-                        continue;
-                }
 
 		n = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
 			     ack, RDT_ACK, NULL, 0, buf);
 
 		if ((n = to_net(cptr->sfd, buf, n, cptr->dst)) < 0)
                         err_sys("rdt_recv(): to_net() Ack error");
+
+                if (ack < base || ack >= base + WINSIZE) {
+                        continue;
+                }
 
                 /*
                  * If the seq is exected, pop the list and delivery

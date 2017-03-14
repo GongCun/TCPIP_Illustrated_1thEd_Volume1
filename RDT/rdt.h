@@ -13,7 +13,7 @@
 
 #define ranport() ((getpid() & 0xfff) | 0x8000)
 #define FILTER "ip[9:1] == 143"
-#define PCAP_TIMEOUT 2 /* 2 milliseconds */
+#define PCAP_TIMEOUT 300 /* 300 milliseconds */
 
 #define RDT_UX_SOCK "/tmp/RDTUXSock" /* Unix Domain Socket for User IPC */
 #define RDT_FIFO "/tmp/RDTFifo" /* FIFO pipe for User IPC */
