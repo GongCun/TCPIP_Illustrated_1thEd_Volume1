@@ -94,8 +94,10 @@ again:
                                 *cptr->snddat[ack%WINSIZE] = HASACK;
                         }
                         
-                        if (base == nextseq)
+                        if (base == nextseq) {
+                                rtt_stop(rptr);
                                 alarm(0);
+                        }
                         else
                                 alarm(rtt_start(rptr));
                 }
