@@ -30,6 +30,7 @@
 
 int readin;
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED} cstate;
+enum {NOACK, HASACK};
 
 /*
  *  0                   1                   2                   3
@@ -65,11 +66,19 @@ struct rdthdr {
 
 
 /* For user process transfer data */
+struct rcvlist {
+        unsigned char *rcvbuf;
+        uint32_t rcvseq;
+        int rcvlen;
+        struct rcvlist *rcvnext;
+};
 struct conn_user {
         struct in_addr src, dst;
         int scid, dcid;
         int sfd, sndfd, rcvfd;
+        /* *snddta[i] = NOACK, HASACK */
         unsigned char *snddat[WINSIZE];
+        struct rcvlist *rcvlist;
         unsigned char *sndpkt;
 	unsigned char *rcvpkt;
         int mss;
@@ -124,7 +133,7 @@ void conn_user_debug(struct conn_user *);
 ssize_t get_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t pass_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 int rdt_send(int);
-ssize_t rdt_recv(void *buf, size_t nbyte);
+void rdt_recv(int fd);
 void rdt_fin(void); /* close active */
 void rdt_close(void); /* close passive */
 void rdt_xmit(int fd[2]);

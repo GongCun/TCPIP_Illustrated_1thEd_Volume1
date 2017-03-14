@@ -45,7 +45,7 @@ int rdt_listen(struct in_addr src, int scid)
         if ((conn_user->rcvpkt = malloc(n)) == NULL)
                 err_sys("malloc() rcvpkt error");
         for (i = 0; i < WINSIZE; i++) {
-                if ((conn_user->snddat[i] = malloc(n)) == NULL)
+                if ((conn_user->snddat[i] = malloc(n+1)) == NULL)
                         err_sys("malloc() snddat[%d] error", i);
         }
 
