@@ -83,8 +83,10 @@ again:
                         fprintf(stderr, "> rdt_send() recv Ack pkt:\n");
                         pkt_debug((struct rdthdr *)cptr->sndpkt);
                         base = rdthdr->rdt_seq + 1;
-                        if (base == nextseq)
+                        if (base == nextseq) {
+                                rtt_stop(rptr);
                                 alarm(0);
+                        }
                         else
                                 alarm(rtt_start(rptr));
                 }
