@@ -11,7 +11,7 @@ rdt_recv(int fd)
 	int base, ack;
 	struct rdthdr *rptr;
 	struct conn_user *cptr;
-        struct rcvlist *plist, *rcvhead, *rcvlist;
+        struct rcvlist *plist, *rcvhead, *rcvlist, *ppre;
         u_char *buf;
 
         cptr = conn_user;
@@ -56,7 +56,7 @@ rdt_recv(int fd)
                 }
 
                 /*
-                 * If the seq is exected, pop the list and delivery
+                 * If the seq is expected, pop the list and delivery
                  * data the user.
                  */
                 if (len - RDT_LEN == 0)
@@ -76,23 +76,26 @@ rdt_recv(int fd)
                                 free(rcvlist->rcvbuf);
                                 free(rcvlist);
                         }
-                } else { /* insert to the list */
+                } else { /* insert to the list from small to large */
                         rcvlist = malloc(sizeof(struct rcvlist));
                         rcvlist->rcvbuf = malloc(cptr->mss);
                         memcpy(rcvlist->rcvbuf, cptr->rcvpkt, len);
                         rcvlist->rcvseq = ack;
                         rcvlist->rcvlen = len - RDT_LEN;
                         rcvlist->rcvnext = NULL;
-                        for (plist = rcvhead; plist; plist = plist->rcvnext) {
-                                if (rcvlist->rcvseq > plist->rcvseq)
+			/********************
+ 			 * Fix the list bug *
+			 ********************/
+                        for (plist = rcvhead; plist; ppre = plist, plist = plist->rcvnext) {
+                                if (rcvlist->rcvseq < plist->rcvseq)
                                         break;
                         }
-                        if (plist == NULL) { /* header */
+                        if (plist == rcvhead) { /* header or nil */
                                 rcvlist->rcvnext = rcvhead;
                                 rcvhead = rcvlist;
                         } else {
-                                rcvlist->rcvnext = plist->rcvnext;
-                                plist->rcvnext = rcvlist;
+                                rcvlist->rcvnext = plist;
+                                ppre->rcvnext = rcvlist;
                         }
                 }
 
