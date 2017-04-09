@@ -57,7 +57,7 @@ rdt_recv(int fd)
 
                 /*
                  * If the seq is expected, pop the list and delivery
-                 * data the user.
+                 * the data to user.
                  */
                 if (len - RDT_LEN == 0)
                         break;
@@ -83,9 +83,9 @@ rdt_recv(int fd)
                         rcvlist->rcvseq = ack;
                         rcvlist->rcvlen = len - RDT_LEN;
                         rcvlist->rcvnext = NULL;
-			/********************
- 			 * Fix the list bug *
-			 ********************/
+			/***************************
+ 			 * Fix the list insert bug *
+			 ***************************/
                         for (plist = rcvhead; plist; ppre = plist, plist = plist->rcvnext) {
                                 if (rcvlist->rcvseq < plist->rcvseq)
                                         break;
