@@ -28,6 +28,17 @@
 
 #define WINSIZE 30
 
+/*
+ * If seqnum is type of uint32_t, no need the const value and mod 2^32:
+ *
+ *     x mod y = (x & (y-1))
+ *
+ * Because 'UINT32_MAX + 1 = 0'
+ */
+#ifndef UINT32_MAX
+#define UINT32_MAX 4294967295U
+#endif
+
 int readin;
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED} cstate;
 
