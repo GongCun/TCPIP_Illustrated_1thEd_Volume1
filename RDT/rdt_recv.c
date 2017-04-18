@@ -76,34 +76,41 @@ rdt_recv(int fd)
                                 free(rcvlist->rcvbuf);
                                 free(rcvlist);
                         }
-                } else { /* insert to the list from small to large */
-                        rcvlist = malloc(sizeof(struct rcvlist));
+			cptr->ack = base;;
+                } else {
+			/*
+			 * Insert the list form small to large of SeqNum,
+			 * don't insert the repeated SeqNum.
+			 */
+			for (plist = rcvhead; plist; ppre = plist, plist = plist->rcvnext) {
+                                if (ack == plist->rcvseq)
+					goto out;
+				else if (ack < plist->rcvseq)
+					break;
+                        }
+
+			rcvlist = malloc(sizeof(struct rcvlist));
                         rcvlist->rcvbuf = malloc(cptr->mss);
                         memcpy(rcvlist->rcvbuf, cptr->rcvpkt, len);
                         rcvlist->rcvseq = ack;
                         rcvlist->rcvlen = len - RDT_LEN;
                         rcvlist->rcvnext = NULL;
-			/***************************
- 			 * Fix the list insert bug *
-			 ***************************/
-                        for (plist = rcvhead; plist; ppre = plist, plist = plist->rcvnext) {
-                                if (rcvlist->rcvseq < plist->rcvseq)
-                                        break;
-                        }
+			
                         if (plist == rcvhead) { /* header or nil */
-                                rcvlist->rcvnext = rcvhead;
+				rcvlist->rcvnext = rcvhead;
                                 rcvhead = rcvlist;
                         } else {
                                 rcvlist->rcvnext = plist;
                                 ppre->rcvnext = rcvlist;
                         }
+		
+
                 }
+	out:
 
 		fprintf(stderr, "rdt_recv(): base = %d\n", base);
 		pkt_debug((struct rdthdr *)(cptr->rcvpkt + IP_LEN));
-
-		cptr->ack = base;;
-
+		
 	}
 
         close(readin);	/* notify send process do rdt_fin() */

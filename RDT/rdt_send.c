@@ -45,7 +45,7 @@ int rdt_send(int fd)
                 maxfd = max(cptr->sndfd, pfd[0]);
                 maxfd = max(maxfd, fd);
 
-again:
+	again:
                 if (select(maxfd+1, &rset, NULL, NULL, NULL) < 0) {
                         if (errno != EINTR)
                                 err_sys("select() error");
@@ -90,16 +90,18 @@ again:
                                                 break;
                                 }
                                 base = i;
+				if (base == nextseq) {
+					rtt_stop(rptr);
+					alarm(0);
+				}
+				else
+					alarm(rtt_start(rptr));
                         } else if (ack > base && ack < nextseq) {
                                 *cptr->snddat[ack%WINSIZE] = HASACK;
                         }
-                        
-                        if (base == nextseq) {
-                                rtt_stop(rptr);
-                                alarm(0);
-                        }
-                        else
-                                alarm(rtt_start(rptr));
+
+			/* Ignore other packet */
+                       
                 }
 
                 if (FD_ISSET(pfd[0], &rset)) { /* timed out */
