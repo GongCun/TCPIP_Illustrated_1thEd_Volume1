@@ -80,10 +80,6 @@ ssize_t rdt_recv(void *buf, size_t nbyte)
 		tv->tv_usec = curr.tv_usec;
 	}
 
-	/*
-	 * fprintf(stderr, "rdt_recv(): Ack to_net():\n");
-	 * pkt_debug((struct rdthdr *)(cptr->rcvpkt + IP_LEN));
-	 */
 
 	cptr->ack++;
 

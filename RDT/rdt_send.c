@@ -17,7 +17,7 @@ int rdt_send(int fd)
         char c;
 	struct conn_user *cptr;
         fd_set rset;
-        uint32_t base, nextseq;
+        uint32_t base, nextseq, ack;
         struct rtt_info *rptr;
         struct rdthdr *rdthdr;
 
@@ -45,7 +45,7 @@ int rdt_send(int fd)
                 maxfd = max(cptr->sndfd, pfd[0]);
                 maxfd = max(maxfd, fd);
 
-again:
+	again:
                 if (select(maxfd+1, &rset, NULL, NULL, NULL) < 0) {
                         if (errno != EINTR)
                                 err_sys("select() error");
@@ -63,12 +63,13 @@ again:
                                         return(0);
                                 } else {
 					i = nextseq % WINSIZE;
+                                        *cptr->snddat[i] = NOACK;
 					len = make_pkt(cptr->src, cptr->dst, cptr->scid, cptr->dcid,
-						       nextseq, RDT_DATA, cptr->sndpkt, n, cptr->snddat[i]);
-                                        n = to_net(cptr->sfd, cptr->snddat[i], len, cptr->dst);
+						       nextseq, RDT_DATA, cptr->sndpkt, n, cptr->snddat[i]+1);
+                                        n = to_net(cptr->sfd, cptr->snddat[i]+1, len, cptr->dst);
 					fprintf(stderr, "rdt_send() send %d bytes data pkt of idx %d\n",
 						n, i);
-					pkt_debug((struct rdthdr *)(cptr->snddat[i] + IP_LEN));
+					pkt_debug((struct rdthdr *)(cptr->snddat[i] + 1 + IP_LEN));
 					if (nextseq == base)
 						alarm(rtt_start(rptr));
 					nextseq++;
@@ -82,13 +83,25 @@ again:
                         rdthdr = (struct rdthdr *)cptr->sndpkt;
                         fprintf(stderr, "> rdt_send() recv Ack pkt:\n");
                         pkt_debug((struct rdthdr *)cptr->sndpkt);
-                        base = rdthdr->rdt_seq + 1;
-                        if (base == nextseq) {
-                                rtt_stop(rptr);
-                                alarm(0);
+                        ack = rdthdr->rdt_seq;
+                        if (base == ack) {
+                                for (i = ack + 1; i < nextseq; i++) {
+                                        if (*cptr->snddat[i%WINSIZE] == NOACK)
+                                                break;
+                                }
+                                base = i;
+				if (base == nextseq) {
+					rtt_stop(rptr);
+					alarm(0);
+				}
+				else
+					alarm(rtt_start(rptr));
+                        } else if (ack > base && ack < nextseq) {
+                                *cptr->snddat[ack%WINSIZE] = HASACK;
                         }
-                        else
-                                alarm(rtt_start(rptr));
+
+			/* Ignore other packet */
+                       
                 }
 
                 if (FD_ISSET(pfd[0], &rset)) { /* timed out */
@@ -103,11 +116,13 @@ again:
 
                         /* re-transmit un-Ack pkt */
                         for (i = base; i < nextseq; i++) {
-                                rdthdr = (struct rdthdr *)(cptr->snddat[i%WINSIZE] + IP_LEN);
-                                len = IP_LEN + ntohs(rdthdr->rdt_len);
-                                fprintf(stderr, "idx = %d, rexmit %d bytes\n", i, len);
-                                n = to_net(cptr->sfd, cptr->snddat[i%WINSIZE], len, cptr->dst);
-                                fprintf(stderr, "rdt_send(): to_net() %d bytes\n", n);
+				if (*cptr->snddat[i % WINSIZE] == NOACK) {
+					rdthdr = (struct rdthdr *)(cptr->snddat[i % WINSIZE] + 1 + IP_LEN);
+					len = IP_LEN + ntohs(rdthdr->rdt_len);
+					fprintf(stderr, "idx = %d, rexmit %d bytes\n", i, len);
+					n = to_net(cptr->sfd, cptr->snddat[i % WINSIZE] + 1, len, cptr->dst);
+					fprintf(stderr, "rdt_send(): to_net() %d bytes\n", n);
+				}
                         }
                 }
         }

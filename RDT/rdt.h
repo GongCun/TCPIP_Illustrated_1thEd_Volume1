@@ -13,7 +13,7 @@
 
 #define ranport() ((getpid() & 0xfff) | 0x8000)
 #define FILTER "ip[9:1] == 143"
-#define PCAP_TIMEOUT 2 /* 2 milliseconds */
+#define PCAP_TIMEOUT 300 /* 300 milliseconds */
 
 #define RDT_UX_SOCK "/tmp/RDTUXSock" /* Unix Domain Socket for User IPC */
 #define RDT_FIFO "/tmp/RDTFifo" /* FIFO pipe for User IPC */
@@ -28,19 +28,9 @@
 
 #define WINSIZE 30
 
-/*
- * If seqnum is type of uint32_t, no need the const value and mod 2^32:
- *
- *     x mod y = (x & (y-1))
- *
- * Because 'UINT32_MAX + 1 = 0'
- */
-#ifndef UINT32_MAX
-#define UINT32_MAX 4294967295U
-#endif
-
 int readin;
 typedef enum {CLOSED, LISTEN, WAITING, ESTABLISHED} cstate;
+enum {NOACK, HASACK};
 
 /*
  *  0                   1                   2                   3
@@ -76,11 +66,19 @@ struct rdthdr {
 
 
 /* For user process transfer data */
+struct rcvlist {
+        unsigned char *rcvbuf;
+        uint32_t rcvseq;
+        int rcvlen;
+        struct rcvlist *rcvnext;
+};
 struct conn_user {
         struct in_addr src, dst;
         int scid, dcid;
         int sfd, sndfd, rcvfd;
+        /* *snddta[i] = NOACK, HASACK */
         unsigned char *snddat[WINSIZE];
+        struct rcvlist *rcvlist;
         unsigned char *sndpkt;
 	unsigned char *rcvpkt;
         int mss;
@@ -135,7 +133,7 @@ void conn_user_debug(struct conn_user *);
 ssize_t get_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 ssize_t pass_pkt(int fd, struct conn_info *ciptr, u_char *buf, ssize_t buflen);
 int rdt_send(int);
-ssize_t rdt_recv(void *buf, size_t nbyte);
+void rdt_recv(int fd);
 void rdt_fin(void); /* close active */
 void rdt_close(void); /* close passive */
 void rdt_xmit(int fd[2]);
